@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2021-10-21T13:04:25.940Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36" etag="sspTbgn3BFRGx15CdmHX" version="15.5.8" type="github">
+<mxfile host="app.diagrams.net" modified="2021-10-21T15:49:05.708Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.54 Safari/537.36" etag="Py9QwWxhhZMWP96xl6Cb" version="15.5.8" type="github">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
     <mxGraphModel dx="1695" dy="482" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
@@ -8,7 +8,7 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-3" value="&lt;div style=&quot;text-align: center&quot;&gt;&lt;b&gt;Users&lt;/b&gt;&lt;/div&gt;&lt;br&gt;1.Id&lt;br&gt;2.firstname&lt;br&gt;3.lastname&lt;br&gt;4.createdOn&lt;br&gt;5.role :enum([ SuperAdmin, SuperSubAdmin,&lt;br&gt;Admin , SubAdmin ,Employee, User])&amp;nbsp;&lt;br&gt;6.gender :enum([male, female, other])&lt;br&gt;7.loginSource : enum([&amp;nbsp;&lt;span&gt;facebook,&amp;nbsp;&lt;/span&gt;&lt;span&gt;google,&lt;/span&gt;&lt;span&gt;&lt;br&gt;&lt;/span&gt;&lt;div&gt;apple,&lt;span&gt;default])&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span&gt;8.email: &quot;&quot;&lt;/span&gt;&lt;br&gt;&lt;/div&gt;&lt;div&gt;9.phoneNumber&lt;/div&gt;&lt;div&gt;10.dateOfBirth&lt;/div&gt;&lt;div&gt;11:isEmailVerified&lt;/div&gt;&lt;div&gt;12.profilePicture&lt;/div&gt;&lt;div&gt;13.lat&lt;/div&gt;&lt;div&gt;14.long&lt;/div&gt;&lt;div&gt;15.companyName&lt;/div&gt;&lt;div&gt;16.company logo:&amp;nbsp;&lt;/div&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=12;glass=0;strokeWidth=1;shadow=0;align=left;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
-          <mxGeometry x="-270" y="30" width="250" height="290" as="geometry" />
+          <mxGeometry x="-270" y="185" width="250" height="290" as="geometry" />
         </mxCell>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-4" value="Yes" style="rounded=0;html=1;jettySize=auto;orthogonalLoop=1;fontSize=11;endArrow=block;endFill=0;endSize=8;strokeWidth=1;shadow=0;labelBackgroundColor=none;edgeStyle=orthogonalEdgeStyle;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="WIyWlLk6GJQsqaUBKTNV-6" target="WIyWlLk6GJQsqaUBKTNV-10" edge="1">
           <mxGeometry y="20" relative="1" as="geometry">
