@@ -37,3 +37,6 @@ app.use("/visit", visitController);
 
 
 // DATABASE_URL="mysql://khan1972:SanaTax@7262@a2plcpnl0463.prod.iad2.secureserver.net:3306/wbms"
+
+// username : wbms_user1
+// pass : wbmsu1786@

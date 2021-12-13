@@ -10,7 +10,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Userrr {
   // id Int @defualt(autoincrement()) @id
    id String @id @default(dbgenerated("left(uuid(),8)"))
   username String @db.VarChar(255) @unique
