@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.4/firebase-firestore.js"></script>
+    <script>
+        var formData;
+        var firebaseConfig = {
+            apiKey: "AIzaSyCF7k6j7LbGbAZMLGBXR7Vk-MF5aPkt2Lg",
+            authDomain: "water-vendor-ce707.firebaseapp.com",
+            projectId: "water-vendor-ce707",
+            storageBucket: "water-vendor-ce707.appspot.com",
+            messagingSenderId: "282841612728",
+            appId: "1:282841612728:web:ce15a5341c218459140f4d",
+            measurementId: "G-F0985EKPXX"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        let cloudDB = firebase.firestore();
+    </script>
+
+    <script>
+        $(function () {
+            fetchData();
+        });
+
+        async function fetchData() {
+            let check = await firebase.auth()
+                .signInWithEmailAndPassword("user1@gmail.com", "1234567");
+            let token = await check.user.getIdToken(true);
+            $("#token").html(token);
+
+        }
+    </script>
+
+    <textarea id="token" rows="12" cols="100"></textarea>
+</head>
+
+</html>

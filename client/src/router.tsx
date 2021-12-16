@@ -1,26 +1,25 @@
 import { Suspense, lazy, Fragment } from 'react';
-import { Redirect, Route } from 'react-router-dom';
+import { Switch, Redirect, Route } from 'react-router-dom';
 
 import SidebarLayout from 'src/layouts/SidebarLayout';
 import BaseLayout from 'src/layouts/BaseLayout';
-
 import SuspenseLoader from 'src/components/SuspenseLoader';
 
+// import AuthGuard from 'src/components/Guards/AuthGuard'
 
 export const renderRoutes = (routes = []) => (
   <Suspense fallback={<SuspenseLoader />}>
-    <Route>
+    <Switch>
       {routes.map((route, i) => {
         const Guard = route.guard || Fragment;
         const Layout = route.layout || Fragment;
         const Component = route.component;
 
-        console.log(route, 'route')
-        console.log(route.component, 'route')
         return (
           <Route
             key={i}
             path={route.path}
+            exact={route.exact}
             render={props => (
               <Guard>
                 <Layout>
@@ -35,12 +34,9 @@ export const renderRoutes = (routes = []) => (
           />
         );
       })}
-    </Route>
+    </Switch>
   </Suspense>
 );
-
-
-
 
 
 
@@ -50,7 +46,8 @@ export default interface IRoute {
   exact?: boolean,
   protected?: boolean,
   component?: any,
-  layout? : any,
+  layout?: any,
+  guard?: any,
   routes?: IRoute[],
   props?
 
@@ -66,12 +63,12 @@ export const routes: IRoute[] = [
   //   path: '/404',
   //   component: lazy(() => import('src/views/errors/NotFoundView'))
   // },
-  // {
-  //   exact: true,
-  //   guard: GuestGuard,
-  //   path: '/login',
-  //   component: lazy(() => import('src/views/auth/LoginView'))
-  // },
+  {
+    exact: true,
+    // guard: GuestGuard,
+    path: '/login',
+    component: lazy(() => import('src/content/pages/Components/Buttons'))
+  },
   // {
   //   exact: true,
   //   path: '/login-unprotected',
@@ -109,6 +106,7 @@ export const routes: IRoute[] = [
   {
     path: '/components',
     layout: SidebarLayout,
+    // guard : AuthGuard ,
     routes: [
       {
         exact: true,
@@ -156,9 +154,9 @@ export const routes: IRoute[] = [
         path: '/components/forms',
         component: lazy(() => import('src/content/pages/Components/Forms'))
       },
-      
+
       {
-        component: () => <Redirect to="/components/buttons" />
+        component: () => <Redirect to="/404" />
       }
     ]
   },
@@ -181,9 +179,9 @@ export const routes: IRoute[] = [
         path: '/management/profile/settings',
         component: lazy(() => import('src/content/applications/Users/settings'))
       },
-      
+
       {
-        component: () => <Redirect to="/management/transactions" />
+        component: () => <Redirect to="/404" />
       }
     ]
   },
@@ -191,6 +189,7 @@ export const routes: IRoute[] = [
   {
     path: '/dashboards',
     layout: SidebarLayout,
+    // guard: AuthGuard,
     routes: [
       {
         exact: true,
@@ -201,6 +200,9 @@ export const routes: IRoute[] = [
         exact: true,
         path: '/dashboards/messenger',
         component: lazy(() => import('src/content/applications/Messenger'))
+      },
+      {
+        component: () => <Redirect to="/404" />
       }
     ]
   },
@@ -213,7 +215,8 @@ export const routes: IRoute[] = [
 
       {
         exact: true,
-        path: '/',
+        // path: '/overview',
+        path: '/overview',
         component: lazy(() => import('src/content/overview'))
       },
 
