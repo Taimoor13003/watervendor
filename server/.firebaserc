@@ -1,0 +1,21 @@
+{
+  "projects": {
+    "default": "water-vendor-ce707"
+  },
+  "targets": {
+    "water-vendor-ce707": {
+      "hosting": {
+        "client": [
+          "serviceit-client"
+        ]
+      }
+    },
+    "serviceit-5b174": {
+      "hosting": {
+        "client": [
+          "serviceit-client"
+        ]
+      }
+    }
+  }
+}
