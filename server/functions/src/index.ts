@@ -73,11 +73,11 @@ const prisma = new PrismaClient()
 
 async function main2() {
 
-  const post = await prisma.post.update({
-    where: { id: 1 },
-    data: { published: false },
-  })
-  console.log(post)
+  // const post = await prisma.post.update({
+  //   where: { id: 1 },
+  //   data: { published: false },
+  // })
+  // console.log(post)
 
   return
 
@@ -110,3 +110,4 @@ main2()
   .finally(async () => {
     await prisma.$disconnect()
   })
+

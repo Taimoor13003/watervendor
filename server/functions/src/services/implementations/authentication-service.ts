@@ -6,27 +6,29 @@ import { auth } from "google-auth-library";
 @injectable()
 export class AuthenticationService {
   public async authenticate(req: any): Promise<boolean> {
-    console.log("Check if request is authorized with Firebase ID token");
+    // console.log("Check if request is authorized with Firebase ID token");
     // console.log(JSON.stringify(req),"REEEEEEEQUESST HAI");
-    console.log("PROJECT ID", auth.getProjectId());
+    // console.log("PROJECT ID", auth.getProjectId());
+    auth.getProjectId()
     let idToken;
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer ")
     ) {
-      console.log('Found "authorization" header');
+      // console.log('Found "authorization" header');
       // Read the ID Token from the authorization header.
       idToken = req.headers.authorization.split("Bearer ")[1];
-      console.log("ID", idToken);
+      // console.log("ID", idToken);
     } else {
       return false;
     }
 
     try {
-      console.log(idToken);
-      console.log(admin.auth());
+      // console.log(idToken);
+      // console.log(admin.auth());
+      admin.auth()
       const userClaims = await admin.auth().verifyIdToken(idToken);
-      console.log("ID Token correctly decoded", userClaims.user_id);
+      // console.log("ID Token correctly decoded", userClaims.user_id);
       // let id: string = userClaims.user_id;
       // let user:User=await this.userRepository.get(id);
       // this.userInfo.user=user;

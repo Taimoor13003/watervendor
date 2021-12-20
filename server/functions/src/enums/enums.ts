@@ -30,3 +30,14 @@ export enum VisitStatus {
   inProgress = "inProgress",
   complete = "complete"
 }
+
+// export enum PrismaModel {
+//   "user",
+//   "post",
+//  "profile"
+// }
+export enum PrismaModel {
+  user = "user",
+  post = "post",
+  profile = "profile"
+}
