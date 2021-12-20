@@ -28,26 +28,19 @@ export abstract class Repository<T extends IBaseEntity>
    * Get record of Type T for id
    * @param id Unique Id for record
    */
-  async get(id: string): Promise<T> {
+  async get(id: string | number | undefined): Promise<T> {
 
     console.info("Get ${id} from ${this.collectionName}");
 
 
-    const post = await this.db2[this.collectionName2].findUnique({
+    // @ts-ignore
+    const entity: T = await this.db2[this.collectionName2].findUnique({
       where: {
-        id: 1,
+        // @ts-ignore
+        id: id,
       },
     })
-    console.log(post, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
 
-
-
-    const doc = await this.getCollection().doc(id).get();
-    console.log(doc);
-    const entity = doc.data() as T;
-    if (entity) {
-      entity.id = doc.id;
-    }
     return entity;
 
   }
@@ -447,7 +440,18 @@ export abstract class Repository<T extends IBaseEntity>
    */
   async add(object: T): Promise<T> {
     try {
+
       const entity = Repository.convertToObject(object);
+
+      console.log(entity, "entity")
+
+
+      await this.db2[this.collectionName2].create({
+        data: entity
+      })
+
+
+
       const loanRef = await this.db.collection(this.collectionName).add(entity);
       const doc = await loanRef.get();
 
@@ -468,9 +472,21 @@ export abstract class Repository<T extends IBaseEntity>
    */
   async update(object: T): Promise<T> {
     const entity = Repository.convertToObject(object);
-    await this.db.collection(this.collectionName).doc(object.id).set(entity);
-    const doc = await this.get(object.id);
+
+    const doc = await this.db2[this.collectionName2].update({
+      where: { id: object.id },
+      data: entity,
+    })
+    
+    // await this.db.collection(this.collectionName).doc(object.id).set(entity);
+    
+    // await this.db.collection(this.collectionName).doc(object.id).set(entity);
+    
+    // const doc = await this.get(object.id);
+    
+    // @ts-ignore
     return doc;
+
   }
 
   async increamentValueInField(

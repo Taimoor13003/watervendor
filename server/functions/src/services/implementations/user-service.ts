@@ -18,32 +18,35 @@ export class UserService implements IUserService {
   constructor(
     @inject(SERVICE_IDENTIFIER.UserRepository)
     private userRepository: IUserRepository,
-    
-    public userNotificationService:UserNotificationService=new UserNotificationService()
 
-  ) {}
+    public userNotificationService: UserNotificationService = new UserNotificationService()
 
-  public async signUp(userDTO: UserDTO,userId: string): Promise<ResponseModel<UserDTO>> {
+  ) { }
+
+  public async signUp(userDTO: UserDTO, userId: string): Promise<ResponseModel<UserDTO>> {
     let response = new ResponseModel<UserDTO>();
     try {
       // add id field in userDto
-      Object.assign(userDTO,{id:userId})
-
-      let user = await this.userRepository.get(userDTO.id);
+      Object.assign(userDTO, { id: userId })
+      
+      let user = await this.userRepository.get(userId);
+      
+      await this.userRepository.update(userDTO);
 
       if (!user) {
+        
         let user = new User();
         user = UtilityService.DataCopier(user, userDTO);
-          
-          await this.userRepository.update(user);
-          response.setSuccessAndData(user, "Sign Up Successfull");
-        }
-       else {
-        if(user.email==userDTO.email){
+        await this.userRepository.add(user);
+
+        response.setSuccessAndData(user, "Sign Up Successfull");
+      }
+      else {
+        if (user.email == userDTO.email) {
 
           response.setServerError("your email is already register");
         }
-        else{
+        else {
           response.setServerError("your id is already register");
         }
       }
@@ -87,7 +90,7 @@ export class UserService implements IUserService {
     return response;
   }
 
-  
+
   public async unregisterUserDevice(removeUserDevice: IRemoveDeviceRequestModel): Promise<ResponseModel<boolean>> {
     let response: ResponseModel<boolean> = new ResponseModel<boolean>();
     try {
@@ -107,7 +110,7 @@ export class UserService implements IUserService {
         // Type: type,          
         Type: "All",
       };
-      console.log('type'  , type)
+      console.log('type', type)
       await this.userNotificationService.subscribeDevice(userDevice);
       console.log("Subscribe Device Done");
       let subscription: any = {
@@ -132,7 +135,7 @@ export class UserService implements IUserService {
     return response;
   }
 
-  
+
   async getAllByPagination(
     page: number,
     count: number,
@@ -140,12 +143,12 @@ export class UserService implements IUserService {
   ): Promise<ResponseModel<ListDTO<UserListDTO>>> {
     let response = new ResponseModel<ListDTO<UserListDTO>>();
     try {
-      let userLists:User[] = [];
+      let userLists: User[] = [];
 
       if (!keyword) {
         userLists = await this.userRepository.getAllByPagination(+page, +count);
-      }else{
-        userLists = await this.userRepository.getAllByPaginateAndKeyWord(+page, +count,'fullName',keyword);
+      } else {
+        userLists = await this.userRepository.getAllByPaginateAndKeyWord(+page, +count, 'fullName', keyword);
       }
       let listdto = new ListDTO<UserListDTO>();
       userLists.forEach((item: User) => {
@@ -162,7 +165,7 @@ export class UserService implements IUserService {
     return response;
   }
 
-  async update(userDTO: UserDTO,userId:string): Promise<ResponseModel<User>> {
+  async update(userDTO: UserDTO, userId: string): Promise<ResponseModel<User>> {
     let response = new ResponseModel<User>();
 
     try {
@@ -171,14 +174,14 @@ export class UserService implements IUserService {
       if (!getUser) {
         response.setServerError("your id is invalid");
       } else {
-    
+
         let user = new User();
         user = UtilityService.DataCopier(user, userDTO);
 
-        const getByEmail = await this.userRepository.getAllByPaginationAndId(1,1,user.email,'email');
-        if(getByEmail.length>0 && getUser.email !=user.email){
+        const getByEmail = await this.userRepository.getAllByPaginationAndId(1, 1, user.email, 'email');
+        if (getByEmail.length > 0 && getUser.email != user.email) {
           response.setError("email is already register");
-        }else{
+        } else {
           user.createdOnDate = getUser.createdOnDate;
           const update = await this.userRepository.update(user);
           response.setSuccessAndData(update, "Sign Up Successfull");

@@ -6,7 +6,7 @@ import { Repository } from "./repository";
 
 export class UserRepository extends Repository<User> implements IUserRepository {
     public collectionName = "user"  ; 
-    public collectionName2 : PrismaModel = PrismaModel.post
+    public collectionName2 : PrismaModel = PrismaModel.user
     constructor() {
 
         super();

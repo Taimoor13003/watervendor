@@ -4,7 +4,7 @@ import * as express from "express";
 import * as bodyParser from "body-parser";
 const swaggerUI = require("swagger-ui-express");
 const swaggerJsDoc = require('swagger-jsdoc');
-import { PrismaClient } from '@prisma/client'
+// import { PrismaClient } from '@prisma/client'
 
 
 
@@ -69,9 +69,9 @@ app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(specs));
 
 
 
-const prisma = new PrismaClient()
+// const prisma = new PrismaClient()
 
-async function main2() {
+// async function main2() {
 
   // const post = await prisma.post.update({
   //   where: { id: 1 },
@@ -79,35 +79,36 @@ async function main2() {
   // })
   // console.log(post)
 
-  return
+  // return
 
-  await prisma.user.create({
-    data: {
-      name: 'Alice',
-      email: 'alice@prisma.io',
-      posts: {
-        create: { title: 'Hello World' },
-      },
-      profile: {
-        create: { bio: 'I like turtles' },
-      },
-    },
-  })
+  // await prisma.user.create({
+  //   data: {
+  //     name: 'Alice',
+  //     email: 'alice@prisma.io',
+  //     posts: {
+  //       create: { title: 'Hello World' },
+  //     },
+  //     profile: {
+  //       create: { bio: 'I like turtles' },
+  //     },
+  //   },
+  // })
 
-  const allUsers = await prisma.user.findMany({
-    include: {
-      posts: true,
-      profile: true,
-    },
-  })
-  console.dir(allUsers, { depth: null })
-}
+  // const allUsers = await prisma.user.findMany({
+  //   include: {
+  //     posts: true,
+  //     profile: true,
+  //   },
+  // })
+  // console.dir(allUsers, { depth: null })
 
-main2()
-  .catch((e) => {
-    throw e
-  })
-  .finally(async () => {
-    await prisma.$disconnect()
-  })
+// }
+
+// main2()
+//   .catch((e) => {
+//     throw e
+//   })
+//   .finally(async () => {
+//     await prisma.$disconnect()
+//   })
 

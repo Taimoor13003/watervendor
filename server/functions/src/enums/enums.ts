@@ -37,7 +37,5 @@ export enum VisitStatus {
 //  "profile"
 // }
 export enum PrismaModel {
-  user = "user",
-  post = "post",
-  profile = "profile"
+  user = "user"
 }
