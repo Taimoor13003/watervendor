@@ -42,6 +42,37 @@ import BlankLayout from 'src/@core/layouts/BlankLayout'
 // ** Demo Imports
 import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
 
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCF7k6j7LbGbAZMLGBXR7Vk-MF5aPkt2Lg",
+  authDomain: "water-vendor-ce707.firebaseapp.com",
+  projectId: "water-vendor-ce707",
+  storageBucket: "water-vendor-ce707.appspot.com",
+  messagingSenderId: "282841612728",
+  appId: "1:282841612728:web:ce15a5341c218459140f4d",
+  measurementId: "G-F0985EKPXX"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+// const analytics = getAnalytics(app);
+
+// Initialize Firebase Authentication and get a reference to the service
+const fauth = getAuth(app);
+
+const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: "select_account" });
+
+
 // ** Styled Components
 const LoginIllustration = styled('img')(({ theme }) => ({
   zIndex: 2,
@@ -122,12 +153,41 @@ const LoginPage = () => {
 
   const onSubmit = (data: FormData) => {
     const { email, password } = data
-    auth.login({ email, password, rememberMe }, () => {
+
+  //   signInWithPopup(fauth, provider)
+  // .then((result) => {
+  //   // This gives you a Google Access Token. You can use it to access the Google API.
+  //   const credential: any = GoogleAuthProvider.credentialFromResult(result);
+  //   const token = credential.accessToken;
+  //   // The signed-in user info.
+  //   const user = result.user;
+  //   console.log(user, "userrrrr")
+  //   // IdP data available using getAdditionalUserInfo(result)
+  //   // ...
+  // }).catch((error) => {
+  //   // Handle Errors here.
+  //   const errorCode = error.code;
+  //   const errorMessage = error.message;
+  //   // The email of the user's account used.
+  //   const email = error.customData.email;
+  //   // The AuthCredential type that was used.
+  //   const credential = GoogleAuthProvider.credentialFromError(error);
+  //   // ...
+  // });
+
+    // auth.login({ email, password, rememberMe }, () => {
+    //   setError('email', {
+    //     type: 'manual',
+    //     message: 'Email or Password is invalid'
+    //   })
+    // })
+    auth.loginWithGoogle({ email, password, rememberMe }, () => {
       setError('email', {
         type: 'manual',
         message: 'Email or Password is invalid'
       })
     })
+
   }
 
   const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'

@@ -7,7 +7,7 @@ export type LoginParams = {
 }
 
 export type UserDataType = {
-  id: number
+  id: number | string
   role: string
   email: string
   fullName: string
@@ -23,4 +23,5 @@ export type AuthValuesType = {
   setLoading: (value: boolean) => void
   setUser: (value: UserDataType | null) => void
   login: (params: LoginParams, errorCallback?: ErrCallbackType) => void
+  loginWithGoogle: (params: LoginParams, errorCallback?: ErrCallbackType) => void
 }
