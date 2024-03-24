@@ -17,6 +17,7 @@ let app
 if (!getApps.length) {
   app = initializeApp(firebaseConfig)
 }
+
 // firebase authentication
 const firebaseAuth = getAuth(app);
 

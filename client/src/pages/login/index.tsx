@@ -5,7 +5,7 @@ import { useState, ReactNode, MouseEvent } from 'react'
 import Link from 'next/link'
 
 // ** MUI Components
-import Alert from '@mui/material/Alert'
+// import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import Checkbox from '@mui/material/Checkbox'
@@ -14,23 +14,31 @@ import IconButton from '@mui/material/IconButton'
 import Box, { BoxProps } from '@mui/material/Box'
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { styled, useTheme } from '@mui/material/styles'
-import InputAdornment from '@mui/material/InputAdornment'
+
+// import InputAdornment from '@mui/material/InputAdornment'
+
 import MuiFormControlLabel, { FormControlLabelProps } from '@mui/material/FormControlLabel'
 
 // ** Custom Component Import
-import CustomTextField from 'src/@core/components/mui/text-field'
+// import CustomTextField from 'src/@core/components/mui/text-field'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
 // ** Third Party Imports
 import * as yup from 'yup'
-import { useForm, Controller } from 'react-hook-form'
+
+// import { useForm, Controller } from 'react-hook-form'
+
+import { useForm} from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
+
 
 // ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
-import useBgColor from 'src/@core/hooks/useBgColor'
+
+// import useBgColor from 'src/@core/hooks/useBgColor'
+
 import { useSettings } from 'src/@core/hooks/useSettings'
 
 // ** Configs
@@ -41,37 +49,6 @@ import BlankLayout from 'src/@core/layouts/BlankLayout'
 
 // ** Demo Imports
 import FooterIllustrationsV2 from 'src/views/pages/auth/FooterIllustrationsV2'
-
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCF7k6j7LbGbAZMLGBXR7Vk-MF5aPkt2Lg",
-  authDomain: "water-vendor-ce707.firebaseapp.com",
-  projectId: "water-vendor-ce707",
-  storageBucket: "water-vendor-ce707.appspot.com",
-  messagingSenderId: "282841612728",
-  appId: "1:282841612728:web:ce15a5341c218459140f4d",
-  measurementId: "G-F0985EKPXX"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-// const analytics = getAnalytics(app);
-
-// Initialize Firebase Authentication and get a reference to the service
-const fauth = getAuth(app);
-
-const provider = new GoogleAuthProvider();
-provider.setCustomParameters({ prompt: "select_account" });
-
 
 // ** Styled Components
 const LoginIllustration = styled('img')(({ theme }) => ({
@@ -128,12 +105,15 @@ interface FormData {
 
 const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState<boolean>(true)
-  const [showPassword, setShowPassword] = useState<boolean>(false)
+
+  // const [showPassword, setShowPassword] = useState<boolean>(false)
 
   // ** Hooks
   const auth = useAuth()
   const theme = useTheme()
-  const bgColors = useBgColor()
+  
+  // const bgColors = useBgColor()
+  
   const { settings } = useSettings()
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
 
@@ -141,10 +121,14 @@ const LoginPage = () => {
   const { skin } = settings
 
   const {
-    control,
+
+    // control,
+
     setError,
     handleSubmit,
-    formState: { errors }
+    
+    // formState: { errors }
+    
   } = useForm({
     defaultValues,
     mode: 'onBlur',
@@ -154,7 +138,7 @@ const LoginPage = () => {
   const onSubmit = (data: FormData) => {
     const { email, password } = data
 
-  //   signInWithPopup(fauth, provider)
+  // (fauth, provider)
   // .then((result) => {
   //   // This gives you a Google Access Token. You can use it to access the Google API.
   //   const credential: any = GoogleAuthProvider.credentialFromResult(result);
@@ -258,16 +242,19 @@ const LoginPage = () => {
                 Please sign-in to your account and start the adventure
               </Typography>
             </Box>
-            <Alert icon={false} sx={{ py: 3, mb: 6, ...bgColors.primaryLight, '& .MuiAlert-message': { p: 0 } }}>
+
+            {/* <Alert icon={false} sx={{ py: 3, mb: 6, ...bgColors.primaryLight, '& .MuiAlert-message': { p: 0 } }}>
               <Typography variant='body2' sx={{ mb: 2, color: 'primary.main' }}>
                 Admin: <strong>admin@vuexy.com</strong> / Pass: <strong>admin</strong>
               </Typography>
               <Typography variant='body2' sx={{ color: 'primary.main' }}>
                 Client: <strong>client@vuexy.com</strong> / Pass: <strong>client</strong>
               </Typography>
-            </Alert>
+            </Alert> */}
+
             <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-              <Box sx={{ mb: 4 }}>
+              
+              {/* <Box sx={{ mb: 4 }}>
                 <Controller
                   name='email'
                   control={control}
@@ -319,7 +306,8 @@ const LoginPage = () => {
                     />
                   )}
                 />
-              </Box>
+              </Box> */}
+              
               <Box
                 sx={{
                   mb: 1.75,
@@ -338,7 +326,7 @@ const LoginPage = () => {
                 </Typography>
               </Box>
               <Button fullWidth type='submit' variant='contained' sx={{ mb: 4 }}>
-                Login
+                Login With Google
               </Button>
               <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <Typography sx={{ color: 'text.secondary', mr: 2 }}>New on our platform?</Typography>

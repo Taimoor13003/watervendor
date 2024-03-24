@@ -44,6 +44,7 @@ const AuthProvider = ({ children }: Props) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth ,(authUser) => {
       setLoading(true)
+
       // setLoading(true);
       if (authUser) {
         // User is signed in
@@ -72,6 +73,7 @@ const AuthProvider = ({ children }: Props) => {
               router.replace('/login')
             }
       }
+
       // setLoading(false);
     });
 

@@ -76,13 +76,14 @@ mock.onPost('/jwt/register').reply(request => {
     }
 
     if (!error.username && !error.email) {
-      const { length } = users
-      let lastIndex = 0
-      if (length) {
-        lastIndex = users[length - 1].id
-      }
+      // const { length } = users
+      // let lastIndex = 0
+      // if (length) {
+      //   lastIndex = users[length - 1].id
+      // }
+      
       const userData = {
-        id: lastIndex + 1,
+        id: 1,
         email,
         password,
         username,
