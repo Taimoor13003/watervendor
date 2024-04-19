@@ -4,6 +4,7 @@ import { configureStore } from '@reduxjs/toolkit'
 // ** Reducers
 import chat from 'src/store/apps/chat'
 import user from 'src/store/apps/user'
+import order from 'src/store/app/order'
 import email from 'src/store/apps/email'
 import invoice from 'src/store/apps/invoice'
 import calendar from 'src/store/apps/calendar'
@@ -13,6 +14,7 @@ export const store = configureStore({
   reducer: {
     user,
     chat,
+    order,
     email,
     invoice,
     calendar,

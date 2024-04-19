@@ -4,6 +4,36 @@ import { VerticalNavItemsType } from 'src/@core/layouts/types'
 const navigation = (): VerticalNavItemsType => {
   return [
     {
+      sectionTitle: 'Application Menu'
+    },
+    {
+      title: 'Customers',
+      icon: 'tabler:users',
+      path: '/app/customers',
+    },
+    {
+      title: 'Orders',
+      icon: 'tabler:receipt',
+      path: '/app/orders'
+    },
+    {
+      title: 'Vouchers',
+      icon: 'tabler:discount',
+      path: '/app/vouchers' 
+    },
+    {
+      title: 'Products',
+      icon: 'tabler:package',
+      path: '/app/products'
+    },
+    {
+      title: 'Accounts',
+      icon: 'tabler:file-text',
+      path: '/app/accounts'
+    },
+
+    // old
+    {
       title: 'Dashboards',
       icon: 'tabler:smart-home',
       badgeContent: 'new',
