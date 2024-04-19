@@ -80,7 +80,7 @@ const AuthProvider = ({ children }: Props) => {
     return () => {
       unsubscribe(); // Unsubscribe from the listener when component unmounts
     };
-  }, []);
+  }, [router]);
 
 
   // useEffect(() => {
