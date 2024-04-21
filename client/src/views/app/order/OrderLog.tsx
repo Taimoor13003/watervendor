@@ -5,7 +5,6 @@ import { Fragment, useState, SyntheticEvent, ReactNode } from 'react'
 import Box from '@mui/material/Box'
 import List from '@mui/material/List'
 import Input from '@mui/material/Input'
-import Avatar from '@mui/material/Avatar'
 import Divider from '@mui/material/Divider'
 import Tooltip from '@mui/material/Tooltip'
 import Backdrop from '@mui/material/Backdrop'
@@ -378,7 +377,8 @@ const OrderLog = (props: OrderLogType) => {
             </Box>
           </Box>
         </Box>
-        <Divider sx={{ m: '0 !important' }} />
+      {/* header start */}
+        {/* <Divider sx={{ m: '0 !important' }} />
         <Box sx={{ p: 0, position: 'relative', overflowX: 'hidden', height: 'calc(100% - 7.5625rem)' }}>
           <ScrollWrapper hidden={hidden}>
             {store && store.mails && store.mails.length ? (
@@ -507,6 +507,223 @@ const OrderLog = (props: OrderLogType) => {
                   )
                 })}
               </List>
+            ) : (
+              <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', alignItems: 'center', '& svg': { mr: 2 } }}>
+                <Icon icon='tabler:alert-octagon' />
+                <Typography>No Orders Found</Typography>
+              </Box>
+            )}
+          </ScrollWrapper>
+          <Backdrop
+            open={refresh}
+            onClick={() => setRefresh(false)}
+            sx={{
+              zIndex: 5,
+              position: 'absolute',
+              color: 'common.white',
+              backgroundColor: 'action.disabledBackground'
+            }}
+          >
+            <CircularProgress color='inherit' />
+          </Backdrop>
+        </Box> */}
+        {/* header end */}
+        <Divider sx={{ m: '0 !important' }} />
+        <Box sx={{ p: 0, position: 'relative', overflowX: 'hidden', height: 'calc(100% - 7.5625rem)' }}>
+          <ScrollWrapper hidden={hidden}>
+
+        
+
+            {store && store.mails && store.mails.length ? (
+
+
+/////// internal start
+              <List sx={{ p: 0 }}>
+
+
+{/* my start */}
+<OrderItem
+                      key={0}
+                      sx={{ backgroundColor: 'action.hover'}}
+                      onClick={() => {
+                        setOrderDetailsOpen(true)
+                        dispatch(getCurrentOrder(0))
+                        dispatch(updateOrder({ orderIds: [0], dataToUpdate: { isRead: true } }))
+                        setTimeout(() => {
+                          dispatch(handleSelectAllOrder(false))
+                        }, 600)
+                      }}
+                    >
+                      <Box
+                        border={1}
+                       sx={{ mr: 4, display: 'flex', overflow: 'hidden', alignItems: 'center' }}>
+                        <Checkbox
+                          onClick={e => e.stopPropagation()}
+                          onChange={() => dispatch(handleSelectOrder(0))}
+                          checked={store.selectedOrders.includes(0) || false}
+                          style={{opacity: 0, pointerEvents: 'none'}}
+                        />
+
+
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            overflow: 'hidden',
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            alignItems: { xs: 'flex-start', sm: 'center' }
+                          }}
+                        >
+                     Order Number
+                        </Box>
+                      </Box>
+                      <Box
+                      border={1}
+                      >
+                     Customer Name
+                      </Box>
+                      <Box
+                        border={1}
+                      >
+                     
+                     Order Date
+                      </Box>
+
+                    </OrderItem>
+            
+                    {/* <Divider sx={{ m: '0 !important' }} /> */}
+
+{/* my code end */}
+
+
+                {store.mails.map((mail: OrderType, index: number) => {
+                  const mailReadToggleIcon = mail.isRead ? 'tabler:mail' : 'tabler:mail-opened'
+
+                  return (
+                    <OrderItem
+                      key={mail.id}
+                      sx={{ backgroundColor: mail.isRead ? 'action.hover' : 'background.paper' }}
+                      onClick={() => {
+                        setOrderDetailsOpen(true)
+                        dispatch(getCurrentOrder(mail.id))
+                        dispatch(updateOrder({ orderIds: [mail.id], dataToUpdate: { isRead: true } }))
+                        setTimeout(() => {
+                          dispatch(handleSelectAllOrder(false))
+                        }, 600)
+                      }}
+                    >
+                      <Box
+                          border={1}
+                      sx={{ mr: 4, display: 'flex', overflow: 'hidden', alignItems: 'center' }}>
+
+<Box
+                        border={1}
+                        width={10}
+                      >
+                        {index + 1}.
+                      </Box>
+
+                        <Checkbox
+                          onClick={e => e.stopPropagation()}
+                          onChange={() => dispatch(handleSelectOrder(mail.id))}
+                          checked={store.selectedOrders.includes(mail.id) || false}
+                        />
+                        <IconButton
+                          size='small'
+                          onClick={e => handleStarOrder(e, mail.id, !mail.isStarred)}
+                        >
+                          {/* {mail.id} */}
+                        </IconButton>
+
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            overflow: 'hidden',
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            alignItems: { xs: 'flex-start', sm: 'center' }
+                          }}
+                        >
+                          {/* <Typography
+                            variant='h6'
+                            sx={{
+                              mr: 3,
+                              fontWeight: 500,
+                              whiteSpace: 'nowrap',
+                              width: ['100%', 'auto'],
+                              overflow: ['hidden', 'unset'],
+                              textOverflow: ['ellipsis', 'unset']
+                            }}
+                          >
+                            {mail.from.name}
+                          </Typography>
+                          <Typography noWrap sx={{ width: '100%', color: 'text.secondary' }}>
+                            {mail.subject}
+                          </Typography> */}
+                        </Box>
+                      </Box>
+                      <Box
+                        className='mail-actions'
+                        sx={{ display: 'none', alignItems: 'center', justifyContent: 'flex-end' }}
+                      >
+                        {routeParams && routeParams.folder !== 'trash' ? (
+                          <Tooltip placement='top' title='Delete Order'>
+                            <IconButton
+                              onClick={e => {
+                                e.stopPropagation()
+                                dispatch(updateOrder({ orderIds: [mail.id], dataToUpdate: { folder: 'trash' } }))
+                              }}
+                            >
+                              <Icon icon='tabler:trash' />
+                            </IconButton>
+                          </Tooltip>
+                        ) : null}
+
+                        <Tooltip placement='top' title={mail.isRead ? 'Unread Order' : 'Read Order'}>
+                          <IconButton
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleReadOrder([mail.id], !mail.isRead)
+                            }}
+                          >
+                            <Icon icon={mailReadToggleIcon} />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip placement='top' title='Move to Spam'>
+                          <IconButton
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleFolderUpdate([mail.id], 'spam')
+                            }}
+                          >
+                            <Icon icon='tabler:alert-octagon' />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                      <Box
+                        className='mail-info-right'
+                        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}
+                      >
+                        <Box sx={{ display: { xs: 'none', sm: 'flex' } }}>{renderOrderLabels(mail.labels)}</Box>
+                        <Typography
+                          variant='body2'
+                          sx={{ minWidth: '50px', textAlign: 'right', whiteSpace: 'nowrap', color: 'text.disabled' }}
+                        >
+                          {new Date(mail.time).toLocaleTimeString('en-US', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </Typography>
+                      </Box>
+                    </OrderItem>
+                  )
+                })}
+
+
+
+              </List>
+
+////  internal end
+
             ) : (
               <Box sx={{ mt: 6, display: 'flex', justifyContent: 'center', alignItems: 'center', '& svg': { mr: 2 } }}>
                 <Icon icon='tabler:alert-octagon' />
