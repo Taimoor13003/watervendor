@@ -12,6 +12,7 @@ import { DataGrid, GridColDef, GridRenderCellParams, GridSortModel } from '@mui/
 import axios from 'axios'
 
 // ** Custom Components
+import CustomChip from 'src/@core/components/mui/chip'
 import CustomAvatar from 'src/@core/components/mui/avatar'
 import ServerSideToolbar from 'src/views/table/data-grid/ServerSideToolbar'
 
@@ -21,6 +22,13 @@ import { DataGridRowType } from 'src/@fake-db/types'
 
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
+
+interface StatusObj {
+  [key: number]: {
+    title: string
+    color: ThemeColor
+  }
+}
 
 type SortType = 'asc' | 'desc' | undefined | null
 
@@ -46,14 +54,20 @@ const renderClient = (params: GridRenderCellParams) => {
   }
 }
 
-
+const statusObj: StatusObj = {
+  1: { title: 'current', color: 'primary' },
+  2: { title: 'professional', color: 'success' },
+  3: { title: 'rejected', color: 'error' },
+  4: { title: 'resigned', color: 'warning' },
+  5: { title: 'applied', color: 'info' }
+}
 
 const columns: GridColDef[] = [
   {
     flex: 0.25,
     minWidth: 290,
     field: 'full_name',
-    headerName: 'Order Number',
+    headerName: 'Name',
     renderCell: (params: GridRenderCellParams) => {
       const { row } = params
 
@@ -74,17 +88,6 @@ const columns: GridColDef[] = [
   },
   {
     flex: 0.175,
-    minWidth: 110,
-    field: 'salary',
-    headerName: 'Customer Name',
-    renderCell: (params: GridRenderCellParams) => (
-      <Typography variant='body2' sx={{ color: 'text.primary' }}>
-        {params.row.salary}
-      </Typography>
-    )
-  },
-  {
-    flex: 0.175,
     type: 'date',
     minWidth: 120,
     headerName: 'Date',
@@ -95,10 +98,52 @@ const columns: GridColDef[] = [
         {params.row.start_date}
       </Typography>
     )
+  },
+  {
+    flex: 0.175,
+    minWidth: 110,
+    field: 'salary',
+    headerName: 'Salary',
+    renderCell: (params: GridRenderCellParams) => (
+      <Typography variant='body2' sx={{ color: 'text.primary' }}>
+        {params.row.salary}
+      </Typography>
+    )
+  },
+  {
+    flex: 0.125,
+    field: 'age',
+    minWidth: 80,
+    headerName: 'Age',
+    renderCell: (params: GridRenderCellParams) => (
+      <Typography variant='body2' sx={{ color: 'text.primary' }}>
+        {params.row.age}
+      </Typography>
+    )
+  },
+  {
+    flex: 0.175,
+    minWidth: 140,
+    field: 'status',
+    headerName: 'Status',
+    renderCell: (params: GridRenderCellParams) => {
+      const status = statusObj[params.row.status]
+
+      return (
+        <CustomChip
+          rounded
+          size='small'
+          skin='light'
+          color={status.color}
+          label={status.title}
+          sx={{ '& .MuiChip-label': { textTransform: 'capitalize' } }}
+        />
+      )
+    }
   }
 ]
 
-const TableServerSide = () => {
+const orderTableServerSide = () => {
   // ** States
   const [total, setTotal] = useState<number>(0)
   const [sort, setSort] = useState<SortType>('asc')
@@ -151,8 +196,9 @@ const TableServerSide = () => {
   }
 
   return (
-    <Card>
-      <CardHeader title='Orders' />
+      <Card>
+      <CardHeader title='Server Side' />
+        <h1>hello</h1>
       <DataGrid
         autoHeight
         pagination
@@ -183,4 +229,4 @@ const TableServerSide = () => {
   )
 }
 
-export default TableServerSide
+export default orderTableServerSide
