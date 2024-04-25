@@ -9,6 +9,7 @@ import CardHeader from '@mui/material/CardHeader'
 import { DataGrid, GridSortModel, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { DateType } from 'src/types/forms/reactDatepickerTypes'
 import Fab from '@mui/material/Fab'
+
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
@@ -21,12 +22,12 @@ import ServerSideToolbar from 'src/views/table/data-grid/ServerSideToolbar'
 
 // ** Types Imports
 import { DataGridRowType } from 'src/@fake-db/types'
-import DatePicker, { ReactDatePickerProps } from 'react-datepicker'
+import DatePicker from 'react-datepicker'
 import CustomInput from './DatePicker/CustomInput'
-import PickersBasic from 'src/views/forms/form-elements/pickers/PickersBasic'
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import Grid from '@mui/material/Grid';
 import { useRouter } from 'next/router';
+
 type SortType = 'asc' | 'desc' | undefined | null
 
 const columns: GridColDef[] = [
@@ -67,7 +68,7 @@ const columns: GridColDef[] = [
   },
 ]
 
-const orderTableServerSide = () => {
+const OrderTableServerSide = () => {
   // ** States
   const [total, setTotal] = useState<number>(0)
   const [sort, setSort] = useState<SortType>('asc')
@@ -185,4 +186,4 @@ const orderTableServerSide = () => {
   )
 }
 
-export default orderTableServerSide
+export default OrderTableServerSide
