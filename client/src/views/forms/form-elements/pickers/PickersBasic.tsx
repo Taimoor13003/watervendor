@@ -20,6 +20,7 @@ const PickersBasic = ({ popperPlacement }: { popperPlacement: ReactDatePickerPro
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap' }} className='demo-space-x'>
       <div>
+        <h1></h1>
         <DatePicker
           selected={date}
           id='basic-input'
@@ -55,4 +56,4 @@ const PickersBasic = ({ popperPlacement }: { popperPlacement: ReactDatePickerPro
   )
 }
 
-export default PickersBasic
+export default PickersBasic;

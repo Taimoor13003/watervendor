@@ -6,23 +6,37 @@ import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import Typography from '@mui/material/Typography'
 import CardHeader from '@mui/material/CardHeader'
-import { DataGrid, GridColDef, GridRenderCellParams, GridSortModel } from '@mui/x-data-grid'
+import { DataGrid, GridSortModel, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import { DateType } from 'src/types/forms/reactDatepickerTypes'
+import Fab from '@mui/material/Fab'
+
+// ** Icon Imports
+import Icon from 'src/@core/components/icon'
+
 
 // ** ThirdParty Components
 import axios from 'axios'
 
 // ** Custom Components
-import CustomAvatar from 'src/@core/components/mui/avatar'
 import ServerSideToolbar from 'src/views/table/data-grid/ServerSideToolbar'
 
 // ** Types Imports
-import { ThemeColor } from 'src/@core/layouts/types'
 import { DataGridRowType } from 'src/@fake-db/types'
+import DatePicker from 'react-datepicker'
+import CustomInput from './DatePicker/CustomInput'
+import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
+import Grid from '@mui/material/Grid';
+import { useRouter } from 'next/router';
+
+import CustomAvatar from 'src/@core/components/mui/avatar'
+
+// ** Types Imports
+import { ThemeColor } from 'src/@core/layouts/types'
+
+type SortType = 'asc' | 'desc' | undefined | null
 
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
-
-type SortType = 'asc' | 'desc' | undefined | null
 
 // ** renders client column
 const renderClient = (params: GridRenderCellParams) => {
@@ -45,7 +59,6 @@ const renderClient = (params: GridRenderCellParams) => {
     )
   }
 }
-
 
 
 const columns: GridColDef[] = [
@@ -98,7 +111,7 @@ const columns: GridColDef[] = [
   }
 ]
 
-const TableServerSide = () => {
+const OrderTableServerSide = () => {
   // ** States
   const [total, setTotal] = useState<number>(0)
   const [sort, setSort] = useState<SortType>('asc')
@@ -106,6 +119,8 @@ const TableServerSide = () => {
   const [searchValue, setSearchValue] = useState<string>('')
   const [sortColumn, setSortColumn] = useState<string>('full_name')
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 7 })
+  const [date, setDate] = useState<DateType>(new Date())
+  const router = useRouter()
 
   function loadServerRows(currentPage: number, data: DataGridRowType[]) {
     return data.slice(currentPage * paginationModel.pageSize, (currentPage + 1) * paginationModel.pageSize)
@@ -152,35 +167,66 @@ const TableServerSide = () => {
 
   return (
     <Card>
-      <CardHeader title='Orders' />
-      <DataGrid
-        autoHeight
-        pagination
-        rows={rows}
-        rowCount={total}
-        columns={columns}
-        checkboxSelection
-        sortingMode='server'
-        paginationMode='server'
-        pageSizeOptions={[7, 10, 25, 50]}
-        paginationModel={paginationModel}
-        onSortModelChange={handleSortModel}
-        slots={{ toolbar: ServerSideToolbar }}
-        onPaginationModelChange={setPaginationModel}
-        slotProps={{
-          baseButton: {
-            size: 'medium',
-            variant: 'tonal'
-          },
-          toolbar: {
-            value: searchValue,
-            clearSearch: () => handleSearch(''),
-            onChange: (event: ChangeEvent<HTMLInputElement>) => handleSearch(event.target.value)
-          }
-        }}
-      />
+      <DatePickerWrapper>
+        <CardHeader title='Orders' />
+
+        <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
+          <Box display='flex' gap={2}>
+            <DatePicker
+              selected={date}
+              id='basic-input'
+              popperPlacement={'bottom-start'}
+              onChange={(date: Date) => setDate(date)}
+              placeholderText='Click to select a date'
+              customInput={<CustomInput label='From' />}
+            />
+            <DatePicker
+              selected={date}
+              id='basic-input'
+              popperPlacement={'bottom-start'}
+              onChange={(date: Date) => setDate(date)}
+              placeholderText='Click to select a date'
+              customInput={<CustomInput label='To' />}
+            />
+          </Box>
+          <Box>
+            <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
+              <Icon icon='tabler:plus' />
+              Create New Order
+            </Fab>
+          </Box>
+        </Grid>
+
+
+        <DataGrid
+          autoHeight
+          pagination
+          rows={rows}
+          rowCount={total}
+          columns={columns || []}
+          checkboxSelection
+          sortingMode='server'
+          paginationMode='server'
+          pageSizeOptions={[7, 10, 25, 50]}
+          paginationModel={paginationModel}
+          onSortModelChange={handleSortModel}
+          slots={{ toolbar: ServerSideToolbar }}
+          onPaginationModelChange={setPaginationModel}
+          slotProps={{
+            baseButton: {
+              size: 'medium',
+              variant: 'tonal'
+            },
+            toolbar: {
+              value: searchValue,
+              clearSearch: () => handleSearch(''),
+              onChange: (event: ChangeEvent<HTMLInputElement>) => handleSearch(event.target.value)
+            }
+          }}
+        />
+      </DatePickerWrapper>
     </Card>
   )
 }
 
-export default TableServerSide
+export default OrderTableServerSide
