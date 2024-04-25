@@ -28,9 +28,74 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import Grid from '@mui/material/Grid';
 import { useRouter } from 'next/router';
 
+import CustomAvatar from 'src/@core/components/mui/avatar'
+
+// ** Types Imports
+import { ThemeColor } from 'src/@core/layouts/types'
+
 type SortType = 'asc' | 'desc' | undefined | null
 
+// ** Utils Import
+import { getInitials } from 'src/@core/utils/get-initials'
+
+// ** renders client column
+const renderClient = (params: GridRenderCellParams) => {
+  const { row } = params
+  const stateNum = Math.floor(Math.random() * 6)
+  const states = ['success', 'error', 'warning', 'info', 'primary', 'secondary']
+  const color = states[stateNum]
+
+  if (row.avatar.length) {
+    return <CustomAvatar src={`/images/avatars/${row.avatar}`} sx={{ mr: 3, width: '1.875rem', height: '1.875rem' }} />
+  } else {
+    return (
+      <CustomAvatar
+        skin='light'
+        color={color as ThemeColor}
+        sx={{ mr: 3, fontSize: '.8rem', width: '1.875rem', height: '1.875rem' }}
+      >
+        {getInitials(row.full_name ? row.full_name : 'John Doe')}
+      </CustomAvatar>
+    )
+  }
+}
+
+
 const columns: GridColDef[] = [
+  {
+    flex: 0.25,
+    minWidth: 290,
+    field: 'full_name',
+    headerName: 'Order Number',
+    renderCell: (params: GridRenderCellParams) => {
+      const { row } = params
+
+      return (
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          {renderClient(params)}
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+            <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
+              {row.full_name}
+            </Typography>
+            <Typography noWrap variant='caption'>
+              {row.email}
+            </Typography>
+          </Box>
+        </Box>
+      )
+    }
+  },
+  {
+    flex: 0.175,
+    minWidth: 110,
+    field: 'salary',
+    headerName: 'Customer Name',
+    renderCell: (params: GridRenderCellParams) => (
+      <Typography variant='body2' sx={{ color: 'text.primary' }}>
+        {params.row.salary}
+      </Typography>
+    )
+  },
   {
     flex: 0.175,
     type: 'date',
@@ -43,29 +108,7 @@ const columns: GridColDef[] = [
         {params.row.start_date}
       </Typography>
     )
-  },
-  {
-    flex: 0.175,
-    minWidth: 110,
-    field: 'salary',
-    headerName: 'Salary',
-    renderCell: (params: GridRenderCellParams) => (
-      <Typography variant='body2' sx={{ color: 'text.primary' }}>
-        {params.row.salary}
-      </Typography>
-    )
-  },
-  {
-    flex: 0.125,
-    field: 'age',
-    minWidth: 80,
-    headerName: 'Age',
-    renderCell: (params: GridRenderCellParams) => (
-      <Typography variant='body2' sx={{ color: 'text.primary' }}>
-        {params.row.age}
-      </Typography>
-    )
-  },
+  }
 ]
 
 const OrderTableServerSide = () => {
@@ -125,7 +168,7 @@ const OrderTableServerSide = () => {
   return (
     <Card>
       <DatePickerWrapper>
-        <CardHeader title='Server Side' />
+        <CardHeader title='Orders' />
 
         <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
           <Box display='flex' gap={2}>
