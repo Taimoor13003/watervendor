@@ -81,13 +81,14 @@ const CardSnippet = (props: CardSnippetProps) => {
         {...(hidden
           ? {}
           : {
-              action: (
-                <IconButton onClick={() => setShowCode(!showCode)}>
+            action: (
+              <IconButton onClick={() => setShowCode(!showCode)}>
                   <Icon icon='tabler:code' fontSize={20} />
                 </IconButton>
               )
             })}
-      />
+            />
+            <h1>hi</h1>
       <CardContent>{children}</CardContent>
       {hidden ? null : (
         <Collapse in={showCode}>

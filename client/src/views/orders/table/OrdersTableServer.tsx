@@ -29,6 +29,7 @@ import Grid from '@mui/material/Grid';
 import { useRouter } from 'next/router';
 
 import CustomAvatar from 'src/@core/components/mui/avatar'
+import DialougeComponent from './DialougeComponent'
 
 // ** Types Imports
 import { ThemeColor } from 'src/@core/layouts/types'
@@ -37,8 +38,11 @@ type SortType = 'asc' | 'desc' | undefined | null
 
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
+import Button from '@mui/material/Button'
+import Edit from 'src/views/apps/invoice/edit/Edit'
 
 // ** renders client column
+
 const renderClient = (params: GridRenderCellParams) => {
   const { row } = params
   const stateNum = Math.floor(Math.random() * 6)
@@ -59,57 +63,12 @@ const renderClient = (params: GridRenderCellParams) => {
     )
   }
 }
+const deleteHandler = () => {
 
 
-const columns: GridColDef[] = [
-  {
-    flex: 0.25,
-    minWidth: 290,
-    field: 'full_name',
-    headerName: 'Order Number',
-    renderCell: (params: GridRenderCellParams) => {
-      const { row } = params
+}
 
-      return (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {renderClient(params)}
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-              {row.full_name}
-            </Typography>
-            <Typography noWrap variant='caption'>
-              {row.email}
-            </Typography>
-          </Box>
-        </Box>
-      )
-    }
-  },
-  {
-    flex: 0.175,
-    minWidth: 110,
-    field: 'salary',
-    headerName: 'Customer Name',
-    renderCell: (params: GridRenderCellParams) => (
-      <Typography variant='body2' sx={{ color: 'text.primary' }}>
-        {params.row.salary}
-      </Typography>
-    )
-  },
-  {
-    flex: 0.175,
-    type: 'date',
-    minWidth: 120,
-    headerName: 'Date',
-    field: 'start_date',
-    valueGetter: params => new Date(params.value),
-    renderCell: (params: GridRenderCellParams) => (
-      <Typography variant='body2' sx={{ color: 'text.primary' }}>
-        {params.row.start_date}
-      </Typography>
-    )
-  }
-]
+
 
 const OrderTableServerSide = () => {
   // ** States
@@ -119,6 +78,7 @@ const OrderTableServerSide = () => {
   const [searchValue, setSearchValue] = useState<string>('')
   const [sortColumn, setSortColumn] = useState<string>('full_name')
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 7 })
+  const [open, setOpen] = useState<boolean>(false)
   const [date, setDate] = useState<DateType>(new Date())
   const router = useRouter()
 
@@ -165,11 +125,81 @@ const OrderTableServerSide = () => {
     fetchTableData(sort, value, sortColumn)
   }
 
+  const columns: GridColDef[] = [
+    {
+      flex: 0.25,
+      minWidth: 290,
+      field: 'full_name',
+      headerName: 'Order Number',
+      renderCell: (params: GridRenderCellParams) => {
+        const { row } = params
+  
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {renderClient(params)}
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
+                {row.full_name}
+              </Typography>
+              <Typography noWrap variant='caption'>
+                {row.email}
+              </Typography>
+            </Box>
+          </Box>
+        )
+      }
+    },
+    {
+      flex: 0.175,
+      minWidth: 110,
+      field: 'salary',
+      headerName: 'Customer Name',
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.salary}
+        </Typography>
+      )
+    }
+    ,
+    {
+      flex: 0.175,
+      type: 'date',
+      minWidth: 120,
+      headerName: 'Date',
+      field: 'start_date',
+      valueGetter: params => new Date(params.value),
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.start_date}
+        </Typography>
+      )
+    }
+  
+    , {
+      flex: 0.25,
+      minWidth: 290,
+      field: 'Actions',
+      headerName: 'Actions',
+      renderCell: (params: GridRenderCellParams) => {
+        const { row } = params
+  
+        return (
+          
+          
+          
+            <><Button variant='contained' onClick={() => router.push('/app/orders/create')}>Edit</Button>
+            <Button variant='contained' onClick={() => setOpen(true)}>Delete</Button>
+            </>
+          
+        )
+      }
+    }
+  ]
+
   return (
     <Card>
       <DatePickerWrapper>
         <CardHeader title='Orders' />
-
         <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
           <Box display='flex' gap={2}>
             <DatePicker
@@ -188,6 +218,7 @@ const OrderTableServerSide = () => {
               placeholderText='Click to select a date'
               customInput={<CustomInput label='To' />}
             />
+
           </Box>
           <Box>
             <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
@@ -196,7 +227,7 @@ const OrderTableServerSide = () => {
             </Fab>
           </Box>
         </Grid>
-
+        <Button variant='contained'>Go</Button>
 
         <DataGrid
           autoHeight
@@ -225,6 +256,10 @@ const OrderTableServerSide = () => {
           }}
         />
       </DatePickerWrapper>
+
+
+      <DialougeComponent open={open} setOpen={setOpen} />
+
     </Card>
   )
 }
