@@ -106,7 +106,7 @@ const FormValidationSchema = () => {
                     aria-describedby='validation-schema-first-name'
                     {...(errors.firstName && { helperText: errors.firstName.message })}
                   />
-                  
+
                 )}
               />
             </Grid>
@@ -205,59 +205,7 @@ const FormValidationSchema = () => {
                 )}
               />
             </Grid>
-            {/* <Grid item xs={12}>
-              <Controller
-                name='email'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    type='email'
-                    value={value}
-                    label='Email'
-                    onChange={onChange}
-                    error={Boolean(errors.email)}
-                    placeholder='carterleonard@gmail.com'
-                    aria-describedby='validation-schema-email'
-                    {...(errors.email && { helperText: errors.email.message })}
-                  />
-                )}
-              />
-            </Grid> */}
-            {/* <Grid item xs={12}>
-              <Controller
-                name='password'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Password'
-                    onChange={onChange}
-                    id='validation-schema-password'
-                    error={Boolean(errors.password)}
-                    type={state.showPassword ? 'text' : 'password'}
-                    {...(errors.password && { helperText: errors.password.message })}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position='end'>
-                          <IconButton
-                            edge='end'
-                            onClick={handleClickShowPassword}
-                            onMouseDown={e => e.preventDefault()}
-                            aria-label='toggle password visibility'
-                          >
-                            <Icon fontSize='1.25rem' icon={state.showPassword ? 'tabler:eye' : 'tabler:eye-off'} />
-                          </IconButton>
-                        </InputAdornment>
-                      )
-                    }}
-                  />
-                )}
-              />
-            </Grid> */}
+
 
             <Grid item xs={12}>
               <Button type='submit' variant='contained'>

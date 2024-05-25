@@ -11,7 +11,7 @@ import PageHeader from 'src/@core/components/page-header'
 
 // ** Demo Components Imports
 import FormValidationBasic from 'src/views/forms/form-validation/FormValidationBasic'
-import FormValidationAsync from 'src/views/forms/form-validation/FormValidationAsync'
+import FormValidationAsync from 'src/views/forms/form-wizard/FormValidationAsync'
 import FormValidationSchema from 'src/views/forms/form-validation/FormValidationSchema'
 
 // ** Styled Component

@@ -86,7 +86,7 @@ const FormValidationSchema = () => {
 
   return (
     <Card>
-      <CardHeader title='Customers Form' />
+      <CardHeader title='Products Form' />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={5}>

@@ -1,11 +1,12 @@
 import React from 'react'
-import VoucherTable from 'src/views/orders/table/VoucherTable'
+import AccountTable from 'src/views/orders/table/AccountTable'
+
 
 function index() {
   return (
     <div>
-<VoucherTable />
-        
+      <AccountTable />
+
     </div>
   )
 }

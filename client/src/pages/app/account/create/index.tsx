@@ -1,11 +1,10 @@
 import React from 'react'
-import VoucherTable from 'src/views/orders/table/VoucherTable'
+import AccountForm from '../AccountForm'
 
 function index() {
   return (
     <div>
-<VoucherTable />
-        
+        <AccountForm />
     </div>
   )
 }

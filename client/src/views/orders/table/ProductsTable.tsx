@@ -63,12 +63,6 @@ const renderClient = (params: GridRenderCellParams) => {
     )
   }
 }
-const deleteHandler = () => {
-
-
-}
-
-
 
 const OrderTableServerSide = () => {
   // ** States
@@ -184,10 +178,7 @@ const OrderTableServerSide = () => {
         const { row } = params
 
         return (
-
-
-
-          <><Button variant='contained' onClick={() => router.push('/app/orders/create')}>Edit</Button>
+          <><Button variant='contained' onClick={() => router.push('/app/products/create')}>Edit</Button>
             <Button variant='contained' onClick={() => setOpen(true)}>Delete</Button>
           </>
 
@@ -199,7 +190,7 @@ const OrderTableServerSide = () => {
   return (
     <Card>
       <DatePickerWrapper>
-        <CardHeader title='Orders' />
+        <CardHeader title='Products Table' />
         <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
           <Box display='flex' gap={2}>
             <DatePicker
@@ -221,9 +212,9 @@ const OrderTableServerSide = () => {
 
           </Box>
           <Box>
-            <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
+            <Fab color='primary' variant='extended' onClick={() => router.push('/app/products/create')}>
               <Icon icon='tabler:plus' />
-              Create New Order
+              Create New
             </Fab>
           </Box>
         </Grid>

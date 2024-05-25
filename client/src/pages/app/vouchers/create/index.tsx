@@ -1,9 +1,9 @@
 import React from 'react'
-import AccountForm from './AccountForm'
+import VouchersForm from '../VouchersForm'
 
 function index() {
   return (
-    <div><AccountForm /></div>
+    <div><VouchersForm /></div>
   )
 }
 

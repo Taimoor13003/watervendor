@@ -1,10 +1,11 @@
 import React from 'react'
-import CustomerForm from './CustomerForm'
+import CustomerTable from 'src/views/orders/table/CustomerTable'
+
 
 function index() {
   return (
     <div>
-        <CustomerForm />
+      <CustomerTable />
     </div>
   )
 }
