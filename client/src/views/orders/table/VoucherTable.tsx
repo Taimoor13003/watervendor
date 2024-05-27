@@ -121,7 +121,7 @@ const VoucherTable = () => {
             flex: 0.25,
             minWidth: 290,
             field: 'full_name',
-            headerName: 'Order Number',
+            headerName: 'Voucher No.',
             renderCell: (params: GridRenderCellParams) => {
                 const { row } = params
 
@@ -144,7 +144,7 @@ const VoucherTable = () => {
             flex: 0.175,
             minWidth: 110,
             field: 'salary',
-            headerName: 'Customer Name',
+            headerName: 'Voucher Type',
             renderCell: (params: GridRenderCellParams) => (
                 <Typography variant='body2' sx={{ color: 'text.primary' }}>
                     {params.row.salary}
@@ -156,7 +156,7 @@ const VoucherTable = () => {
             flex: 0.175,
             type: 'date',
             minWidth: 120,
-            headerName: 'Date',
+            headerName: 'Voucher Date',
             field: 'start_date',
             valueGetter: params => new Date(params.value),
             renderCell: (params: GridRenderCellParams) => (
@@ -165,8 +165,24 @@ const VoucherTable = () => {
                 </Typography>
             )
         }
+        ,
 
-        , {
+        {
+            flex: 0.175,
+            type: 'date',
+            minWidth: 120,
+            headerName: 'Voucher Amount',
+            field: 'amount',
+            valueGetter: params => new Date(params.value),
+            renderCell: (params: GridRenderCellParams) => (
+                <Typography variant='body2' sx={{ color: 'text.primary' }}>
+                    {params.row.amount}
+                </Typography>
+            )
+        }
+        ,
+
+        {
             flex: 0.25,
             minWidth: 290,
             field: 'Actions',

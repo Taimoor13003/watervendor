@@ -124,7 +124,7 @@ const OrderTableServerSide = () => {
       flex: 0.25,
       minWidth: 290,
       field: 'full_name',
-      headerName: 'Order Number',
+      headerName: 'Customer Name',
       renderCell: (params: GridRenderCellParams) => {
         const { row } = params
 
@@ -147,7 +147,7 @@ const OrderTableServerSide = () => {
       flex: 0.175,
       minWidth: 110,
       field: 'salary',
-      headerName: 'Customer Name',
+      headerName: 'Customer Type',
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {params.row.salary}
@@ -159,7 +159,7 @@ const OrderTableServerSide = () => {
       flex: 0.175,
       type: 'date',
       minWidth: 120,
-      headerName: 'Date',
+      headerName: 'Payment Mode',
       field: 'start_date',
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
@@ -168,8 +168,37 @@ const OrderTableServerSide = () => {
         </Typography>
       )
     }
+    ,
+    {
+      flex: 0.175,
+      type: 'date',
+      minWidth: 120,
+      headerName: 'Telephone (Delivery)',
+      field: 'number',
+      valueGetter: params => new Date(params.value),
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.number}
+        </Typography>
+      )
+    }
+    ,
 
-    , {
+    {
+      flex: 0.175,
+      type: 'date',
+      minWidth: 120,
+      headerName: 'Telephone (Office)',
+      field: 'numberOffice',
+      valueGetter: params => new Date(params.value),
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.numberOffice}
+        </Typography>
+      )
+    }
+    ,
+    {
       flex: 0.25,
       minWidth: 290,
       field: 'Actions',
