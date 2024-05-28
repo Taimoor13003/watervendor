@@ -123,7 +123,7 @@ const OrderTableServerSide = () => {
       flex: 0.25,
       minWidth: 290,
       field: 'full_name',
-      headerName: 'Order Number',
+      headerName: 'Account Name',
       renderCell: (params: GridRenderCellParams) => {
         const { row } = params
 
@@ -146,7 +146,7 @@ const OrderTableServerSide = () => {
       flex: 0.175,
       minWidth: 110,
       field: 'salary',
-      headerName: 'Customer Name',
+      headerName: 'Account Code',
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {params.row.salary}
@@ -154,21 +154,23 @@ const OrderTableServerSide = () => {
       )
     }
     ,
+
     {
       flex: 0.175,
       type: 'date',
       minWidth: 120,
       headerName: 'Date',
-      field: 'start_date',
+      field: 'balance',
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.start_date}
+          {params.row.balance}
         </Typography>
       )
     }
 
-    , {
+    ,
+    {
       flex: 0.25,
       minWidth: 290,
       field: 'Actions',
@@ -208,6 +210,7 @@ const OrderTableServerSide = () => {
               placeholderText='Click to select a date'
               customInput={<CustomInput label='To' />}
             />
+            <Button variant='contained'>Go</Button>
 
           </Box>
           <Box>
@@ -217,7 +220,6 @@ const OrderTableServerSide = () => {
             </Fab>
           </Box>
         </Grid>
-        <Button variant='contained'>Go</Button>
 
         <DataGrid
           autoHeight

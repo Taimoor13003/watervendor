@@ -124,7 +124,7 @@ const OrderTableServerSide = () => {
       flex: 0.25,
       minWidth: 290,
       field: 'full_name',
-      headerName: 'Order Number',
+      headerName: 'Products Code',
       renderCell: (params: GridRenderCellParams) => {
         const { row } = params
 
@@ -147,7 +147,7 @@ const OrderTableServerSide = () => {
       flex: 0.175,
       minWidth: 110,
       field: 'salary',
-      headerName: 'Customer Name',
+      headerName: 'Products Name',
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {params.row.salary}
@@ -159,7 +159,7 @@ const OrderTableServerSide = () => {
       flex: 0.175,
       type: 'date',
       minWidth: 120,
-      headerName: 'Date',
+      headerName: 'Units in Stock',
       field: 'start_date',
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
@@ -168,7 +168,35 @@ const OrderTableServerSide = () => {
         </Typography>
       )
     }
+    ,
+    {
+      flex: 0.175,
+      type: 'date',
+      minWidth: 120,
+      headerName: 'Rate Per Unit(Cash)',
+      field: 'ratePerUnit',
+      valueGetter: params => new Date(params.value),
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.ratePerUnit}
+        </Typography>
+      )
+    }
 
+    ,
+    {
+      flex: 0.175,
+      type: 'date',
+      minWidth: 120,
+      headerName: 'Rate Per Unit(Count)',
+      field: 'ratePerUnitCount',
+      valueGetter: params => new Date(params.value),
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.ratePerUnitCount}
+        </Typography>
+      )
+    }
     , {
       flex: 0.25,
       minWidth: 290,
@@ -178,9 +206,16 @@ const OrderTableServerSide = () => {
         const { row } = params
 
         return (
-          <><Button variant='contained' onClick={() => router.push('/app/products/create')}>Edit</Button>
+
+          <div>
+
+            <Button variant='contained' onClick={() => router.push('/app/products/create')}>Edit</Button>
+
+
+
             <Button variant='contained' onClick={() => setOpen(true)}>Delete</Button>
-          </>
+
+          </div>
 
         )
       }
@@ -209,6 +244,7 @@ const OrderTableServerSide = () => {
               placeholderText='Click to select a date'
               customInput={<CustomInput label='To' />}
             />
+            <Button variant='contained'>Go</Button>
 
           </Box>
           <Box>
@@ -218,7 +254,6 @@ const OrderTableServerSide = () => {
             </Fab>
           </Box>
         </Grid>
-        <Button variant='contained'>Go</Button>
 
         <DataGrid
           autoHeight

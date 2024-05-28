@@ -221,6 +221,7 @@ const VoucherTable = () => {
                             placeholderText='Click to select a date'
                             customInput={<CustomInput label='To' />}
                         />
+                        <Button variant='contained'>Go</Button>
 
                     </Box>
                     <Box>
@@ -230,7 +231,6 @@ const VoucherTable = () => {
                         </Fab>
                     </Box>
                 </Grid>
-                <Button variant='contained'>Go</Button>
 
                 <DataGrid
                     autoHeight
