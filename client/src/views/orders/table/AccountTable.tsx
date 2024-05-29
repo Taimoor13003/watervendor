@@ -179,9 +179,10 @@ const OrderTableServerSide = () => {
         const { row } = params
 
         return (
-          <><Button variant='contained' onClick={() => router.push('/app/account/create')}>Edit</Button>
+          <Box display="flex" gap={3}>
+            <Button variant='contained' onClick={() => router.push('/app/vouchers/create')}>Edit</Button>
             <Button variant='contained' onClick={() => setOpen(true)}>Delete</Button>
-          </>
+          </Box>
 
         )
       }

@@ -184,6 +184,7 @@ const OrderTableServerSide = () => {
     }
 
     ,
+
     {
       flex: 0.175,
       type: 'date',
@@ -206,16 +207,10 @@ const OrderTableServerSide = () => {
         const { row } = params
 
         return (
-
-          <div>
-
+          <Box display="flex" gap={3}>
             <Button variant='contained' onClick={() => router.push('/app/products/create')}>Edit</Button>
-
-
-
             <Button variant='contained' onClick={() => setOpen(true)}>Delete</Button>
-
-          </div>
+          </Box>
 
         )
       }
