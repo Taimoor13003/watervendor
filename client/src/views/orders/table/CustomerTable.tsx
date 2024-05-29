@@ -127,7 +127,6 @@ const OrderTableServerSide = () => {
       headerName: 'Customer Name',
       renderCell: (params: GridRenderCellParams) => {
         const { row } = params
-
         return (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {renderClient(params)}
@@ -178,7 +177,7 @@ const OrderTableServerSide = () => {
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.number}
+          {Math.random()}
         </Typography>
       )
     }
@@ -193,7 +192,7 @@ const OrderTableServerSide = () => {
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.numberOffice}
+          {Math.random()}
         </Typography>
       )
     }

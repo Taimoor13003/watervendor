@@ -178,7 +178,7 @@ const OrderTableServerSide = () => {
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.ratePerUnit}
+          {123}
         </Typography>
       )
     }
@@ -194,7 +194,7 @@ const OrderTableServerSide = () => {
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.ratePerUnitCount}
+          {1313413412}
         </Typography>
       )
     }

@@ -164,7 +164,7 @@ const OrderTableServerSide = () => {
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.balance}
+          {Date.now()}
         </Typography>
       )
     }
