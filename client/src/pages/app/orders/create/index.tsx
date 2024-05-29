@@ -1,10 +1,9 @@
 import React from 'react'
-import FormLayoutsBasic from 'src/views/forms/form-layouts/FormLayoutsBasic';
-
+import Formvalidation2 from 'src/views/forms/form-validation/Formvalidation2';
 const createOrder = () => {
     return (
-        <FormLayoutsBasic />
+        <Formvalidation2 />
     )
 }
 
-export default createOrder
+export default createOrder;

@@ -63,13 +63,6 @@ const renderClient = (params: GridRenderCellParams) => {
     )
   }
 }
-const deleteHandler = () => {
-
-
-}
-
-
-
 const OrderTableServerSide = () => {
   // ** States
   const [total, setTotal] = useState<number>(0)
@@ -130,7 +123,7 @@ const OrderTableServerSide = () => {
       flex: 0.25,
       minWidth: 290,
       field: 'full_name',
-      headerName: 'Order Number',
+      headerName: 'Account Name',
       renderCell: (params: GridRenderCellParams) => {
         const { row } = params
 
@@ -153,7 +146,7 @@ const OrderTableServerSide = () => {
       flex: 0.175,
       minWidth: 110,
       field: 'salary',
-      headerName: 'Customer Name',
+      headerName: 'Account Code',
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {params.row.salary}
@@ -161,21 +154,23 @@ const OrderTableServerSide = () => {
       )
     }
     ,
+
     {
       flex: 0.175,
       type: 'date',
       minWidth: 120,
       headerName: 'Date',
-      field: 'start_date',
+      field: 'balance',
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.start_date}
+          {Date.now()}
         </Typography>
       )
     }
 
-    , {
+    ,
+    {
       flex: 0.25,
       minWidth: 290,
       field: 'Actions',
@@ -184,8 +179,6 @@ const OrderTableServerSide = () => {
         const { row } = params
 
         return (
-
-
           <Box display="flex" gap={3}>
             <Button variant='contained' onClick={() => router.push('/app/vouchers/create')}>Edit</Button>
             <Button variant='contained' onClick={() => setOpen(true)}>Delete</Button>
@@ -199,7 +192,7 @@ const OrderTableServerSide = () => {
   return (
     <Card>
       <DatePickerWrapper>
-        <CardHeader title='Orders' />
+        <CardHeader title="Account Table" />
         <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
           <Box display='flex' gap={2}>
             <DatePicker
@@ -222,9 +215,9 @@ const OrderTableServerSide = () => {
 
           </Box>
           <Box>
-            <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
+            <Fab color='primary' variant='extended' onClick={() => router.push('/app/accounts/create')}>
               <Icon icon='tabler:plus' />
-              Create New Order
+              Create New
             </Fab>
           </Box>
         </Grid>

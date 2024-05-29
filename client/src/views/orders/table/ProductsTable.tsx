@@ -63,12 +63,6 @@ const renderClient = (params: GridRenderCellParams) => {
     )
   }
 }
-const deleteHandler = () => {
-
-
-}
-
-
 
 const OrderTableServerSide = () => {
   // ** States
@@ -130,7 +124,7 @@ const OrderTableServerSide = () => {
       flex: 0.25,
       minWidth: 290,
       field: 'full_name',
-      headerName: 'Order Number',
+      headerName: 'Products Code',
       renderCell: (params: GridRenderCellParams) => {
         const { row } = params
 
@@ -153,7 +147,7 @@ const OrderTableServerSide = () => {
       flex: 0.175,
       minWidth: 110,
       field: 'salary',
-      headerName: 'Customer Name',
+      headerName: 'Products Name',
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {params.row.salary}
@@ -165,7 +159,7 @@ const OrderTableServerSide = () => {
       flex: 0.175,
       type: 'date',
       minWidth: 120,
-      headerName: 'Date',
+      headerName: 'Units in Stock',
       field: 'start_date',
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
@@ -174,7 +168,36 @@ const OrderTableServerSide = () => {
         </Typography>
       )
     }
+    ,
+    {
+      flex: 0.175,
+      type: 'date',
+      minWidth: 120,
+      headerName: 'Rate Per Unit(Cash)',
+      field: 'ratePerUnit',
+      valueGetter: params => new Date(params.value),
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {123}
+        </Typography>
+      )
+    }
 
+    ,
+
+    {
+      flex: 0.175,
+      type: 'date',
+      minWidth: 120,
+      headerName: 'Rate Per Unit(Count)',
+      field: 'ratePerUnitCount',
+      valueGetter: params => new Date(params.value),
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {1313413412}
+        </Typography>
+      )
+    }
     , {
       flex: 0.25,
       minWidth: 290,
@@ -184,10 +207,8 @@ const OrderTableServerSide = () => {
         const { row } = params
 
         return (
-
-
           <Box display="flex" gap={3}>
-            <Button variant='contained' onClick={() => router.push('/app/vouchers/create')}>Edit</Button>
+            <Button variant='contained' onClick={() => router.push('/app/products/create')}>Edit</Button>
             <Button variant='contained' onClick={() => setOpen(true)}>Delete</Button>
           </Box>
 
@@ -199,7 +220,7 @@ const OrderTableServerSide = () => {
   return (
     <Card>
       <DatePickerWrapper>
-        <CardHeader title='Orders' />
+        <CardHeader title='Products Table' />
         <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
           <Box display='flex' gap={2}>
             <DatePicker
@@ -222,9 +243,9 @@ const OrderTableServerSide = () => {
 
           </Box>
           <Box>
-            <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
+            <Fab color='primary' variant='extended' onClick={() => router.push('/app/products/create')}>
               <Icon icon='tabler:plus' />
-              Create New Order
+              Create New
             </Fab>
           </Box>
         </Grid>

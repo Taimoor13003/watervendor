@@ -46,7 +46,7 @@ const Dialog = () => {
           }}
         >
           <Typography sx={{ mb: 4 }}>
-            Show an alert to the user to convey something or make the user choose from the given options.
+            Are you sure you want to delete??
           </Typography>
           <DialogAlert />
         </CardSnippet>
@@ -86,6 +86,7 @@ const Dialog = () => {
             jsx: source.DialogCustomizedJSXCode
           }}
         >
+          
           <Typography sx={{ mb: 4 }}>
             You can customize the component the way you want using <code>styled</code> hook.
           </Typography>

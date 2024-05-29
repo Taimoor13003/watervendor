@@ -31,7 +31,8 @@ const Buttons = () => {
             tsx: source.ButtonsContainedTSXCode,
             jsx: source.ButtonsContainedJSXCode
           }}
-        >
+          >
+          <h1>hi</h1>
           <Typography>
             Use <code>variant='contained'</code> prop with <code>&lt;Button&gt;</code> component for contained buttons.
           </Typography>
@@ -40,7 +41,7 @@ const Buttons = () => {
       </Grid>
       <Grid item xs={12}>
         <CardSnippet
-          title='Text'
+          title='Text1'
           code={{
             tsx: source.ButtonsTextTSXCode,
             jsx: source.ButtonsTextJSXCode
