@@ -63,7 +63,6 @@ const renderClient = (params: GridRenderCellParams) => {
   }
 }
 
-
 const OrderTableServerSide = () => {
   // ** States
   const [total, setTotal] = useState<number>(0)
@@ -124,11 +123,11 @@ const OrderTableServerSide = () => {
       flex: 0.25,
       minWidth: 290,
       field: 'full_name',
-      headerName: 'Order Number',
+      headerName: 'Customer Name',
       renderCell: (params: GridRenderCellParams) => {
         const { row } = params
-
-        return (
+        
+return (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {renderClient(params)}
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -147,7 +146,7 @@ const OrderTableServerSide = () => {
       flex: 0.175,
       minWidth: 110,
       field: 'salary',
-      headerName: 'Customer Name',
+      headerName: 'Customer Type',
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {params.row.salary}
@@ -159,7 +158,7 @@ const OrderTableServerSide = () => {
       flex: 0.175,
       type: 'date',
       minWidth: 120,
-      headerName: 'Date',
+      headerName: 'Payment Mode',
       field: 'start_date',
       valueGetter: params => new Date(params.value),
       renderCell: (params: GridRenderCellParams) => (
@@ -168,8 +167,43 @@ const OrderTableServerSide = () => {
         </Typography>
       )
     }
+    ,
+    {
+      flex: 0.175,
+      type: 'date',
+      minWidth: 120,
+      headerName: 'Telephone (Delivery)',
+      field: 'number',
+      valueGetter: params => new Date(params.value),
+      renderCell: (
 
-    , {
+        // params: GridRenderCellParams
+      ) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {Math.random()}
+        </Typography>
+      )
+    }
+    ,
+
+    {
+      flex: 0.175,
+      type: 'date',
+      minWidth: 120,
+      headerName: 'Telephone (Office)',
+      field: 'numberOffice',
+      valueGetter: params => new Date(params.value),
+      renderCell: (
+        
+        // params: GridRenderCellParams
+      ) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {Math.random()}
+        </Typography>
+      )
+    }
+    ,
+    {
       flex: 0.25,
       minWidth: 290,
       field: 'Actions',
@@ -180,8 +214,6 @@ const OrderTableServerSide = () => {
          } = params
 
         return (
-
-
           <Box display="flex" gap={3}>
             <Button variant='contained' onClick={() => router.push('/app/vouchers/create')}>Edit</Button>
             <Button variant='contained' onClick={() => setOpen(true)}>Delete</Button>
@@ -195,7 +227,7 @@ const OrderTableServerSide = () => {
   return (
     <Card>
       <DatePickerWrapper>
-        <CardHeader title='Orders' />
+        <CardHeader title='Customer Table' />
         <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
           <Box display='flex' gap={2}>
             <DatePicker
@@ -218,9 +250,9 @@ const OrderTableServerSide = () => {
 
           </Box>
           <Box>
-            <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
+            <Fab color='primary' variant='extended' onClick={() => router.push('/app/customers/create')}>
               <Icon icon='tabler:plus' />
-              Create New Order
+              Create New
             </Fab>
           </Box>
         </Grid>
