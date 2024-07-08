@@ -39,7 +39,6 @@ type SortType = 'asc' | 'desc' | undefined | null
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
 import Button from '@mui/material/Button'
-import Edit from 'src/views/apps/invoice/edit/Edit'
 
 // ** renders client column
 
@@ -176,7 +175,10 @@ const OrderTableServerSide = () => {
       headerName: 'Rate Per Unit(Cash)',
       field: 'ratePerUnit',
       valueGetter: params => new Date(params.value),
-      renderCell: (params: GridRenderCellParams) => (
+      renderCell: (
+
+        // params: GridRenderCellParams
+      ) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {123}
         </Typography>
@@ -192,7 +194,10 @@ const OrderTableServerSide = () => {
       headerName: 'Rate Per Unit(Count)',
       field: 'ratePerUnitCount',
       valueGetter: params => new Date(params.value),
-      renderCell: (params: GridRenderCellParams) => (
+      renderCell: (
+
+        // params: GridRenderCellParams
+      ) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {1313413412}
         </Typography>
@@ -204,7 +209,10 @@ const OrderTableServerSide = () => {
       field: 'Actions',
       headerName: 'Actions',
       renderCell: (params: GridRenderCellParams) => {
-        const { row } = params
+        const {
+
+          //  row
+           } = params
 
         return (
           <Box display="flex" gap={3}>

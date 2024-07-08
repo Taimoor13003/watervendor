@@ -39,7 +39,6 @@ type SortType = 'asc' | 'desc' | undefined | null
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
 import Button from '@mui/material/Button'
-import Edit from 'src/views/apps/invoice/edit/Edit'
 
 // ** renders client column
 
@@ -127,7 +126,8 @@ const OrderTableServerSide = () => {
       headerName: 'Customer Name',
       renderCell: (params: GridRenderCellParams) => {
         const { row } = params
-        return (
+        
+return (
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             {renderClient(params)}
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -175,7 +175,10 @@ const OrderTableServerSide = () => {
       headerName: 'Telephone (Delivery)',
       field: 'number',
       valueGetter: params => new Date(params.value),
-      renderCell: (params: GridRenderCellParams) => (
+      renderCell: (
+
+        // params: GridRenderCellParams
+      ) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {Math.random()}
         </Typography>
@@ -190,7 +193,10 @@ const OrderTableServerSide = () => {
       headerName: 'Telephone (Office)',
       field: 'numberOffice',
       valueGetter: params => new Date(params.value),
-      renderCell: (params: GridRenderCellParams) => (
+      renderCell: (
+        
+        // params: GridRenderCellParams
+      ) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
           {Math.random()}
         </Typography>
@@ -203,7 +209,9 @@ const OrderTableServerSide = () => {
       field: 'Actions',
       headerName: 'Actions',
       renderCell: (params: GridRenderCellParams) => {
-        const { row } = params
+        const { 
+          // row
+         } = params
 
         return (
           <Box display="flex" gap={3}>

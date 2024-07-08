@@ -39,7 +39,6 @@ type SortType = 'asc' | 'desc' | undefined | null
 // ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
 import Button from '@mui/material/Button'
-import Edit from 'src/views/apps/invoice/edit/Edit'
 
 // ** renders client column
 
@@ -63,11 +62,6 @@ const renderClient = (params: GridRenderCellParams) => {
     )
   }
 }
-const deleteHandler = () => {
-
-
-}
-
 
 
 const OrderTableServerSide = () => {
@@ -181,7 +175,9 @@ const OrderTableServerSide = () => {
       field: 'Actions',
       headerName: 'Actions',
       renderCell: (params: GridRenderCellParams) => {
-        const { row } = params
+        const { 
+          // row
+         } = params
 
         return (
 

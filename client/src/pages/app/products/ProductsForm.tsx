@@ -1,14 +1,12 @@
 // ** React Imports
-import { useState } from 'react'
+// import { useState } from 'react'
 
 // ** MUI Imports
 import Card from '@mui/material/Card'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
 import CardHeader from '@mui/material/CardHeader'
-import IconButton from '@mui/material/IconButton'
 import CardContent from '@mui/material/CardContent'
-import InputAdornment from '@mui/material/InputAdornment'
 
 // ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field'
@@ -22,10 +20,10 @@ import { yupResolver } from '@hookform/resolvers/yup'
 // ** Icon Imports
 
 
-interface State {
-  password: string
-  showPassword: boolean
-}
+// interface State {
+//   password: string
+//   showPassword: boolean
+// }
 
 const defaultValues = {
   email: '',
@@ -62,10 +60,10 @@ const schema = yup.object().shape({
 
 const FormValidationSchema = () => {
   // ** States
-  const [state, setState] = useState<State>({
-    password: '',
-    showPassword: false
-  })
+  // const [state, setState] = useState<State>({
+  //   password: '',
+  //   showPassword: false
+  // })
 
   // ** Hook
   const {
@@ -78,9 +76,9 @@ const FormValidationSchema = () => {
     resolver: yupResolver(schema)
   })
 
-  const handleClickShowPassword = () => {
-    setState({ ...state, showPassword: !state.showPassword })
-  }
+  // const handleClickShowPassword = () => {
+  //   setState({ ...state, showPassword: !state.showPassword })
+  // }
 
   const onSubmit = () => toast.success('Form Submitted')
 

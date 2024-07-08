@@ -37,7 +37,6 @@ type SortType = 'asc' | 'desc' | undefined | null
 
 import { getInitials } from 'src/@core/utils/get-initials'
 import Button from '@mui/material/Button'
-import Edit from 'src/views/apps/invoice/edit/Edit'
 
 
 const renderClient = (params: GridRenderCellParams) => {
@@ -174,7 +173,10 @@ const VoucherTable = () => {
             headerName: 'Voucher Amount',
             field: 'amount',
             valueGetter: params => new Date(params.value),
-            renderCell: (params: GridRenderCellParams) => (
+            renderCell: (
+
+                // params: GridRenderCellParams
+            ) => (
                 <Typography variant='body2' sx={{ color: 'text.primary' }}>
                     {Math.random()}
                 </Typography>
@@ -188,7 +190,10 @@ const VoucherTable = () => {
             field: 'Actions',
             headerName: 'Actions',
             renderCell: (params: GridRenderCellParams) => {
-                const { row } = params
+                const {
+
+                    //  row 
+                    } = params
 
                 return (
 
@@ -201,7 +206,8 @@ const VoucherTable = () => {
             }
         }
     ]
-    return (
+    
+return (
         <Card>
             <DatePickerWrapper>
                 <CardHeader title='Voucher Table' />
