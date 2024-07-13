@@ -10,3 +10,5 @@
 // ) {
 //   res.status(200).json({ message: 'Hello from Next.js!' })
 // }
+
+console.log('Hello from Next.js!')

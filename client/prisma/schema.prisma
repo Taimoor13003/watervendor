@@ -1,0 +1,505 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Conversion_Errors {
+  id                Int     @id @default(autoincrement())
+  Object_Type       String? @map("Object Type") @db.VarChar(255)
+  Object_Name       String? @map("Object Name") @db.VarChar(255)
+  Error_Description String? @map("Error Description") @db.VarChar(10485760)
+
+  @@map("Conversion Errors")
+}
+
+model Conversion_Errors1 {
+  id                Int     @id @default(autoincrement())
+  Object_Type       String? @map("Object Type") @db.VarChar(255)
+  Object_Name       String? @map("Object Name") @db.VarChar(255)
+  Error_Description String? @map("Error Description") @db.VarChar(10485760)
+
+  @@map("Conversion Errors1")
+}
+
+model Conversion_Errors2 {
+  id                Int     @id @default(autoincrement())
+  Object_Type       String? @map("Object Type") @db.VarChar(255)
+  Object_Name       String? @map("Object Name") @db.VarChar(255)
+  Error_Description String? @map("Error Description") @db.VarChar(10485760)
+
+  @@map("Conversion Errors2")
+}
+
+model Conversion_Errors3 {
+  id                Int     @id @default(autoincrement())
+  Object_Type       String? @map("Object Type") @db.VarChar(255)
+  Object_Name       String? @map("Object Name") @db.VarChar(255)
+  Error_Description String? @map("Error Description") @db.VarChar(10485760)
+
+  @@map("Conversion Errors3")
+}
+
+model Conversion_Errors4 {
+  id                Int     @id @default(autoincrement())
+  Object_Type       String? @map("Object Type") @db.VarChar(255)
+  Object_Name       String? @map("Object Name") @db.VarChar(255)
+  Error_Description String? @map("Error Description") @db.VarChar(10485760)
+
+  @@map("Conversion Errors4")
+}
+
+model Conversion_Errors5 {
+  id                Int     @id @default(autoincrement())
+  Object_Type       String? @map("Object Type") @db.VarChar(255)
+  Object_Name       String? @map("Object Name") @db.VarChar(255)
+  Error_Description String? @map("Error Description") @db.VarChar(10485760)
+
+  @@map("Conversion Errors5")
+}
+
+model Conversion_Errors6 {
+  id                Int     @id @default(autoincrement())
+  Object_Type       String? @map("Object Type") @db.VarChar(255)
+  Object_Name       String? @map("Object Name") @db.VarChar(255)
+  Error_Description String? @map("Error Description") @db.VarChar(10485760)
+
+  @@map("Conversion Errors6")
+}
+
+model accounts_head {
+  id             Int      @id @default(autoincrement())
+  accountid      Int?
+  accountcode    String?  @db.VarChar(50)
+  accounttype    Int?
+  accountname    String?  @db.VarChar(50)
+  openingbalance Int?
+  isdebit        String?  @db.VarChar(50)
+  remarks        String?  @db.VarChar(10485760)
+  isdeleted      Boolean?
+}
+
+model admin_commisiontype {
+  id                Int      @id @default(autoincrement())
+  commisiontypeid   Int?
+  commisiontypename String?  @db.VarChar(50)
+  ispercent         Boolean?
+  commisionvalue    Int?
+}
+
+model ageinganalysis {
+  id            Int       @id @default(autoincrement())
+  customerid    Int?
+  orderid       Int?
+  invoiceno     String?   @db.VarChar(50)
+  invoicedate   DateTime? @db.Timestamp(6)
+  orderamount   Int?
+  duedate       DateTime? @db.Timestamp(6)
+  onemonthold   String?   @db.VarChar(50)
+  twomonthold   String?   @db.VarChar(50)
+  threemonthold String?   @db.VarChar(50)
+  fourmonthold  String?   @db.VarChar(50)
+  uptilloneyear String?   @db.VarChar(50)
+  analysisdate  DateTime? @db.Timestamp(6)
+}
+
+model company_info {
+  id              Int     @id @default(autoincrement())
+  companyid       Int?
+  companyname     String? @db.VarChar(50)
+  address         String? @db.VarChar(10485760)
+  city            String? @db.VarChar(50)
+  sate            String? @db.VarChar(50)
+  zipcode         Int?
+  country         String? @db.VarChar(50)
+  telephone       String? @db.VarChar(50)
+  fax             String? @db.VarChar(50)
+  email           String? @db.VarChar(200)
+  weburl          String? @db.VarChar(200)
+  companylogofile String? @db.VarChar(200)
+}
+
+model customer {
+  id                   Int       @id @default(autoincrement())
+  customerid           Int?
+  firstname            String?   @db.VarChar(50)
+  middlename           String?   @db.VarChar(50)
+  lastname             String?   @db.VarChar(50)
+  customertype         String?   @db.VarChar(50)
+  accountno            String?   @db.VarChar(50)
+  accountclosedate     DateTime? @db.Timestamp(6)
+  dateofbirth          DateTime? @db.Timestamp(6)
+  addressres           String?   @db.VarChar(10485760)
+  areares              String?   @db.VarChar(50)
+  telephoneres         String?   @db.VarChar(50)
+  addressoffice        String?   @db.VarChar(10485760)
+  areaoffice           String?   @db.VarChar(50)
+  telephoneoffice      String?   @db.VarChar(50)
+  telephoneext         String?   @db.VarChar(5)
+  fax                  String?   @db.VarChar(50)
+  email                String?   @db.VarChar(200)
+  weburl               String?   @db.VarChar(200)
+  datefirstcontacted   DateTime? @db.Timestamp(6)
+  paymentmode          String?   @db.VarChar(50)
+  deliverydate         DateTime? @db.Timestamp(6)
+  deliveryarea         String?   @db.VarChar(50)
+  reqbottles           Int?
+  requirement          String?   @db.VarChar(50)
+  notes                String?   @db.VarChar(10485760)
+  modifydate           DateTime? @db.Timestamp(6)
+  modifybyuser         Int?
+  isdeleted            Boolean?
+  depositamount        Int?
+  isdepositvoucherdone Boolean?
+  rate_per_bottle      Int?
+  delivery_person      Int?
+  istaxable            Boolean?
+}
+
+model customer_comments {
+  id           Int       @id @default(autoincrement())
+  commentid    Int?
+  customerid   Int?
+  commenttype  String?   @db.VarChar(50)
+  commentdate  DateTime? @db.Timestamp(6)
+  description  String?   @db.VarChar(10485760)
+  isdeleted    Boolean?
+  modifydate   DateTime? @db.Timestamp(6)
+  modifybyuser Int?
+}
+
+model customer_coupons {
+  id              Int       @id @default(autoincrement())
+  customerid      Int?
+  couponid        Int?
+  couponissuedate DateTime? @db.Timestamp(6)
+  startcouponno   Int?
+  endcouponno     Int?
+  usedcoupons     Int?
+  balancecoupons  Int?
+  percouponvalue  Int?
+  isdeleted       Boolean?
+  isvoucherdone   Boolean?
+}
+
+model customer_schedule {
+  id          Int      @id @default(autoincrement())
+  customerid  Int?
+  issunday    Boolean?
+  ismonday    Boolean?
+  istuesday   Boolean?
+  iswednesday Boolean?
+  isthursday  Boolean?
+  isfriday    Boolean?
+  issaturday  Boolean?
+}
+
+model deliveryschedule {
+  id           Int     @id @default(autoincrement())
+  deliveryid   Int?
+  deliveryarea String? @db.VarChar(50)
+  day1         String? @db.VarChar(50)
+  day2         String? @db.VarChar(50)
+  day3         String? @db.VarChar(50)
+  day4         String? @db.VarChar(50)
+  day5         String? @db.VarChar(50)
+  day6         String? @db.VarChar(50)
+  day7         String? @db.VarChar(50)
+}
+
+model employee_attendance {
+  id             Int       @id @default(autoincrement())
+  empid          Int?
+  attendancedate DateTime? @db.Timestamp(6)
+  timein         DateTime? @db.Timestamp(6)
+  timeout        DateTime? @db.Timestamp(6)
+}
+
+model employee_payroll {
+  id               Int       @id @default(autoincrement())
+  empid            Int?
+  payrollmonth     Int?
+  payrollyear      Int?
+  basicpay         Int?
+  commision        Int?
+  extrapay         Int?
+  additions        Int?
+  grosspay         Int?
+  deductions       Int?
+  taxdeduction     Int?
+  netpay           Int?
+  paiddate         DateTime? @db.Timestamp(6)
+  ispaid           Boolean?
+  paymethod        String?   @db.VarChar(50)
+  chqno            String?   @db.VarChar(50)
+  chqdate          DateTime? @db.Timestamp(6)
+  remarks          String?   @db.VarChar(10485760)
+  ispayslipprint   Boolean?
+  payslipprintdate DateTime? @db.Timestamp(6)
+}
+
+model employee_personal {
+  id                    Int       @id @default(autoincrement())
+  empid                 Int?
+  employeecode          String?   @db.VarChar(50)
+  firstname             String?   @db.VarChar(50)
+  middlename            String?   @db.VarChar(50)
+  lastname              String?   @db.VarChar(50)
+  designation           String?   @db.VarChar(50)
+  dob                   DateTime? @db.Timestamp(6)
+  doj                   DateTime? @db.Timestamp(6)
+  education             String?   @db.VarChar(10485760)
+  experience            String?   @db.VarChar(200)
+  empreferences         String?   @db.VarChar(10485760)
+  nicno                 String?   @db.VarChar(50)
+  vehicleregistrationno String?   @db.VarChar(50)
+  remarks               String?   @db.VarChar(10485760)
+  email                 String?   @db.VarChar(200)
+  addresshome           String?   @db.VarChar(10485760)
+  telephonehome         String?   @db.VarChar(50)
+  mobileno              String?   @db.VarChar(50)
+  econtactname          String?   @db.VarChar(50)
+  econtacttelehone      String?   @db.VarChar(50)
+  econtactaddress       String?   @db.VarChar(10485760)
+  basicsalary           Float?
+  salarypaydate         DateTime? @db.Timestamp(6)
+  paymentmethod         String?   @db.VarChar(50)
+  paymentfrequency      String?   @db.VarChar(50)
+  commissiontypeid      Int?
+  ispercent             Boolean?
+  commisionvalue        Int?
+  isdeleted             Boolean?
+  issupervisor          Boolean?
+  modifydate            DateTime? @db.Timestamp(6)
+  modifybyuser          Int?
+  dot                   DateTime? @db.Timestamp(6)
+  terminationreason     String?   @db.VarChar(10485760)
+  employeestatus        String?   @db.VarChar(50)
+}
+
+model employee_vehicle {
+  id           Int     @id @default(autoincrement())
+  empid        Int?
+  vehicleregid String? @db.VarChar(50)
+}
+
+model forecastorders {
+  id            Int     @id @default(autoincrement())
+  customername  String? @db.VarChar(200)
+  accountno     String? @db.VarChar(50)
+  paymentmode   String? @db.VarChar(50)
+  deliveryarea  String? @db.VarChar(50)
+  requirement   String? @db.VarChar(50)
+  lastorderdate String? @db.VarChar(50)
+  orderdueon    String? @db.VarChar(50)
+}
+
+model modules {
+  id         Int      @id @default(autoincrement())
+  moduleid   Int?
+  modulename String?  @db.VarChar(50)
+  isactive   Boolean?
+}
+
+model monthly_profit {
+  id           Int     @id @default(autoincrement())
+  monthname    String? @db.VarChar(50)
+  monthyear    String? @db.VarChar(50)
+  income       Int?
+  expenses     Int?
+  actualprofit Int?
+}
+
+model order_details {
+  id               Int       @id @default(autoincrement())
+  orderdetailid    Int?
+  orderid          Int?
+  productid        Int?
+  quantity         Int?
+  unitprice        Int?
+  bottlereturndate DateTime? @db.Timestamp(6)
+  returnqty        Int?
+}
+
+model orders {
+  id                      Int       @id @default(autoincrement())
+  orderid                 Int?
+  customerid              Int?
+  orderno                 String?   @db.VarChar(50)
+  orderdate               DateTime? @db.Timestamp(6)
+  paymentmode             String?   @db.VarChar(50)
+  notes                   String?   @db.VarChar(10485760)
+  orderstatus             String?   @db.VarChar(50)
+  deliveryno              String?   @db.VarChar(50)
+  deliverydate            DateTime? @db.Timestamp(6)
+  deliveredbyempid        Int?
+  deliveredbyvehicleregid String?   @db.VarChar(50)
+  deliveryaddress         String?   @db.VarChar(10485760)
+  deliveryarea            String?   @db.VarChar(50)
+  telephone               String?   @db.VarChar(50)
+  fax                     String?   @db.VarChar(50)
+  deliverynotes           String?   @db.VarChar(10485760)
+  invoiceno               Int?
+  invoicedate             DateTime? @db.Timestamp(6)
+  isinvoiceprinted        Boolean?
+  invoicelastprintdate    DateTime? @db.Timestamp(6)
+  isdeleted               Boolean?
+  modifydate              DateTime? @db.Timestamp(6)
+  modifybyuser            Int?
+  orderqty                Int?
+  orderamount             Int?
+  ispaymentreceived       Boolean?
+}
+
+model pick_commenttype {
+  id           Int     @id @default(autoincrement())
+  commentstype String? @db.VarChar(50)
+}
+
+model pick_customertype {
+  id           Int     @id @default(autoincrement())
+  customertype String? @db.VarChar(50)
+}
+
+model pick_deliveryarea {
+  id           Int     @id @default(autoincrement())
+  deliveryarea String? @db.VarChar(50)
+}
+
+model pick_designation {
+  id          Int     @id @default(autoincrement())
+  designation String? @db.VarChar(50)
+}
+
+model pick_employeestatus {
+  id             Int     @id @default(autoincrement())
+  employeestatus String? @db.VarChar(50)
+}
+
+model pick_orderstatus {
+  id          Int     @id @default(autoincrement())
+  orderstatus String? @db.VarChar(50)
+}
+
+model pick_payfreq {
+  id      Int     @id @default(autoincrement())
+  payfreq String? @db.VarChar(50)
+}
+
+model pick_paymentmode {
+  id          Int     @id @default(autoincrement())
+  paymentmode String? @db.VarChar(50)
+}
+
+model pick_requirement {
+  id          Int     @id @default(autoincrement())
+  requirement String? @db.VarChar(50)
+}
+
+model products {
+  id                Int      @id @default(autoincrement())
+  productid         Int?
+  productcode       String?  @db.VarChar(50)
+  productname       String?  @db.VarChar(50)
+  unitsinstock      Int?
+  totalunits        Int?
+  rateperunitcash   Int?
+  rateperunitcoupon Int?
+  remarks           String?  @db.VarChar(10485760)
+  isactive          Boolean?
+  isdeleted         Boolean?
+}
+
+model reminder {
+  id            Int      @id @default(autoincrement())
+  reminderid    Int?
+  remindertitle String?  @db.VarChar(100)
+  reminderdesc  String?  @db.VarChar(255)
+  alm_year      Int?     @db.SmallInt
+  alm_month     Int?     @db.SmallInt
+  alm_day       Int?     @db.SmallInt
+  alm_hour      Int?     @db.SmallInt
+  alm_minute    Int?     @db.SmallInt
+  alm_done      Boolean?
+  isdeleted     Boolean?
+}
+
+model roles {
+  id           Int      @id @default(autoincrement())
+  roleid       Int?
+  userid       Int?
+  moduleid     Int?
+  modulename   String?  @db.VarChar(50)
+  isadd        Boolean?
+  isedit       Boolean?
+  isdelete     Boolean?
+  isview       Boolean?
+  isviewreport Boolean?
+}
+
+model systemmodules {
+  id         Int     @id @default(autoincrement())
+  moduleid   Int?
+  modulename String? @db.VarChar(50)
+}
+
+model temp_report {
+  id    Int     @id @default(autoincrement())
+  tmp1  String? @db.VarChar(200)
+  tmp2  String? @db.VarChar(200)
+  tmp3  String? @db.VarChar(200)
+  tmp4  String? @db.VarChar(200)
+  tmp5  String? @db.VarChar(200)
+  tmp6  String? @db.VarChar(200)
+  tmp7  String? @db.VarChar(200)
+  tmp8  String? @db.VarChar(200)
+  tmp9  String? @db.VarChar(200)
+  tmp10 String? @db.VarChar(200)
+  tmp11 String? @db.VarChar(200)
+  tmp12 String? @db.VarChar(200)
+  tmp13 String? @db.VarChar(200)
+  tmp14 String? @db.VarChar(200)
+  tmp15 String? @db.VarChar(200)
+  tmp16 String? @db.VarChar(200)
+  tmp17 String? @db.VarChar(200)
+  tmp18 String? @db.VarChar(200)
+  tmp19 String? @db.VarChar(200)
+  tmp20 String? @db.VarChar(200)
+}
+
+model users {
+  id           Int       @id @default(autoincrement())
+  userid       Int?
+  username     String?   @db.VarChar(50)
+  userloginid  String?   @db.VarChar(50)
+  userpassword String?   @db.VarChar(50)
+  lastlogin    DateTime? @db.Timestamp(6)
+  isactive     Boolean?
+  isadmin      Boolean?
+}
+
+model voucher_trans {
+  id            Int     @id @default(autoincrement())
+  transactionid Int?
+  voucherno     Int?
+  accountcode   String? @db.VarChar(50)
+  chqno         String? @db.VarChar(50)
+  debitamount   Int?
+  creditamount  Int?
+}
+
+model vouchers {
+  id            Int       @id @default(autoincrement())
+  voucherid     Int?
+  voucherno     Int?
+  vouchertype   Int?
+  voucherdate   DateTime? @db.Timestamp(6)
+  description   String?   @db.VarChar(10485760)
+  voucheramount Int?
+  isdeleted     Boolean?
+  modifydate    DateTime? @db.Timestamp(6)
+  modifybyuser  Int?
+}
