@@ -18,6 +18,13 @@ import ApexChartWrapper from 'src/@core/styles/libs/react-apexcharts'
 import CardStatsWithAreaChart from 'src/@core/components/card-statistics/card-stats-with-area-chart'
 
 const AnalyticsDashboard = () => {
+
+// useEffect(() =>{
+
+// console.log(prisma)
+
+// },[])
+
   return (
     <ApexChartWrapper>
       <KeenSliderWrapper>
