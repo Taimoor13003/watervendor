@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "types": ["node"],
     "baseUrl": ".",
     "rootDir": "src",
     "target": "es6",
@@ -37,3 +38,4 @@
     "node_modules"
   ]
 }
+
