@@ -2,7 +2,7 @@
   "compilerOptions": {
     "types": ["node"],
     "baseUrl": ".",
-    "rootDir": "src",
+    "rootDir": "src", 
     "target": "es6",
     "lib": [
       "dom",

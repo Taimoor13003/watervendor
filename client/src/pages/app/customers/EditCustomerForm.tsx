@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
@@ -14,7 +14,7 @@ import { FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/
 type FormValues = {
   firstname: string;
   lastname: string;
-  datefirstcontacted: string;
+  datefirstcontacted: string; // Date as string
   customertype: string;
   dateofbirth: string;
   accountno: string;
@@ -29,7 +29,7 @@ type FormValues = {
   addressoffice: string;
   depositamount: string;
   requirement: string;
-  delivery_person: string;
+  delivery_person: { empid: string, firstname: string, lastname: string };
   reqbottles: string;
 };
 
@@ -37,14 +37,18 @@ type EditCustomerFormProps = {
   customerData: FormValues;
   customerTypes: { id: number; customertype: string }[];
   pickrequirement: { id: number; requirement: string }[];
-  paymentmode: { id: number; paymentmode: string }[];
-  deliveryPersons: { id: number; empid: number; employeecode: string; firstname: string; middlename: string }[];
+  paymentmode: {
+    paymentmode: string | number | readonly string[] | undefined; id: number; requirement: string
+  }[];
+  deliveryPersons: {
+    lastname: string; id: number; empid: string; employeecode: string; firstname: string; middlename: string
+  }[];
 };
 
 const schema = yup.object().shape({
   firstname: yup.string().required(),
   lastname: yup.string().required(),
-  datefirstcontacted: yup.string().required(),
+  datefirstcontacted: yup.string().required(), // Validation for date
   customertype: yup.string().required(),
   dateofbirth: yup.string().required(),
   accountno: yup.string().required(),
@@ -64,20 +68,34 @@ const schema = yup.object().shape({
 });
 
 const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymentmode, deliveryPersons }: EditCustomerFormProps) => {
-  const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  // @ts-ignore
+  customerData = JSON.parse(customerData)[0]
+
+  const { control, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
     defaultValues: customerData,
     mode: 'onChange',
     resolver: yupResolver(schema)
   });
+  console.log(customerData, "alldata");
+  console.log(customerTypes, "customerTypes");
+  console.log(pickrequirement, "pickrequirement");
+  console.log(paymentmode, "paymentmode");
+  console.log(deliveryPersons, "deliveryPersons");
 
   const onSubmit = (data: FormValues) => {
     toast.success('Form Submitted');
     console.log(data);
+    // Handle form submission logic here
   };
+
+
+  useEffect(() => {
+    setValue("delivery_person", customerData.delivery_person)
+  }, [])
 
   return (
     <Card>
-      <CardHeader title='Customer Form' />
+      <CardHeader title=' Edit Customer Form' />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={5}>
@@ -120,7 +138,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.customertype)}>
                     <InputLabel>Customer Type</InputLabel>
-                    <Select {...field} label='Customer Type' defaultValue=''>
+                    <Select {...field} label='Customer Type' fullWidth defaultValue=''>
                       {customerTypes.map((type) => (
                         <MenuItem key={type.id} value={type.customertype}>
                           {type.customertype}
@@ -139,7 +157,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.requirement)}>
                     <InputLabel>Requirements</InputLabel>
-                    <Select {...field} label='Requirements' defaultValue=''>
+                    <Select {...field} label='Requirements' fullWidth defaultValue=''>
                       {pickrequirement.map((req) => (
                         <MenuItem key={req.id} value={req.requirement}>
                           {req.requirement}
@@ -158,7 +176,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.paymentmode)}>
                     <InputLabel>Payment Mode</InputLabel>
-                    <Select {...field} label='Payment Mode' defaultValue=''>
+                    <Select {...field} label='Payment Mode' fullWidth defaultValue=''>
                       {paymentmode.map((mode) => (
                         <MenuItem key={mode.id} value={mode.paymentmode}>
                           {mode.paymentmode}
@@ -308,7 +326,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                   <CustomTextField
                     fullWidth
                     label='Delivery Area'
-                    placeholder='123456'
+                    placeholder='Area Name'
                     error={Boolean(errors.deliveryarea)}
                     helperText={errors.deliveryarea?.message}
                     {...field}
@@ -324,7 +342,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                   <CustomTextField
                     fullWidth
                     label='Office Address'
-                    placeholder='123456'
+                    placeholder='Office Address'
                     error={Boolean(errors.addressoffice)}
                     helperText={errors.addressoffice?.message}
                     {...field}
@@ -340,9 +358,25 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                   <CustomTextField
                     fullWidth
                     label='Deposit Amount'
-                    placeholder='123456'
+                    placeholder='Amount'
                     error={Boolean(errors.depositamount)}
                     helperText={errors.depositamount?.message}
+                    {...field}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Controller
+                name='reqbottles'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    label='Required Bottles'
+                    placeholder='Number of Bottles'
+                    error={Boolean(errors.reqbottles)}
+                    helperText={errors.reqbottles?.message}
                     {...field}
                   />
                 )}
@@ -356,7 +390,8 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                   <CustomTextField
                     fullWidth
                     label='Notes'
-                    placeholder='Any specific information'
+                    multiline
+                    rows={4}
                     error={Boolean(errors.notes)}
                     helperText={errors.notes?.message}
                     {...field}
@@ -366,15 +401,15 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
             </Grid>
             <Grid item xs={12}>
               <Controller
-                name='delivery_person'
+                name='delivery_person.empid'
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.delivery_person)}>
                     <InputLabel>Delivery Person</InputLabel>
-                    <Select {...field} label='Delivery Person' defaultValue=''>
+                    <Select {...field} label='Delivery Person' fullWidth defaultValue=''>
                       {deliveryPersons.map((person) => (
-                        <MenuItem key={person.id} value={person.firstname}>
-                          {person.firstname} {person.middlename} {person.lastname}
+                        <MenuItem key={person.empid} value={person.empid}>
+                          {person.firstname} {person.lastname}
                         </MenuItem>
                       ))}
                     </Select>
@@ -384,29 +419,11 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
               />
             </Grid>
             <Grid item xs={12}>
-              <Controller
-                name='reqbottles'
-                control={control}
-                render={({ field }) => (
-                  <CustomTextField
-                    fullWidth
-                    label='Required Bottles'
-                    placeholder='123456'
-                    error={Boolean(errors.reqbottles)}
-                    helperText={errors.reqbottles?.message}
-                    {...field}
-                  />
-                )}
-              />
-            </Grid>
-          </Grid>
-          <Grid container justifyContent='flex-end' spacing={3} sx={{ mt: 3 }}>
-            <Grid item>
               <Button type='submit' variant='contained'>
                 Submit
               </Button>
             </Grid>
-          </Grid> 
+          </Grid>
         </form>
       </CardContent>
     </Card>
