@@ -220,7 +220,7 @@ const OrderTableServerSide = () => {
           <Box>
             <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
               <Icon icon='tabler:plus' />
-              Create New Order
+              Create New Orderooooo
             </Fab>
           </Box>
         </Grid>

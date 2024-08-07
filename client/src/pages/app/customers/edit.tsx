@@ -1,7 +1,7 @@
 import { GetServerSideProps } from 'next';
-import { format } from 'date-fns';
 import EditCustomerForm from 'src/pages/app/customers/EditCustomerForm';
 import prisma from 'src/lib/prisma';
+import { serializeDate } from 'src/@core/utils/date';
 
 type FormValues = {
   firstname: string;
@@ -94,8 +94,6 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
     const pickrequirement = await prisma.pick_requirement.findMany();
     const paymentmode = await prisma.pick_paymentmode.findMany();
     const employee = await prisma.employee_personal.findMany();
-
-    const serializeDate = (date: Date | null) => (date ? format(new Date(date), 'yyyy-MM-dd') : null);
 
     const serializedEmployee = employee.map(emp => ({
       ...emp,

@@ -16,13 +16,6 @@ import toast from 'react-hot-toast'
 import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 
-// ** Icon Imports
-// import Icon from 'src/@core/components/icon'
-
-// interface State {
-//   password: string
-//   showPassword: boolean
-// }
 
 const defaultValues = {
   email: '',
@@ -74,11 +67,6 @@ const FormValidationSchema = () => {
     mode: 'onChange',
     resolver: yupResolver(schema)
   })
-
-  // const handleClickShowPassword = () => {
-  //   setState({ ...state, showPassword: !state.showPassword })
-  // }
-
   const onSubmit = () => toast.success('Form Submitted')
 
   return (

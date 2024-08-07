@@ -148,6 +148,7 @@ export type UserProfileActiveTab = ProfileTabType | TeamsTabType[] | ProjectsTab
 // Data Grid page
 //---------------
 export type DataGridRowType = {
+  orderid: any
   id: number
   age: string
   post: string
