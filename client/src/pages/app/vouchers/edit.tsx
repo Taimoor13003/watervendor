@@ -1,17 +1,19 @@
 import { GetServerSideProps } from 'next';
 import { PrismaClient } from '@prisma/client'; // Adjust the import as needed
-import VoucherTable from 'src/views/orders/table/VoucherTable';
+import EditVoucherForm from './EditVoucherForm';
 
 const prisma = new PrismaClient();
 
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
     const vouchers = await prisma.vouchers.findMany();
+
     // Serialize dates to strings
     const serializedVouchers = vouchers.map(voucher => ({
       ...voucher,
       voucherdate: voucher.voucherdate.toISOString(), // Corrected to use `voucher.voucherdate`
     }));
+
     return {
       props: {
         vouchers: serializedVouchers,
@@ -37,12 +39,12 @@ type VoucherProps = {
   }[];
 };
 
-const EditPage = ({ vouchers }: VoucherProps) => {
+const EditVoucher = ({ vouchers }: VoucherProps) => {
   return (
     <div>
-      <VoucherTable vouchers={vouchers} />
+      <EditVoucherForm vouchers={vouchers} />
     </div>
   );
 };
 
-export default EditPage;
+export default EditVoucher;

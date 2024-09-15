@@ -1,277 +1,175 @@
-// ** React Imports
-import { useEffect, useState, useCallback, ChangeEvent } from 'react'
-
-// ** MUI Imports
-import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import Typography from '@mui/material/Typography'
-import CardHeader from '@mui/material/CardHeader'
-import { DataGrid, GridSortModel, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import { DateType } from 'src/types/forms/reactDatepickerTypes'
-import Fab from '@mui/material/Fab'
-
-// ** Icon Imports
-import Icon from 'src/@core/components/icon'
-
-
-// ** ThirdParty Components
-import axios from 'axios'
-
-// ** Custom Components
-import ServerSideToolbar from 'src/views/table/data-grid/ServerSideToolbar'
-
-// ** Types Imports
-import { DataGridRowType } from 'src/@fake-db/types'
-import DatePicker from 'react-datepicker'
-import CustomInput from './DatePicker/CustomInput'
-import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
+import React, { useEffect, useState, ChangeEvent } from 'react';
+import Card from '@mui/material/Card';
+import CardHeader from '@mui/material/CardHeader';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
+import Fab from '@mui/material/Fab';
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { useRouter } from 'next/router';
+import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
+import DialougeComponent from './DialougeComponent';
+import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
+import moment from 'moment';
 
-import CustomAvatar from 'src/@core/components/mui/avatar'
-import DialougeComponent from './DialougeComponent'
+type Voucher = {
+  id: number;
+  voucherCode: string;
+  voucherType: string;
+  amount: number;
+  voucherdate: string; // Date as ISO string
+};
 
-import { ThemeColor } from 'src/@core/layouts/types'
+const VoucherTable = ({ vouchers }: { vouchers: Voucher[] }) => {
+  const [rows, setRows] = useState<Voucher[]>([]);
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [searchText, setSearchText] = useState<string>('');
+  const [filteredData, setFilteredData] = useState<Voucher[]>([]);
+  const [open, setOpen] = useState<boolean>(false);
+  const router = useRouter();
 
-type SortType = 'asc' | 'desc' | undefined | null
+  useEffect(() => {
+    // Convert date strings to Date objects
+    const updatedRows = vouchers.map(row => ({
+      ...row,
+      voucherdate: new Date(row.voucherdate), // Convert string to Date object
+    }));
+    setRows(updatedRows);
+  }, [vouchers]);
 
-import { getInitials } from 'src/@core/utils/get-initials'
-import Button from '@mui/material/Button'
+  // Function to handle search and filter data
+  const handleSearch = (searchValue: string) => {
+    setSearchText(searchValue);
+    const searchRegex = new RegExp(escapeRegExp(searchValue), 'i');
+    const filteredRows = vouchers.filter(row => {
+      return Object.keys(row).some(field => {
+        return searchRegex.test(row[field as keyof Voucher] as unknown as string);
+      });
+    });
+    setFilteredData(filteredRows.length ? filteredRows : []);
+  };
 
+  // Escape special characters for regex search
+  const escapeRegExp = (value: string) => {
+    return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+  };
 
-const renderClient = (params: GridRenderCellParams) => {
-    const { row } = params
-    const stateNum = Math.floor(Math.random() * 6)
-    const states = ['success', 'error', 'warning', 'info', 'primary', 'secondary']
-    const color = states[stateNum]
-
-    if (row.avatar.length) {
-        return <CustomAvatar src={`/images/avatars/${row.avatar}`} sx={{ mr: 3, width: '1.875rem', height: '1.875rem' }} />
-    } else {
+  // Columns configuration for DataGrid
+  const columns: GridColDef[] = [
+    {
+      flex: 0.25,
+      minWidth: 180,
+      field: 'voucherno',
+      headerName: 'Voucher No',
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.voucherno}
+        </Typography>
+      ),
+    },
+    {
+      flex: 0.25,
+      minWidth: 180,
+      field: 'vouchertype',
+      headerName: 'Voucher Type',
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.vouchertype}
+        </Typography>
+      ),
+    },
+   
+    {
+      flex: 0.175,
+      type: 'date',
+      minWidth: 120,
+      headerName: 'Voucher Date',
+      field: 'voucherdate',
+      valueGetter: (params) => new Date(params.row.voucherdate), // Convert ISO string to Date object
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {moment(params.row.voucherdate).format('DD-MM-YYYY')}
+        </Typography>
+      ),
+    },
+    {
+      flex: 0.175,
+      type: 'number',
+      minWidth: 120,
+      field: 'amount',
+      headerName: 'Voucher Amount',
+      renderCell: (params: GridRenderCellParams) => {
+        const amount = params.row.amount;
         return (
-            <CustomAvatar
-                skin='light'
-                color={color as ThemeColor}
-                sx={{ mr: 3, fontSize: '.8rem', width: '1.875rem', height: '1.875rem' }}
-            >
-                {getInitials(row.full_name ? row.full_name : 'John Doe')}
-            </CustomAvatar>
-        )
-    }
-}
+          <Typography variant='body2' sx={{ color: 'text.primary' }}>
+            {amount != null && !isNaN(amount) ? amount.toFixed(2) : 'N/A'}
+          </Typography>
+        );
+      },
+    },
+    {
+      flex: 0.25,
+      minWidth: 200,
+      field: 'actions',
+      headerName: 'Actions',
+      renderCell: (params: GridRenderCellParams) => (
+        <Box display="flex" gap={2}>
+          <Button variant='contained' onClick={() => router.push(`/app/vouchers/edit?voucherid=${params.row.id}`)}>
+            Edit
+          </Button>
+          <Button variant='contained' onClick={() => setOpen(true)}>
+            Delete
+          </Button>
+        </Box>
+      ),
+    },
+  ];
 
-const VoucherTable = () => {
-    // ** States
-    const [total, setTotal] = useState<number>(0)
-    const [sort, setSort] = useState<SortType>('asc')
-    const [rows, setRows] = useState<DataGridRowType[]>([])
-    const [searchValue, setSearchValue] = useState<string>('')
-    const [sortColumn, setSortColumn] = useState<string>('full_name')
-    const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 7 })
-    const [open, setOpen] = useState<boolean>(false)
-    const [date, setDate] = useState<DateType>(new Date())
-    const router = useRouter()
+  return (
+    <Card>
+      <DatePickerWrapper>
+        <CardHeader title='Voucher Table' />
+        <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
+          <Box></Box>
+          <Box>
+            <Fab color='primary' variant='extended' onClick={() => router.push('/app/vouchers/create')}>
+              Create New Voucher
+            </Fab>
+          </Box>
+        </Grid>
 
-    function loadServerRows(currentPage: number, data: DataGridRowType[]) {
-        return data.slice(currentPage * paginationModel.pageSize, (currentPage + 1) * paginationModel.pageSize)
-    }
+        <DataGrid
+          autoHeight
+          columns={columns}
+          pageSizeOptions={[7, 10, 25, 50]}
+          paginationModel={paginationModel}
+          slots={{ toolbar: QuickSearchToolbar }}
+          onPaginationModelChange={setPaginationModel}
+          rows={filteredData.length ? filteredData : rows}
+          getRowId={(row) => row.id}
+          sx={{
+            '& .MuiSvgIcon-root': {
+              fontSize: '1.125rem',
+            },
+          }}
+          slotProps={{
+            baseButton: {
+              size: 'medium',
+              variant: 'outlined',
+            },
+            toolbar: {
+              value: searchText,
+              clearSearch: () => handleSearch(''),
+              onChange: (event: ChangeEvent<HTMLInputElement>) => handleSearch(event.target.value),
+            },
+          }}
+        />
+      </DatePickerWrapper>
 
-    const fetchTableData = useCallback(
-        async (sort: SortType, q: string, column: string) => {
-            await axios
-                .get('/api/table/data', {
-                    params: {
-                        q,
-                        sort,
-                        column
-                    }
-                })
-                .then(res => {
-                    setTotal(res.data.total)
-                    setRows(loadServerRows(paginationModel.page, res.data.data))
-                })
-        },
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [paginationModel]
-    )
+      <DialougeComponent open={open} setOpen={setOpen} onDelete={() => alert("Delete Function")} />
+    </Card>
+  );
+};
 
-    useEffect(() => {
-        fetchTableData(sort, searchValue, sortColumn)
-    }, [fetchTableData, searchValue, sort, sortColumn])
-
-    const handleSortModel = (newModel: GridSortModel) => {
-        if (newModel.length) {
-            setSort(newModel[0].sort)
-            setSortColumn(newModel[0].field)
-            fetchTableData(newModel[0].sort, searchValue, newModel[0].field)
-        } else {
-            setSort('asc')
-            setSortColumn('full_name')
-        }
-    }
-
-    const handleSearch = (value: string) => {
-        setSearchValue(value)
-        fetchTableData(sort, value, sortColumn)
-    }
-
-    const columns: GridColDef[] = [
-        {
-            flex: 0.25,
-            minWidth: 290,
-            field: 'full_name',
-            headerName: 'Voucher No.',
-            renderCell: (params: GridRenderCellParams) => {
-                const { row } = params
-
-                return (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        {renderClient(params)}
-                        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                            <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-                                {row.full_name}
-                            </Typography>
-                            <Typography noWrap variant='caption'>
-                                {row.email}
-                            </Typography>
-                        </Box>
-                    </Box>
-                )
-            }
-        },
-        {
-            flex: 0.175,
-            minWidth: 110,
-            field: 'salary',
-            headerName: 'Voucher Type',
-            renderCell: (params: GridRenderCellParams) => (
-                <Typography variant='body2' sx={{ color: 'text.primary' }}>
-                    {params.row.salary}
-                </Typography>
-            )
-        }
-        ,
-        {
-            flex: 0.175,
-            type: 'date',
-            minWidth: 120,
-            headerName: 'Voucher Date',
-            field: 'start_date',
-            valueGetter: params => new Date(params.value),
-            renderCell: (params: GridRenderCellParams) => (
-                <Typography variant='body2' sx={{ color: 'text.primary' }}>
-                    {params.row.start_date}
-                </Typography>
-            )
-        }
-        ,
-
-        {
-            flex: 0.175,
-            type: 'date',
-            minWidth: 120,
-            headerName: 'Voucher Amount',
-            field: 'amount',
-            valueGetter: params => new Date(params.value),
-            renderCell: (
-
-                // params: GridRenderCellParams
-            ) => (
-                <Typography variant='body2' sx={{ color: 'text.primary' }}>
-                    {Math.random()}
-                </Typography>
-            )
-        }
-        ,
-
-        {
-            flex: 0.25,
-            minWidth: 290,
-            field: 'Actions',
-            headerName: 'Actions',
-            renderCell: (params: GridRenderCellParams) => {
-                const {
-
-                    //  row 
-                    } = params
-
-                return (
-
-                    <Box display="flex" gap={3}>
-                        <Button variant='contained' onClick={() => router.push('/app/vouchers/create')}>Edit</Button>
-                        <Button variant='contained' onClick={() => setOpen(true)}>Delete</Button>
-                    </Box>
-
-                )
-            }
-        }
-    ]
-    
-return (
-        <Card>
-            <DatePickerWrapper>
-                <CardHeader title='Voucher Table' />
-                <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
-                    <Box display='flex' gap={2}>
-                        <DatePicker
-                            selected={date}
-                            id='basic-input'
-                            popperPlacement={'bottom-start'}
-                            onChange={(date: Date) => setDate(date)}
-                            placeholderText='Click to select a date'
-                            customInput={<CustomInput label='From' />}
-                        />
-                        <DatePicker
-                            selected={date}
-                            id='basic-input'
-                            popperPlacement={'bottom-start'}
-                            onChange={(date: Date) => setDate(date)}
-                            placeholderText='Click to select a date'
-                            customInput={<CustomInput label='To' />}
-                        />
-                        <Button variant='contained'>Go</Button>
-
-                    </Box>
-                    <Box>
-                        <Fab color='primary' variant='extended' onClick={() => router.push('/app/vouchers/create')}>
-                            <Icon icon='tabler:plus' />
-                            Create New
-                        </Fab>
-                    </Box>
-                </Grid>
-
-                <DataGrid
-                    autoHeight
-                    pagination
-                    rows={rows}
-                    rowCount={total}
-                    columns={columns || []}
-                    checkboxSelection
-                    sortingMode='server'
-                    paginationMode='server'
-                    pageSizeOptions={[7, 10, 25, 50]}
-                    paginationModel={paginationModel}
-                    onSortModelChange={handleSortModel}
-                    slots={{ toolbar: ServerSideToolbar }}
-                    onPaginationModelChange={setPaginationModel}
-                    slotProps={{
-                        baseButton: {
-                            size: 'medium',
-                            variant: 'tonal'
-                        },
-                        toolbar: {
-                            value: searchValue,
-                            clearSearch: () => handleSearch(''),
-                            onChange: (event: ChangeEvent<HTMLInputElement>) => handleSearch(event.target.value)
-                        }
-                    }}
-                />
-            </DatePickerWrapper>
-
-            <DialougeComponent open={open} setOpen={setOpen} />
-
-        </Card>
-    )
-}
-
-export default VoucherTable
+export default VoucherTable;

@@ -97,7 +97,7 @@ const FormValidationSchema = () => {
                   <CustomTextField
                     fullWidth
                     value={value}
-                    label='Customer Name'
+                    label='Product Code'
                     onChange={onChange}
                     placeholder='Leonard'
                     error={Boolean(errors.firstName)}
@@ -117,7 +117,7 @@ const FormValidationSchema = () => {
                   <CustomTextField
                     fullWidth
                     value={value}
-                    label='Customer Type'
+                    label='Product Name'
                     onChange={onChange}
                     placeholder='Carter'
                     error={Boolean(errors.lastName)}
@@ -136,7 +136,7 @@ const FormValidationSchema = () => {
                   <CustomTextField
                     fullWidth
                     value={value}
-                    label='Customer Account#'
+                    label='Units in Stock'
                     onChange={onChange}
                     placeholder='Carter'
                     error={Boolean(errors.lastName)}
@@ -155,7 +155,7 @@ const FormValidationSchema = () => {
                   <CustomTextField
                     fullWidth
                     value={value}
-                    label='Date Of Birth'
+                    label='Total Units'
                     onChange={onChange}
                     placeholder='Carter'
                     error={Boolean(errors.lastName)}
@@ -174,7 +174,7 @@ const FormValidationSchema = () => {
                   <CustomTextField
                     fullWidth
                     value={value}
-                    label='Delivery Telephone#'
+                    label='Rate per Unit (Cash)'
                     onChange={onChange}
                     placeholder='Carter'
                     error={Boolean(errors.lastName)}
@@ -193,7 +193,7 @@ const FormValidationSchema = () => {
                   <CustomTextField
                     fullWidth
                     value={value}
-                    label='Office Telephone#'
+                    label='Rate Per Unit (Coupon)'
                     onChange={onChange}
                     placeholder='Carter'
                     error={Boolean(errors.lastName)}
@@ -204,25 +204,7 @@ const FormValidationSchema = () => {
               />
             </Grid>
 
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Delivery Address'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
+         
 
             <Grid item xs={12}>
               <Controller
@@ -233,7 +215,7 @@ const FormValidationSchema = () => {
                   <CustomTextField
                     fullWidth
                     value={value}
-                    label='Office Address'
+                    label='Remarks / Note'
                     onChange={onChange}
                     placeholder='Carter'
                     error={Boolean(errors.lastName)}
@@ -243,268 +225,12 @@ const FormValidationSchema = () => {
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Delivery Fax#'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='EmaiL Address'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Date First Contacted'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Delivery Date'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Delivery Area'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Payment Mode'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Remarks/Note'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Delivery Person'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Requirement'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Bottles per'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Deposit Amount'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            {/* <Grid item xs={12}>
-              <Controller
-                name='email'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    type='email'
-                    value={value}
-                    label='Email'
-                    onChange={onChange}
-                    error={Boolean(errors.email)}
-                    placeholder='carterleonard@gmail.com'
-                    aria-describedby='validation-schema-email'
-                    {...(errors.email && { helperText: errors.email.message })}
-                  />
-                )}
-              />
-            </Grid> */}
-            {/* <Grid item xs={12}>
-              <Controller
-                name='password'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Password'
-                    onChange={onChange}
-                    id='validation-schema-password'
-                    error={Boolean(errors.password)}
-                    type={state.showPassword ? 'text' : 'password'}
-                    {...(errors.password && { helperText: errors.password.message })}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position='end'>
-                          <IconButton
-                            edge='end'
-                            onClick={handleClickShowPassword}
-                            onMouseDown={e => e.preventDefault()}
-                            aria-label='toggle password visibility'
-                          >
-                            <Icon fontSize='1.25rem' icon={state.showPassword ? 'tabler:eye' : 'tabler:eye-off'} />
-                          </IconButton>
-                        </InputAdornment>
-                      )
-                    }}
-                  />
-                )}
-              />
-            </Grid> */}
+           
+           
+           
+           
+            
+            
 
             <Grid item xs={12}>
               <Button type='submit' variant='contained'>

@@ -3,9 +3,9 @@ import { VerticalNavItemsType } from 'src/@core/layouts/types'
 
 type Environment = "development" | "production";
 
-// const env : Environment = "development"
+const env : Environment = "development"
 
-const env : Environment  = "production"
+// const env : Environment  = "production"
 
 const devNavItems :  VerticalNavItemsType = [
   {

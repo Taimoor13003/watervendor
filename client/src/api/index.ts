@@ -1,7 +1,7 @@
 // import { NextApiRequest, NextApiResponse } from 'next'
     
 // type ResponseData = {
-//   message: string
+//   messag   e: string
 // }
  
 // export default function handler(

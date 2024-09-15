@@ -1,29 +1,33 @@
 import { GetServerSideProps } from 'next';
 import prisma from 'src/lib/prisma'; // Ensure your Prisma client is correctly configured
-import AccountTable from 'src/views/orders/table/AccountTable';
+import EditAccountForm from './EditAccountForm';
 
 type Account = {
   accountid: number;
   accountname: string;
   accountnumber: string;
   balance: number;
+  accountcode: string;
+  accounttype: number;
+  openingbalance: number;
+  remarks: string | null;
 };
 
 type AccountPageProps = {
-  accounts: Account[];
+  accountData: Account | null; // Adjust based on single account data
 };
 
-const AccountPage = ({ accounts }: AccountPageProps) => {
-  return <AccountTable data={accounts} />;
+const AccountPage = ({ accountData }: AccountPageProps) => {
+  return <EditAccountForm accountData={accountData} />;
 };
 
 export const getServerSideProps: GetServerSideProps<AccountPageProps> = async () => {
   try {
-    const accounts = await prisma.accounts_head.findMany();
+    const accountData = await prisma.accounts_head.findFirst(); // Adjust query as needed
 
     return {
       props: {
-        accounts,
+        accountData: accountData || null,
       },
     };
   } catch (error) {
