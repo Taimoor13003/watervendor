@@ -1,3 +1,5 @@
+import { ReactNode } from "react"
+
 export type InvoiceStatus = 'Paid' | string
 
 export type InvoiceLayoutProps = {
@@ -14,6 +16,12 @@ export type InvoiceClientType = {
 }
 
 export type InvoiceType = {
+  firstname: string
+  lastname: string
+  middlename: string
+  customertype: ReactNode
+  paymentmode: ReactNode
+  telephoneres: ReactNode
   id: number
   name: string
   total: number

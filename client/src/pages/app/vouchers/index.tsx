@@ -6,15 +6,20 @@ const prisma = new PrismaClient();
 
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
-    const vouchers = await prisma.vouchers.findMany();
+    const vouchers = await prisma.vouchers.findMany({
+      take: 10,
+      skip: 0,
+    });
+
     // Serialize dates to strings
     const serializedVouchers = vouchers.map(voucher => ({
       ...voucher,
-      voucherdate: voucher.voucherdate.toISOString(), // Corrected to use `voucher.voucherdate`
+      voucherdate: voucher?.voucherdate ? voucher.voucherdate.toISOString() : "",
     }));
+
     return {
       props: {
-        vouchers: serializedVouchers,
+        vouchers: serializedVouchers
       },
     };
   } catch (error) {
@@ -31,9 +36,9 @@ type VoucherProps = {
   vouchers: {
     id: number;
     voucherCode: string;
+    voucherType: string;
     amount: number;
-    voucherdate: string; // Date as ISO string
-    // Add other relevant fields here if needed
+    voucherdate: Date; // Date as ISO string
   }[];
 };
 

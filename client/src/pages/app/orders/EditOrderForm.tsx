@@ -101,7 +101,6 @@ const schema = yup.object().shape({
   productid: yup.number().required(),
   returnqty: yup.number().required(),
   unitprice: yup.number().required(),
-  bottlereturndate: yup.date().required()
 
 });
 
@@ -121,6 +120,7 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
       productid:orderDetail.productid || '',
       unitprice:orderDetail.unitprice || '',
       bottlereturndate:orderDetail.bottleretundate ||'',
+      returnqty : orderDetail.returnqty || 0,
     },
     mode: 'onChange',
     resolver: yupResolver(schema),
@@ -254,7 +254,6 @@ console.log(orderdetails,"orderdetails")
                     {...field}
                   >
                     <MenuItem value="New">New</MenuItem>
-                    <MenuItem value="In Progress">In Progress</MenuItem>
                     <MenuItem value="Completed">Completed</MenuItem>
                     <MenuItem value="Canceled">Canceled</MenuItem>
                   </TextField>
@@ -383,42 +382,9 @@ console.log(orderdetails,"orderdetails")
                 )}
               />
             </Grid>
-            {/* Delivery Notes */}
-            <Grid item xs={12}>
-              <Controller
-                name="deliveredbyvehicleregid"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    fullWidth
-                    label="Delivery by Vehicle (Registration #)"
-                    placeholder="Delivery Notes"
-                    error={Boolean(errors.deliverynotes)}
-                    helperText={errors.deliverynotes?.message}
-                    {...field}
-                  />
-                )}
-              />
-            </Grid>
+           
 
-            {/* Delivery Person */}
-            <Grid item xs={12}>
-              <Controller
-                name="delivery_person"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    fullWidth
-                    label="Delivery by Employee"
-                    placeholder="Delivery by Employee"
-                    type="number"
-                    error={Boolean(errors.delivery_person)}
-                    helperText={errors.delivery_person?.message}
-                    {...field}
-                  />
-                )}
-              />
-            </Grid>
+           
 
             {/* Delivery Address */}
             <Grid item xs={12}>

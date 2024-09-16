@@ -134,6 +134,36 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
             </Grid>
             <Grid item xs={12}>
               <Controller
+                name='tax'
+                control={control}
+                rules={{
+                  required: true,
+                  validate: value => value <= 100 || 'Tax cannot be more than 100',
+                }}
+                render={({ field: { value, onChange } }) => (
+                  <CustomTextField
+                    fullWidth
+                    value={value}
+                    label='Tax'
+                    onChange={e => {
+                      const inputValue = parseFloat(e.target.value);
+                      if (inputValue <= 100 || e.target.value === '') {
+                        onChange(e);
+                      }
+                    }}
+                    placeholder='Enter tax amount'
+                    type='number'
+                    error={Boolean(errors.tax)}
+                    aria-describedby='validation-schema-tax'
+                    {...(errors.tax && { helperText: errors.tax.message })}
+                    inputProps={{ max: 100 }}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Controller
                 name='requirement'
                 control={control}
                 render={({ field }) => (
@@ -406,7 +436,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 Submit
               </Button>
             </Grid>
-          </Grid> 
+          </Grid>
         </form>
       </CardContent>
     </Card>

@@ -36,7 +36,23 @@ const devNavItems :  VerticalNavItemsType = [
     icon: 'tabler:file-text',
     path: '/app/accounts'
   },
-
+  {
+    title: 'Reports',
+    // icon: 'tabler:file-text',
+    path: '/app/reportFolder'
+  }
+  ,
+  {
+    title: 'Customer Invoice',
+    // icon: 'tabler:file-text',
+    path: '/app/customerinvoice'
+  }
+  , 
+  {
+    title: 'Account Reports',
+    // icon: 'tabler:file-text',
+    path: '/app/accountsreports'
+  },
   // old
   {
     title: 'Dashboards',
@@ -56,6 +72,7 @@ const devNavItems :  VerticalNavItemsType = [
         title: 'eCommerce',
         path: '/dashboards/ecommerce'
       }
+      ,
     ]
   },
 

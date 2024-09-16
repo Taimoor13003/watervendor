@@ -22,7 +22,8 @@ type Order = {
   deliveredbyvehicleregid: string;
   rate_per_bottle: number;
   reqbottles: number;
-  
+  employeefirstname:string;
+  employeelastname:string;
 };
 
 type PaymentMode = {
@@ -60,11 +61,18 @@ export const getServerSideProps: GetServerSideProps<OrderPageProps> = async (con
   try {
     // Fetch order data
     const orders = await prisma.$queryRaw<Order[]>`
-      SELECT o.*, c.*
+      SELECT 
+      ep.empid, ep.firstname as employeeFirstName, ep.lastname as employeelastName,
+      c.customerid ,c.firstname as customerFirstName , c.lastname as customerLastName,
+      od.returnqty , od.productid , od.bottlereturndate,
+      p.productname,
+       o.*
       FROM orders o
       LEFT JOIN customer c ON o.customerid = c.customerid
+      LEFT JOIN employee_personal ep ON ep.empid = o.deliveredbyempid 
+      LEFT JOIN order_details od on o.orderid = od.orderid 
+      left join products p on p.id = od.productid
       WHERE o.orderid = ${Number(id)}
-      ORDER BY o.deliverydate DESC
     `;
 
     const paymentmode = await prisma.pick_paymentmode.findMany();
