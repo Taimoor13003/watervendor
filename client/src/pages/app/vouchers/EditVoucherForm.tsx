@@ -21,7 +21,6 @@ type Voucher = {
   voucherCode: string;
   amount: number;
   voucherdate: Date | null; // Changed to Date
-  // Add other relevant fields here if needed
 };
 
 type VoucherTrans = {
@@ -31,12 +30,11 @@ type VoucherTrans = {
   chqno: string;
   debitamount: number;
   creditamount: number;
-  // Add other relevant fields here if needed
 };
 
 type VoucherProps = {
   vouchers: Voucher[];
-  vouchertrans: VoucherTrans[]; // Include the vouchertrans prop
+  vouchertrans: VoucherTrans[];
 };
 
 const schema = yup.object().shape({
@@ -50,13 +48,11 @@ const schema = yup.object().shape({
   chqno: yup.string().required(),
   debitamount: yup.number().required(),
   creditamount: yup.number().required(),
-  // Add other validation rules here if needed
 });
 
 const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
   console.log(vouchertrans, "vouchertrans");
 console.log(vouchers,"vouchersssssssss")
-  // Assuming you are editing the first voucher and first transaction for demonstration purposes
   const voucher = vouchers[0] || {
     voucherdate: null,
     voucherCode: '',
@@ -105,7 +101,6 @@ console.log(vouchers,"vouchersssssssss")
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={5}>
-            {/* Voucher Number */}
             <Grid item xs={12}>
               <Controller
                 name="voucherno"
@@ -123,7 +118,6 @@ console.log(vouchers,"vouchersssssssss")
               />
             </Grid>
 
-            {/* Voucher Type */}
             <Grid item xs={12}>
               <Controller
                 name="vouchertype"
@@ -142,7 +136,6 @@ console.log(vouchers,"vouchersssssssss")
               />
             </Grid>
 
-            {/* Description */}
             <Grid item xs={12}>
               <Controller
                 name="description"
@@ -160,7 +153,6 @@ console.log(vouchers,"vouchersssssssss")
               />
             </Grid>
 
-            {/* Amount */}
             <Grid item xs={12}>
               <Controller
                 name="voucheramount"
@@ -179,7 +171,6 @@ console.log(vouchers,"vouchersssssssss")
               />
             </Grid>
 
-            {/* Voucher Date */}
             <Grid item xs={12}>
               <Controller
                 name="voucherDate"
@@ -205,7 +196,6 @@ console.log(vouchers,"vouchersssssssss")
 
             <h1>Voucher Transaction</h1>
 
-            {/* Account Code */}
             <Grid item xs={12}>
               <Controller
                 name="accountcode"
@@ -223,7 +213,6 @@ console.log(vouchers,"vouchersssssssss")
               />
             </Grid>
 
-            {/* Cheque / Inv # */}
             <Grid item xs={12}>
               <Controller
                 name="chqno"
@@ -241,7 +230,6 @@ console.log(vouchers,"vouchersssssssss")
               />
             </Grid>
 
-            {/* Debit Amount */}
             <Grid item xs={12}>
               <Controller
                 name="debitamount"
@@ -259,8 +247,6 @@ console.log(vouchers,"vouchersssssssss")
                 )}
               />
             </Grid>
-
-            {/* Credit Amount */}
             <Grid item xs={12}>
               <Controller
                 name="creditamount"
@@ -279,7 +265,6 @@ console.log(vouchers,"vouchersssssssss")
               />
             </Grid>
 
-            {/* Submit Button */}
             <Grid item xs={12}>
               <Button variant="contained" type="submit">
                 Submit

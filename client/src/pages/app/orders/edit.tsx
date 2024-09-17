@@ -102,6 +102,7 @@ export const getServerSideProps: GetServerSideProps<OrderPageProps> = async (con
     };
   } catch (error) {
     console.error(error);
+    
     return {
       notFound: true,
     };

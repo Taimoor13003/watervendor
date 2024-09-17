@@ -1,4 +1,4 @@
-import React, { useEffect, useState, ChangeEvent, useRef } from 'react';
+import React, { useEffect, useState, ChangeEvent, useRef, useCallback } from 'react';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
@@ -16,55 +16,50 @@ import { PrismaClient } from '@prisma/client'; // Adjust the import as needed
 import axios from 'axios';
 
 const prisma = new PrismaClient();
+console.log(prisma);
 
-type Voucher = {
-  id: number;
-  voucherCode: string;
-  voucherType: string;
-  amount: number;
-  voucherdate: Date; // Date as ISO string
-};
-
-const VoucherTable = ({ vouchers }: { vouchers: Voucher[] }) => {
-  const [rows, setRows] = useState<Voucher[]>([]);
+const VoucherTable = () => {
+  const [rows, setRows] = useState([]);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState<string>('');
   const [open, setOpen] = useState<boolean>(false);
   const [total, setTotal] = useState<number>(0);
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const fetchData = async () => {
+  // Updated fetchData function wrapped in useCallback
+  const fetchData = useCallback(async () => {
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
     }
-    setIsLoading(true)
+    setIsLoading(true);
     debounceTimeout.current = setTimeout(async () => {
       const adjustedPage = paginationModel.page + 1;
       const { data: { data, count } } = await axios.get(`/api/vouchers`, {
         params: {
           page: adjustedPage,
           limit: paginationModel.pageSize,
-          searchText: searchText
-        }
+          searchText: searchText,
+        },
       });
       setRows(data);
       setTotal(count);
-      setIsLoading(false)
+      setIsLoading(false);
     }, 1200); // Adjust debounce delay as needed
-  };
+  }, [paginationModel.page, paginationModel.pageSize, searchText]);
 
   // Handle search text change
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchText(event.target.value);
-    setPaginationModel((prev) => ({ ...prev, page: 0 })); // Reset to page 1 when search text changes
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
   };
 
+  // useEffect with fetchData as a dependency
   useEffect(() => {
     fetchData();
-  }, [paginationModel.page, paginationModel.pageSize, searchText]);
-  
+  }, [paginationModel.page, paginationModel.pageSize, searchText, fetchData]);
+
   // Columns configuration for DataGrid
   const columns: GridColDef[] = [
     {
@@ -89,7 +84,6 @@ const VoucherTable = ({ vouchers }: { vouchers: Voucher[] }) => {
         </Typography>
       ),
     },
-
     {
       flex: 0.175,
       type: 'date',

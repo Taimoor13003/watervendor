@@ -8,22 +8,21 @@ export const getServerSideProps: GetServerSideProps = async () => {
   try {
     const products = await prisma.products.findMany();
 
-    // Serialize dates to strings if needed (adjust according to your data schema)
     const serializedProducts = products.map(product => ({
       ...product,
-      // Add serialization logic for date fields if necessary
     }));
 
     return {
       props: {
-        productData: serializedProducts[0] || {}, // Assuming you want to edit the first product for now
+        productData: serializedProducts[0] || {}, 
       },
     };
   } catch (error) {
     console.error(error);
+    
     return {
       props: {
-        productData: {}, // Return an empty object in case of error
+        productData: {},
       },
     };
   }

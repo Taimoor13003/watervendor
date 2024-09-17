@@ -24,6 +24,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
     };
   } catch (error) {
     console.error(error);
+    
     return {
       props: {
         vouchers: [], // Return an empty array in case of error

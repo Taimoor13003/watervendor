@@ -30,10 +30,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json({ results, accounts });
     }
 
-    // Only return the account names if no voucher data is requested
     return res.status(200).json({ accounts });
   } catch (error) {
     console.error('Failed to fetch account details:', error);
+
     return res.status(500).json({ error: 'Failed to fetch account details' });
   } finally {
     await prisma.$disconnect();

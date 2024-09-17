@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect } from 'react';
+import React, {useEffect } from 'react';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
@@ -68,6 +68,7 @@ const schema = yup.object().shape({
 });
 
 const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymentmode, deliveryPersons }: EditCustomerFormProps) => {
+
   // @ts-ignore
   customerData = JSON.parse(customerData)[0]
 
@@ -85,13 +86,12 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
   const onSubmit = (data: FormValues) => {
     toast.success('Form Submitted');
     console.log(data);
-    // Handle form submission logic here
   };
 
 
   useEffect(() => {
     setValue("delivery_person", customerData.delivery_person)
-  }, [])
+  }, [customerData.delivery_person, setValue])
 
   return (
     <Card>

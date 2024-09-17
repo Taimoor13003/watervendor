@@ -25,13 +25,6 @@ type FormValues = {
   reqbottles: string;
 };
 
-type Employee = {
-  id: number;
-  name: string;
-  doj: string | null;
-  salarypaydate: string | null;
-  dob: string | null;
-};
 
 type CustomerFormPageProps = {
   customerData: FormValues;
@@ -55,7 +48,7 @@ const CustomerFormPage = ({ customerData, customerTypes, pickrequirement, paymen
   );
 };
 
-export const getServerSideProps: GetServerSideProps<CustomerFormPageProps> = async (context) => {
+export const getServerSideProps: GetServerSideProps<CustomerFormPageProps> = async () => {
   try {
     const customerData = {
       firstname: '',
@@ -109,10 +102,12 @@ export const getServerSideProps: GetServerSideProps<CustomerFormPageProps> = asy
     };
   } catch (error) {
     console.error(error);
+    
     return {
       notFound: true,
     };
   }
 };
 
-export default CustomerFormPage;
+
+export default CustomerFormPage; 

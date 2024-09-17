@@ -9,8 +9,6 @@ import Fab from '@mui/material/Fab';
 import { DataGrid, GridColDef, GridRenderCellParams, GridSortModel } from '@mui/x-data-grid';
 import { useRouter } from 'next/router';
 import { DatePicker } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import DialougeComponent from './DialougeComponent';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 import moment from 'moment';
@@ -25,7 +23,7 @@ const OrderTableServerSide = () => {
   const [sort, setSort] = useState<SortType>('asc');
   const [sortColumn, setSortColumn] = useState<string>('firstname');
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
-  const [searchValue, setSearchValue] = useState<string>('');
+  const [, setSearchValue] = useState<string>('');
   const [open, setOpen] = useState<boolean>(false);
   const [searchText, setSearchText] = useState<string>('');
   const [startDateRange, setStartDateRange] = useState<Date | null>(null);
@@ -67,7 +65,7 @@ const OrderTableServerSide = () => {
 
   useEffect(() => {
     fetchTableData();
-  }, [paginationModel.page, paginationModel.pageSize, sort, sortColumn, searchText, startDateRange, endDateRange]);
+  }, [paginationModel.page, paginationModel.pageSize, sort, sortColumn, searchText, startDateRange, endDateRange,fetchTableData]);
 
   const handleSortModel = (newModel: GridSortModel) => {
     if (newModel.length) {

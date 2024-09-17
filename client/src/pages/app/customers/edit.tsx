@@ -105,9 +105,7 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
     return {
       props: {
         customerData: JSON.stringify(customerData),
-        // ...customerData,
-        // datefirstcontacted: serializeDate(customerData.datefirstcontacted),
-        // dateofbirth: serializeDate(customerData.dateofbirth),
+
         customerTypes,
         pickrequirement,
         paymentmode,
@@ -116,6 +114,7 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
     };
   } catch (error) {
     console.error(error);
+    
     return {
       notFound: true,
     };
@@ -123,7 +122,3 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
 };
 
 export default EditCustomerPage;
-
-function json_build_object(arg0: string, empid: any, arg2: string, firstname: any, arg4: string, lastname: any) {
-  throw new Error('Function not implemented.');
-}

@@ -110,7 +110,6 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
   const {
     control,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -128,22 +127,22 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
 
 
 console.log(data,"whole")
-  // Function to update the combined field
-  const updateFullName = (firstname: string, lastname: string) => {
-    setValue('fullname', `${firstname}${lastname}`);
-  };
 console.log(orderdetails,"orderdetails")
   const onSubmit = (formData: any) => {
     console.log(formData);
     toast.success('Form Submitted');
   };
+  
   return (
     <Card>
       <CardHeader title="Edit Order Form" />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)}>
+
           <Grid container spacing={5}>
+
             {/* Account Number */}
+
             <Grid item xs={12}>
               <Controller
                 name="orderno"
@@ -441,4 +440,3 @@ console.log(orderdetails,"orderdetails")
 };
 
 export default OrderEditForm; 
-// order number ,paymentmode,orderDate,orderstatus,deliverydate,orderdate,quantity

@@ -19,6 +19,7 @@ interface Props {
 
 const PreviewActions = ({ id,startDate,endDate, toggleSendInvoiceDrawer, toggleAddPaymentDrawer }: Props) => {
   console.log(id,'id')
+  
   return (
     <Card>
       <CardContent>

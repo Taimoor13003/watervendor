@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         try {
 
             const { page = 1, limit = 10, searchText = '' } = req.query;
-            let pageNumber = parseInt(page as string)
+            const pageNumber = parseInt(page as string)
             const limitNumber = parseInt(limit as string);
             const offset = (pageNumber - 1) * limitNumber;
             const searchPattern = `%${searchText}%`;

@@ -1,5 +1,3 @@
-import { ReactNode } from "react"
-
 export type InvoiceStatus = 'Paid' | string
 
 export type InvoiceLayoutProps = {
@@ -16,28 +14,30 @@ export type InvoiceClientType = {
 }
 
 export type InvoiceType = {
-  firstname: string
-  lastname: string
-  middlename: string
-  customertype: ReactNode
-  paymentmode: ReactNode
-  telephoneres: ReactNode
-  id: number
-  name: string
-  total: number
-  avatar: string
-  service: string
-  dueDate: string
-  address: string
-  company: string
-  country: string
-  contact: string
-  avatarColor?: string
-  issuedDate: string
-  companyEmail: string
-  balance: string | number
-  invoiceStatus: InvoiceStatus
-}
+  firstname?: string;
+  lastname?: string;
+  middlename?: string;
+  customertype?: string;
+  paymentmode?: string;
+  telephoneres?: string;
+  id: number;
+  name: string;
+  total: number;
+  avatar?: string;
+  service: string;
+  dueDate: string;
+  address: string;
+  company: string;
+  country: string;
+  contact: string;
+  avatarColor?: string;
+  issuedDate: string;
+  companyEmail: string;
+  balance: string | number;
+  invoiceStatus: string;
+};
+
+
 
 export type InvoicePaymentType = {
   iban: string

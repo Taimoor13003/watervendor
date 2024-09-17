@@ -7,11 +7,13 @@ import { useRouter } from 'next/router';
 import prisma from 'src/lib/prisma';
 
 import CustomerInvoiceTable from 'src/views/orders/table/CustomerInvoiceTable';
+
   // @ts-ignore
+
 function Index({ customers }) {
   const router = useRouter();
   const { q } = router.query;
-  console.log(customers);
+  console.log(customers,q);
 
   return (
     <div>

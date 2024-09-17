@@ -233,7 +233,8 @@
 // };
 
 // export default OrderTableServerSide;
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, {  useState, useCallback, useRef } from 'react';
+
 // import Card from '@mui/material/Card'; 
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
@@ -248,6 +249,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import CustomInput from './DatePicker/CustomInput';
 import DialougeComponent from './DialougeComponent';
+
 // import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 import moment from 'moment';
 import axios from 'axios';
@@ -262,12 +264,11 @@ const OrderTableServerSide = () => {
   const [sort, setSort] = useState<SortType>('asc');
   const [sortColumn, setSortColumn] = useState<string>('firstname');
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
-  const [searchText, setSearchText] = useState<string>('');
+  const [searchText] = useState<string>('');
   const [open, setOpen] = useState<boolean>(false);
   const [startDateRange, setStartDateRange] = useState<Date | null>(null);
   const [endDateRange, setEndDateRange] = useState<Date | null>(null);
 
-  // Temporary states for storing date values
   const [tempStartDate, setTempStartDate] = useState<Date | null>(null);
   const [tempEndDate, setTempEndDate] = useState<Date | null>(null);
 

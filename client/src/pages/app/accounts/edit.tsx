@@ -32,6 +32,7 @@ export const getServerSideProps: GetServerSideProps<AccountPageProps> = async ()
     };
   } catch (error) {
     console.error(error);
+    
     return {
       notFound: true,
     };

@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Missing required query parameters' });
   }
 
-  let ci = customerids?.length ? customerids.split(",").map((el: string) => parseInt(el)) : [];
+  const ci = customerids?.length ? customerids.split(",").map((el: string) => parseInt(el)) : [];
 
   try {
     if (!Array.isArray(ci) || ci.some(isNaN)) {
@@ -34,7 +34,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         acc[id] = [];
       }
       acc[id].push(item);
+
       return acc;
+      
     }, {});
 
     res.status(200).json(groupedData);

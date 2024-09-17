@@ -1,15 +1,15 @@
-import React, { useEffect, useState, useCallback, ChangeEvent } from 'react';
+import React, { useEffect, useState, ChangeEvent } from 'react';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
-import { DataGrid, GridColDef, GridRenderCellParams, GridSortModel } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 import { DataGridRowType } from 'src/@fake-db/types';
 
-type SortType = 'asc' | 'desc' | undefined | null;
+// type SortType = 'asc' | 'desc' | undefined | null;
 
 const RatePerBottle = ({ data, ratePerBottle }: { data: any[], ratePerBottle: number }) => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });

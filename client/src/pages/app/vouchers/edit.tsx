@@ -16,6 +16,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
     }));
 
     return {
+      
       props: {
         vouchers: serializedVouchers,
         vouchertrans, // Pass vouchertrans data to the component
@@ -23,10 +24,14 @@ export const getServerSideProps: GetServerSideProps = async () => {
     };
   } catch (error) {
     console.error(error);
+
     return {
+
       props: {
+
         vouchers: [],
-        vouchertrans: [], // Return an empty array in case of error
+
+        vouchertrans: [], 
       },
     };
   }
@@ -38,7 +43,6 @@ type VoucherTrans = {
   transactionCode: string;
   transactionDate: string;
   amount: number;
-  // Add other relevant fields here if needed
 };
 
 type VoucherProps = {

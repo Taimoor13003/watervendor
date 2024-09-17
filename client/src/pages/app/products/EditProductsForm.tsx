@@ -44,6 +44,7 @@ const EditProductsForm = ({ productData }: EditProductFormProps) => {
   const onSubmit = (data: FormValues) => {
     toast.success('Form Submitted');
     console.log(data);
+    
     // Handle form submission logic here
   };
 
