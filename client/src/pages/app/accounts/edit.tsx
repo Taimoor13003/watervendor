@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from 'next/types';
 import prisma from 'src/lib/prisma'; // Ensure your Prisma client is correctly configured
 import EditAccountForm from './EditAccountForm';
 

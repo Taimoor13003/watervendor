@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from 'next/types';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -10,14 +10,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'Missing required query parameters' });
   }
 
-  const ci = customerids?.length ? customerids.split(",").map((el: string) => parseInt(el)) : [];
+  const ci = typeof customerids === 'string' ? customerids.split(",").map((el: string) => parseInt(el)) : [];
 
   try {
     if (!Array.isArray(ci) || ci.some(isNaN)) {
       return res.status(400).json({ error: 'Invalid customer IDs' });
     }
 
-    const data = await prisma.$queryRaw`
+    const data: Array<{
+      InvoiceDate: string;
+      reqbottles: number;
+      rate_per_bottle: number;
+      firstname: string;
+      lastname: string;
+      addressres: string;
+      customerid: number;
+      [key: string]: any;
+    }> = await prisma.$queryRaw`
       SELECT invoicedate AS "InvoiceDate", c.reqbottles, c.rate_per_bottle, c.firstname, c.lastname,
              c.addressres, o.*, o.customerid
       FROM orders o
