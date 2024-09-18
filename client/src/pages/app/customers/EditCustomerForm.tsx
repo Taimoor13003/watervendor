@@ -1,4 +1,4 @@
-import React, {useEffect } from 'react';
+import React, { useEffect } from 'react';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
@@ -29,8 +29,9 @@ type FormValues = {
   addressoffice: string;
   depositamount: string;
   requirement: string;
-  delivery_person: { empid: string, firstname: string, lastname: string };
+  delivery_person: { empid: string; firstname: string; lastname: string };
   reqbottles: string;
+  tax: string; // Added tax field
 };
 
 type EditCustomerFormProps = {
@@ -64,7 +65,8 @@ const schema = yup.object().shape({
   depositamount: yup.string().required(),
   requirement: yup.string().required(),
   delivery_person: yup.string().required(),
-  reqbottles: yup.string().required()
+  reqbottles: yup.string().required(),
+  tax: yup.string().required() // Validation for tax
 });
 
 const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymentmode, deliveryPersons }: EditCustomerFormProps) => {
@@ -77,6 +79,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
     mode: 'onChange',
     resolver: yupResolver(schema)
   });
+
   console.log(customerData, "alldata");
   console.log(customerTypes, "customerTypes");
   console.log(pickrequirement, "pickrequirement");
@@ -88,14 +91,13 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
     console.log(data);
   };
 
-
   useEffect(() => {
     setValue("delivery_person", customerData.delivery_person)
   }, [customerData.delivery_person, setValue])
 
   return (
     <Card>
-      <CardHeader title=' Edit Customer Form' />
+      <CardHeader title='Edit Customer Form' />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={5}>
@@ -116,7 +118,6 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
               />
             </Grid>
 
-           
             <Grid item xs={12}>
               <Controller
                 name='lastname'
@@ -158,7 +159,11 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 control={control}
                 rules={{
                   required: true,
-                  validate: value => value <= 100 || 'Tax cannot be more than 100',
+                  validate: value => {
+                    const numValue = parseFloat(value);
+
+                    return !isNaN(numValue) && numValue <= 100 || 'Tax cannot be more than 100';
+                  },
                 }}
                 render={({ field: { value, onChange } }) => (
                   <CustomTextField
@@ -166,9 +171,10 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                     value={value}
                     label='Tax'
                     onChange={e => {
-                      const inputValue = parseFloat(e.target.value);
-                      if (inputValue <= 100 || e.target.value === '') {
-                        onChange(e);
+                      const inputValue = e.target.value;
+                      const numValue = parseFloat(inputValue);
+                      if (!isNaN(numValue) && numValue <= 100 || inputValue === '') {
+                        onChange(inputValue);
                       }
                     }}
                     placeholder='Enter tax amount'
@@ -235,7 +241,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 )}
               />
             </Grid>
-           
+
             <Grid item xs={12}>
               <Controller
                 name='telephoneres'
@@ -293,6 +299,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                     fullWidth
                     label='Email Address'
                     InputLabelProps={{ shrink: true }}
+                    placeholder='johndoe@example.com'
                     error={Boolean(errors.email)}
                     helperText={errors.email?.message}
                     {...field}
@@ -307,8 +314,8 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    label='Date First Contacted'
                     type='date'
+                    label='Date First Contacted'
                     InputLabelProps={{ shrink: true }}
                     error={Boolean(errors.datefirstcontacted)}
                     helperText={errors.datefirstcontacted?.message}
@@ -317,7 +324,40 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 )}
               />
             </Grid>
-            
+            <Grid item xs={12}>
+              <Controller
+                name='dateofbirth'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    type='date'
+                    label='Date of Birth'
+                    InputLabelProps={{ shrink: true }}
+                    error={Boolean(errors.dateofbirth)}
+                    helperText={errors.dateofbirth?.message}
+                    {...field}
+                  />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Controller
+                name='delieverydate'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    type='date'
+                    label='Delivery Date'
+                    InputLabelProps={{ shrink: true }}
+                    error={Boolean(errors.delieverydate)}
+                    helperText={errors.delieverydate?.message}
+                    {...field}
+                  />
+                )}
+              />
+            </Grid>
             <Grid item xs={12}>
               <Controller
                 name='deliveryarea'
@@ -350,7 +390,6 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 )}
               />
             </Grid>
-
             <Grid item xs={12}>
               <Controller
                 name='depositamount'
@@ -359,11 +398,62 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                   <CustomTextField
                     fullWidth
                     label='Deposit Amount'
-                    placeholder='Amount'
+                    placeholder='1000'
                     error={Boolean(errors.depositamount)}
                     helperText={errors.depositamount?.message}
                     {...field}
                   />
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Controller
+                name='requirement'
+                control={control}
+                render={({ field }) => (
+                  <FormControl fullWidth error={Boolean(errors.requirement)}>
+                    <InputLabel>Requirements</InputLabel>
+                    <Select {...field} label='Requirements' fullWidth defaultValue=''>
+                      {pickrequirement.map((req) => (
+                        <MenuItem key={req.id} value={req.requirement}>
+                          {req.requirement}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {errors.requirement && <FormHelperText>{errors.requirement.message}</FormHelperText>}
+                  </FormControl>
+                )}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <Controller
+                name='delivery_person'
+                control={control}
+                rules={{ required: true }}
+                render={({ field: { value, onChange, onBlur } }) => (
+                  <FormControl fullWidth error={Boolean(errors.delivery_person)}>
+                    <InputLabel>Delivery Person</InputLabel>
+                    <Select
+                      label='Delivery Person'
+                      fullWidth
+                      value={value?.empid || ''}
+                      onChange={(e) => {
+                        const selectedEmpid = e.target.value;
+                        const selectedPerson = deliveryPersons.find(person => person.empid === selectedEmpid);
+                        if (selectedPerson) {
+                          onChange(selectedPerson); // Pass the whole object if necessary
+                        }
+                      }}
+                      onBlur={onBlur}
+                    >
+                      {deliveryPersons.map((person) => (
+                        <MenuItem key={person.id} value={person.empid}>
+                          {person.firstname} {person.lastname}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {errors.delivery_person && <FormHelperText>{errors.delivery_person.message}</FormHelperText>}
+                  </FormControl>
                 )}
               />
             </Grid>
@@ -375,7 +465,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                   <CustomTextField
                     fullWidth
                     label='Required Bottles'
-                    placeholder='Number of Bottles'
+                    placeholder='10'
                     error={Boolean(errors.reqbottles)}
                     helperText={errors.reqbottles?.message}
                     {...field}
@@ -383,24 +473,6 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='notes'
-                control={control}
-                render={({ field }) => (
-                  <CustomTextField
-                    fullWidth
-                    label='Notes'
-                    multiline
-                    rows={4}
-                    error={Boolean(errors.notes)}
-                    helperText={errors.notes?.message}
-                    {...field}
-                  />
-                )}
-              />
-            </Grid>
-            
             <Grid item xs={12}>
               <Button type='submit' variant='contained'>
                 Submit

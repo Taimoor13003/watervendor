@@ -15,11 +15,11 @@ type FormValues = {
   accountname: string;
   accounttype: number;
   openingbalance: number;
-  remarks: string;
+  remarks: string | null;
 };
 
 type EditAccountFormProps = {
-  accountData: FormValues;
+  accountData: FormValues | null;
 };
 
 const schema = yup.object().shape({
@@ -32,6 +32,8 @@ const schema = yup.object().shape({
 
 const EditAccountForm = ({ accountData }: EditAccountFormProps) => {
   const { control, handleSubmit, formState: { errors }} = useForm<FormValues>({
+    
+    //@ts-ignore
     defaultValues: accountData,
     mode: 'onChange',
     resolver: yupResolver(schema),

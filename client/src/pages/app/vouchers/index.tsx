@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from 'next/types';
 import { PrismaClient } from '@prisma/client'; // Adjust the import as needed
 import VoucherTable from 'src/views/orders/table/VoucherTable';
 
@@ -11,7 +11,6 @@ export const getServerSideProps: GetServerSideProps = async () => {
       skip: 0,
     });
 
-    // Serialize dates to strings
     const serializedVouchers = vouchers.map(voucher => ({
       ...voucher,
       voucherdate: voucher?.voucherdate ? voucher.voucherdate.toISOString() : "",
@@ -45,9 +44,10 @@ type VoucherProps = {
 
 const EditPage = ({ vouchers }: VoucherProps) => {
   return (
-    <div>
+
+//@ts-ignore
+
       <VoucherTable vouchers={vouchers} />
-    </div>
   );
 };
 

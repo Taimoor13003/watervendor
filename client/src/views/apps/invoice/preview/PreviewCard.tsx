@@ -1,26 +1,32 @@
-import Card from '@mui/material/Card'
-import Table from '@mui/material/Table'
-import Divider from '@mui/material/Divider'
-import TableRow from '@mui/material/TableRow'
-import TableHead from '@mui/material/TableHead'
-import TableBody from '@mui/material/TableBody'
-import Typography from '@mui/material/Typography'
-import Box from '@mui/material/Box'
-import CardContent from '@mui/material/CardContent'
-import { useTheme } from '@mui/material/styles'
-import TableContainer from '@mui/material/TableContainer'
-import TableCell from '@mui/material/TableCell'
-import { format } from 'date-fns'
-import Image from 'next/image'
+// src/views/apps/invoice/preview/PreviewCard.tsx
 
+import React from 'react';
+import Card from '@mui/material/Card';
+import Table from '@mui/material/Table';
+import Divider from '@mui/material/Divider';
+import TableRow from '@mui/material/TableRow';
+import TableHead from '@mui/material/TableHead';
+import TableBody from '@mui/material/TableBody';
+import Typography from '@mui/material/Typography';
+import Box from '@mui/material/Box';
+import CardContent from '@mui/material/CardContent';
+import { useTheme } from '@mui/material/styles';
+import TableContainer from '@mui/material/TableContainer';
+import TableCell from '@mui/material/TableCell';
+import { format } from 'date-fns';
+import Image from 'next/image';
+import { SingleInvoiceType } from 'src/types/apps/invoiceTypes';
 
+interface PreviewCardProps {
+  data: SingleInvoiceType[]; // Expecting an array
+}
 
-const PreviewCard = ({ data }: { data: any[] }) => {
-  const theme = useTheme()
+const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
+  const theme = useTheme();
 
   const datanew = Array.isArray(data) ? data : [];
-  const totalBottlesDelivered = datanew.reduce((total: number, current: any) => total + (current.orderqty || 0), 0);
-  const totalBottlesReturned = datanew.reduce((total: number, current: any) => total + (current.reqbottles || 0), 0);
+  const totalBottlesDelivered = datanew.reduce((total: number, current) => total + (current.orderqty || 0), 0);
+  const totalBottlesReturned = datanew.reduce((total: number, current) => total + (current.reqbottles || 0), 0);
 
   if (datanew.length === 0) {
     return null;
@@ -31,18 +37,17 @@ const PreviewCard = ({ data }: { data: any[] }) => {
   const lastname = firstItem?.lastname || 'N/A';
   const address = firstItem?.addressres || 'N/A';
 
-
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
-
-    return format(date, 'dd/MM/yyyy');
     
+    return format(date, 'dd/MM/yyyy');
   };
+  
   const currentDate = format(new Date(), 'EEEE, dd MMMM, yyyy');
 
-  // Calculate total amount due
-  const totalAmountDue = datanew.reduce((total: number, item: any) => {
+  const totalAmountDue = datanew.reduce((total: number, item) => {
+
     return total + (item.orderqty || 0) * (item.rate_per_bottle || 0);
   }, 0);
 
@@ -106,7 +111,7 @@ const PreviewCard = ({ data }: { data: any[] }) => {
               },
             }}
           >
-            {datanew.map((newData: any, index: number) => {
+            {datanew.map((newData, index) => {
               const amount = (newData.orderqty || 0) * (newData.rate_per_bottle || 0);
 
               return (
@@ -144,7 +149,7 @@ const PreviewCard = ({ data }: { data: any[] }) => {
         </Typography>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default PreviewCard
+export default PreviewCard;

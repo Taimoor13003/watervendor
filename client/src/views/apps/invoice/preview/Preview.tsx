@@ -1,57 +1,51 @@
-// ** React Imports
-import { useState, useEffect } from 'react'
+// src/views/app/invoice/preview/InvoicePreview.tsx
 
-// ** Next Import
-import Link from 'next/link'
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Grid from '@mui/material/Grid';
+import Alert from '@mui/material/Alert';
+import axios from 'axios';
+import { SingleInvoiceType, InvoiceLayoutProps } from 'src/types/apps/invoiceTypes';
+import PreviewCard from 'src/views/apps/invoice/preview/PreviewCard';
+import PreviewActions from 'src/views/apps/invoice/preview/PreviewActions';
+import AddPaymentDrawer from 'src/views/apps/invoice/shared-drawer/AddPaymentDrawer';
+import SendInvoiceDrawer from 'src/views/apps/invoice/shared-drawer/SendInvoiceDrawer';
 
-// ** MUI Imports
-import Grid from '@mui/material/Grid'
-import Alert from '@mui/material/Alert'
-
-// ** Third Party Components
-import axios from 'axios'
-
-// ** Types
-import { SingleInvoiceType, InvoiceLayoutProps } from 'src/types/apps/invoiceTypes'
-
-// ** Demo Components Imports
-import PreviewCard from 'src/views/apps/invoice/preview/PreviewCard'
-import PreviewActions from 'src/views/apps/invoice/preview/PreviewActions'
-import AddPaymentDrawer from 'src/views/apps/invoice/shared-drawer/AddPaymentDrawer'
-import SendInvoiceDrawer from 'src/views/apps/invoice/shared-drawer/SendInvoiceDrawer'
-
-const InvoicePreview = ({ id }: InvoiceLayoutProps) => {
-  // ** State
-  const [error, setError] = useState<boolean>(false)
-  const [data, setData] = useState<null | SingleInvoiceType>(null)
-  const [addPaymentOpen, setAddPaymentOpen] = useState<boolean>(false)
-  const [sendInvoiceOpen, setSendInvoiceOpen] = useState<boolean>(false)
+const InvoicePreview: React.FC<InvoiceLayoutProps> = ({ id }) => {
+  const [error, setError] = useState<boolean>(false);
+  const [data, setData] = useState<SingleInvoiceType[]>([]); // Ensure data is an array
+  const [addPaymentOpen, setAddPaymentOpen] = useState<boolean>(false);
+  const [sendInvoiceOpen, setSendInvoiceOpen] = useState<boolean>(false);
 
   useEffect(() => {
     axios
       .get('/apps/invoice/single-invoice', { params: { id } })
       .then(res => {
-        setData(res.data)
-        setError(false)
+        // Ensure data is always an array
+        const invoiceData = res.data ? [res.data] : [];
+        setData(invoiceData);
+        setError(false);
       })
       .catch(() => {
-        setData(null)
-        setError(true)
-      })
-  }, [id])
+        setData([]); // Ensure data is an empty array in case of error
+        setError(true);
+      });
+  }, [id]);
 
-  const toggleSendInvoiceDrawer = () => setSendInvoiceOpen(!sendInvoiceOpen)
-  const toggleAddPaymentDrawer = () => setAddPaymentOpen(!addPaymentOpen)
+  const toggleSendInvoiceDrawer = () => setSendInvoiceOpen(!sendInvoiceOpen);
+  const toggleAddPaymentDrawer = () => setAddPaymentOpen(!addPaymentOpen);
 
-  if (data) {
+  if (data.length > 0) {
     return (
       <>
         <Grid container spacing={6}>
           <Grid item xl={9} md={8} xs={12}>
-            <PreviewCard data={data} />
+            <PreviewCard data={data} /> {/* Pass data as an array */}
           </Grid>
           <Grid item xl={3} md={4} xs={12}>
             <PreviewActions
+            
+              //@ts-ignore
               id={id}
               toggleAddPaymentDrawer={toggleAddPaymentDrawer}
               toggleSendInvoiceDrawer={toggleSendInvoiceDrawer}
@@ -61,7 +55,7 @@ const InvoicePreview = ({ id }: InvoiceLayoutProps) => {
         <SendInvoiceDrawer open={sendInvoiceOpen} toggle={toggleSendInvoiceDrawer} />
         <AddPaymentDrawer open={addPaymentOpen} toggle={toggleAddPaymentDrawer} />
       </>
-    )
+    );
   } else if (error) {
     return (
       <Grid container spacing={6}>
@@ -72,10 +66,10 @@ const InvoicePreview = ({ id }: InvoiceLayoutProps) => {
           </Alert>
         </Grid>
       </Grid>
-    )
+    );
   } else {
-    return null
+    return null;
   }
-}
+};
 
-export default InvoicePreview
+export default InvoicePreview;

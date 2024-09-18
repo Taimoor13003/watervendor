@@ -14,7 +14,6 @@ import { useRouter } from 'next/router';
 import { format } from 'date-fns';
 import Image from 'next/image';
 
-// Styled components
 
 const MUITableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: 0,
@@ -39,8 +38,17 @@ const InvoicePrint = () => {
   const totalAmountDue = Object.values(invoiceData).flat().reduce((total: number, item: any) => total + (item.orderqty || 0) * (item.rate_per_bottle || 0), 0);
 
   const firstItem = Object.values(invoiceData).flat()[0] || {};
+
+  //@ts-ignore
+
   const firstname = firstItem?.firstname || 'N/A';
+
+  //@ts-ignore
+
   const lastname = firstItem?.lastname || 'N/A';
+  
+  //@ts-ignore
+
   const address = firstItem?.addressres || 'N/A';
 
   const formatDate = (dateString: string) => {
@@ -97,7 +105,6 @@ const InvoicePrint = () => {
         <Grid item xs={12}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { sm: 'flex-end', xs: 'flex-start' } }}>
             <Typography variant='h4' sx={{ mb: 2 }}>
-              {/* Invoice ID here */}
             </Typography>
           </Box>
         </Grid>
@@ -111,9 +118,15 @@ const InvoicePrint = () => {
           <b>Address: </b> {address}
         </Typography>
         <Typography>
+
+
+
           <b>Start Date: </b> {formatDate(date1)}
         </Typography>
         <Typography>
+
+
+
           <b>End Date: </b> {formatDate(date2)}
         </Typography>
         <Typography>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
@@ -31,6 +31,7 @@ type FormValues = {
   requirement: string;
   delivery_person: string;
   reqbottles: string;
+  tax: string;
 };
 
 type EditCustomerFormProps = {
@@ -38,7 +39,9 @@ type EditCustomerFormProps = {
   customerTypes: { id: number; customertype: string }[];
   pickrequirement: { id: number; requirement: string }[];
   paymentmode: { id: number; paymentmode: string }[];
-  deliveryPersons: { id: number; empid: number; employeecode: string; firstname: string; middlename: string }[];
+  deliveryPersons: {
+    lastname: ReactNode; id: number; empid: number; employeecode: string; firstname: string; middlename: string 
+}[];
 };
 
 const schema = yup.object().shape({
@@ -138,7 +141,11 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 control={control}
                 rules={{
                   required: true,
-                  validate: value => value <= 100 || 'Tax cannot be more than 100',
+                  validate: value => {
+                    const parsedValue = parseFloat(value);
+                    
+                    return !isNaN(parsedValue) && parsedValue <= 100 || 'Tax cannot be more than 100';
+                  },
                 }}
                 render={({ field: { value, onChange } }) => (
                   <CustomTextField
@@ -160,6 +167,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                   />
                 )}
               />
+
             </Grid>
 
             <Grid item xs={12}>

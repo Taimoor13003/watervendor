@@ -13,7 +13,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 
 type Voucher = {
-  voucheramount: any;
+  voucheramount: number;
   description: string;
   vouchertype: number;
   voucherno: number;
@@ -39,11 +39,11 @@ type VoucherProps = {
 
 const schema = yup.object().shape({
   description: yup.string().required(),
-  vouchertype: yup.string().required(),
-  voucherno: yup.string().required(),
+  vouchertype: yup.number().required(),
+  voucherno: yup.number().required(),
   voucherCode: yup.string().required(),
   amount: yup.number().required(),
-  voucherDate: yup.date().required(), // Validation for Date
+  voucherDate: yup.date().nullable().required(), // Validation for Date
   accountcode: yup.string().required(),
   chqno: yup.string().required(),
   debitamount: yup.number().required(),
@@ -51,15 +51,15 @@ const schema = yup.object().shape({
 });
 
 const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
-  console.log(vouchertrans, "vouchertrans");
-console.log(vouchers,"vouchersssssssss")
   const voucher = vouchers[0] || {
-    voucherdate: null,
-    voucherCode: '',
     voucheramount: 0,
     description: '',
     vouchertype: 0,
     voucherno: 0,
+    id: 0,
+    voucherCode: '',
+    amount: 0,
+    voucherdate: null,
   };
 
   const voucherTransaction = vouchertrans[0] || {
@@ -110,6 +110,7 @@ console.log(vouchers,"vouchersssssssss")
                     fullWidth
                     label="Voucher number"
                     placeholder="Voucher Number"
+                    type="number"
                     error={Boolean(errors.voucherno)}
                     helperText={errors.voucherno?.message}
                     {...field}

@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from 'next/types';
 import { PrismaClient } from '@prisma/client'; // Adjust the import as needed
 import ProductsTable from 'src/views/orders/table/ProductsTable';
 

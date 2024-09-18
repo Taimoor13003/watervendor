@@ -52,12 +52,12 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
     {
       flex: 0.25,
       minWidth: 290,
-      field: 'productCode',
+      field: 'productcode',
       headerName: 'Product Code',
       renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-            {params.row.productCode}
+            {params.row.productcode}
           </Typography>
         </Box>
       ),
@@ -70,7 +70,7 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
       renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-            {params.row.productName}
+            {params.row.productname}
           </Typography>
         </Box>
       ),
@@ -78,12 +78,12 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
     {
       flex: 0.25,
       minWidth: 290,
-      field: 'unitsInStock',
+      field: 'unitsinstockk',
       headerName: 'Units in Stock',
       renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-            {params.row.unitsInStock}
+            {params.row.unitsinstock}
           </Typography>
         </Box>
       ),
@@ -91,22 +91,22 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
     {
       flex: 0.175,
       minWidth: 120,
-      field: 'ratePerUnitCash',
+      field: 'rateperunitcash',
       headerName: 'Rate Per Unit (Cash)',
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          ${params.row.ratePerUnitCash.toFixed(2)}
+          ${params.row. rateperunitcash.toFixed(2)}
         </Typography>
       ),
     },
     {
       flex: 0.175,
       minWidth: 120,
-      field: 'ratePerUnitCoupon',
+      field: 'rateperunitcoupon',
       headerName: 'Rate Per Unit (Coupon)',
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          ${params.row.ratePerUnitCoupon.toFixed(2)}
+          ${params.row.rateperunitcoupon.toFixed(2)}
         </Typography>
       ),
     },

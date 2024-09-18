@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from 'next/types';
 import { PrismaClient } from '@prisma/client';
 import EditProductsForm from './EditProductsForm';
 

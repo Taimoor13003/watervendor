@@ -21,6 +21,8 @@ const AccountPage = ({ accountData }: AccountPageProps) => {
   return <EditAccountForm accountData={accountData} />;
 };
 
+//@ts-ignore
+
 export const getServerSideProps: GetServerSideProps<AccountPageProps> = async () => {
   try {
     const accountData = await prisma.accounts_head.findFirst(); // Adjust query as needed

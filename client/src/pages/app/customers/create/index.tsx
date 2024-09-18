@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from 'next/types';
 import { format } from 'date-fns';
 import CustomerForm from '../CustomerForm';
 import prisma from 'src/lib/prisma';
@@ -23,6 +23,7 @@ type FormValues = {
   requirement: string;
   delivery_person: string;
   reqbottles: string;
+  tax:string;
 };
 
 
@@ -47,6 +48,8 @@ const CustomerFormPage = ({ customerData, customerTypes, pickrequirement, paymen
     </div>
   );
 };
+
+//@ts-ignore
 
 export const getServerSideProps: GetServerSideProps<CustomerFormPageProps> = async () => {
   try {

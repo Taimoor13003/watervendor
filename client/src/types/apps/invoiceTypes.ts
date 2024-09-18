@@ -39,7 +39,7 @@ export type InvoiceType = {
 
 
 
-export type InvoicePaymentType = {
+export type InvoicePaymentType = {      
   iban: string
   totalDue: string
   bankName: string
@@ -48,6 +48,14 @@ export type InvoicePaymentType = {
 }
 
 export type SingleInvoiceType = {
+  orderqty: number
+  reqbottles: number
+  rate_per_bottle: number
+  accountno: string
+  InvoiceDate(InvoiceDate: any): import("react").ReactNode
+  firstname: string
+  lastname: string
+  addressres: string
   invoice: InvoiceType
   paymentDetails: InvoicePaymentType
 }
