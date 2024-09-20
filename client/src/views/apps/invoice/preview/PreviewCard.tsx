@@ -111,7 +111,7 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
               },
             }}
           >
-            {datanew.map((newData, index) => {
+            {datanew.map((newData: any, index) => {
               const amount = (newData.orderqty || 0) * (newData.rate_per_bottle || 0);
 
               return (

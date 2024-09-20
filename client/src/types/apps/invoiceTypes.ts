@@ -1,7 +1,7 @@
 export type InvoiceStatus = 'Paid' | string
 
 export type InvoiceLayoutProps = {
-  id: string | undefined
+  id: string | null
 }
 
 export type InvoiceClientType = {

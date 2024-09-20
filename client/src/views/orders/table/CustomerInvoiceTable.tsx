@@ -1,10 +1,8 @@
-// ** React Imports
 import { useState, useEffect, forwardRef } from 'react';
 
 // ** Next Import
 // import Link from 'next/link';
 
-// ** MUI Imports
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
@@ -57,10 +55,8 @@ const CustomInput = forwardRef((props: CustomInputProps, ref) => {
 
   return <CustomTextField fullWidth inputRef={ref} {...updatedProps} label={props.label || ''} value={value} />;
 });
-/* eslint-enable */
 
 const InvoiceList = ({ data }: { data: any[] }) => {
-  // ** State
   const [dates, setDates] = useState<Date[]>([]);
   const [value, setValue] = useState<string>('');
   const [statusValue, setStatusValue] = useState<string>('');
@@ -85,8 +81,7 @@ const InvoiceList = ({ data }: { data: any[] }) => {
   }, [dispatch, statusValue, value, dates]);
 
   useEffect(() => {
-    // Check if data is ready
-    const dataReady = selectedRowIds.length > 0 && startDateRange && endDateRange;
+    const dataReady : any = selectedRowIds.length > 0 && startDateRange && endDateRange;
     setIsDataReady(dataReady);
   }, [selectedRowIds, startDateRange, endDateRange]);
 
@@ -120,7 +115,6 @@ const InvoiceList = ({ data }: { data: any[] }) => {
       headerName: 'Customer Name',
       renderCell: (params: CellType) => (
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          {/* Replace with your avatar logic */}
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
               {params.row.firstname + " " + params.row.middlename + " " + params.row.lastname}

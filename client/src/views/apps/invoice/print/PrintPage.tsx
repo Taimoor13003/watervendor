@@ -51,7 +51,7 @@ const InvoicePrint = () => {
 
   const address = firstItem?.addressres || 'N/A';
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: any) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
     
@@ -120,7 +120,7 @@ const InvoicePrint = () => {
         <Typography>
 
 
-
+ 
           <b>Start Date: </b> {formatDate(date1)}
         </Typography>
         <Typography>

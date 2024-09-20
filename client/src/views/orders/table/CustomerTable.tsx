@@ -18,6 +18,7 @@ const OrderTableServerSide = ({ data }: { data: any[] }) => {
   const [searchText, setSearchText] = useState<string>('');
   const [filteredData, setFilteredData] = useState<DataGridRowType[]>([]);
   const filterFields = ['firstname', 'lastname', 'customertype', 'paymentmode', 'telephoneoffice', 'telephoneres'];
+const [open,setOpen] = useState(false)
 
   const router = useRouter();
 

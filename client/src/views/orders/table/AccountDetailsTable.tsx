@@ -6,7 +6,6 @@ import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import Typography from '@mui/material/Typography';
 import { Box } from '@mui/material';
 
-// Define a type for the row data
 interface RowData {
   id: number; // Added id field
   voucherno: string;
@@ -18,11 +17,9 @@ interface RowData {
 
 const AccountDetailsTable = ({ data }: { data: RowData[] }) => {
 
-  // Calculate total debit and credit amounts
   const totalDebitAmount = data.reduce((sum, row) => sum + (row.debitamount || 0), 0);
   const totalCreditAmount = data.reduce((sum, row) => sum + (row.creditamount || 0), 0);
 
-  // Add a total row at the end of the data
   const dataWithTotal = [
     ...data,
     {

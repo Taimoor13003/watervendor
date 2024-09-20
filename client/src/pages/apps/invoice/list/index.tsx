@@ -1,4 +1,22 @@
+import React from 'react'
+
+const index = () => {
+  return (
+    <div>
+      
+    </div>
+  )
+}
+
+export default index
+
+
+
+
+
 // import { useState, useEffect, forwardRef } from 'react'
+
+
 
 // import Link from 'next/link'
 

@@ -21,7 +21,6 @@ const InvoicePreview: React.FC<InvoiceLayoutProps> = ({ id }) => {
     axios
       .get('/apps/invoice/single-invoice', { params: { id } })
       .then(res => {
-        // Ensure data is always an array
         const invoiceData = res.data ? [res.data] : [];
         setData(invoiceData);
         setError(false);
@@ -40,7 +39,7 @@ const InvoicePreview: React.FC<InvoiceLayoutProps> = ({ id }) => {
       <>
         <Grid container spacing={6}>
           <Grid item xl={9} md={8} xs={12}>
-            <PreviewCard data={data} /> {/* Pass data as an array */}
+            <PreviewCard data={data} /> 
           </Grid>
           <Grid item xl={3} md={4} xs={12}>
             <PreviewActions
@@ -48,8 +47,7 @@ const InvoicePreview: React.FC<InvoiceLayoutProps> = ({ id }) => {
               //@ts-ignore
               id={id}
               toggleAddPaymentDrawer={toggleAddPaymentDrawer}
-              toggleSendInvoiceDrawer={toggleSendInvoiceDrawer}
-            />
+              toggleSendInvoiceDrawer={toggleSendInvoiceDrawer} startDate={undefined} endDate={undefined}            />
           </Grid>
         </Grid>
         <SendInvoiceDrawer open={sendInvoiceOpen} toggle={toggleSendInvoiceDrawer} />

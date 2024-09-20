@@ -33,6 +33,10 @@ console.log(ratePerBottle,"rd")
     const filteredRows = filteredData.filter(row => {
       return Object.keys(row).some(field => {
         if (filterFields.includes(field)) {
+
+
+//@ts-ignore
+
           return searchRegex.test(row[field]);
         }
       });

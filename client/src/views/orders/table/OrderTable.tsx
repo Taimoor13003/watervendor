@@ -233,9 +233,9 @@
 // };
 
 // export default OrderTableServerSide;
+
 import React, {  useState, useCallback, useRef } from 'react';
 
-// import Card from '@mui/material/Card'; 
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -412,6 +412,10 @@ const OrderTableServerSide = () => {
               }}
               customInput={
                 <CustomInput
+
+
+//@ts-ignore
+
                   dates={[tempStartDate, tempEndDate]}
                   setDates={(dates: React.SetStateAction<Date | null>[]) => {
                     setTempStartDate(dates[0]);
