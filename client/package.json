@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "export": "next export",
     "lint": "eslint --fix \"src/**/*.{js,jsx,ts,tsx}\"",
@@ -47,7 +47,8 @@
     "clsx": "1.2.1",
     "date-fns": "2.30.0",
     "draft-js": "0.11.7",
-    "firebase": "^10.9.0",
+    "firebase": "^10.13.2",
+    "firebase-admin": "^12.5.0",
     "i18next": "22.4.15",
     "i18next-browser-languagedetector": "7.0.1",
     "i18next-http-backend": "2.2.0",
