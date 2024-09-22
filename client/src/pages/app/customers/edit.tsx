@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from 'next/types';
 import EditCustomerForm from 'src/pages/app/customers/EditCustomerForm';
 import prisma from 'src/lib/prisma';
 import { serializeDate } from 'src/@core/utils/date';
@@ -23,67 +23,81 @@ type FormValues = {
   requirement: string;
   delivery_person: { empid: string, firstname: string, lastname: string };
   reqbottles: string;
+  tax:string;
 };
 
+// Updated Employee type to match EditCustomerForm expectations
 type Employee = {
   id: number;
-  empid: number;
+  empid: string; // Changed to string
   employeecode: string;
   firstname: string;
   middlename: string;
   lastname: string;
   doj: Date | null;
   salarypaydate: Date | null;
-  dob: Date | null; // Added dob
+  dob: Date | null;
+};
+
+type PaymentMode = {
+  id: number;
+  paymentmode: string;
+  requirement: string; // Ensure this is included
 };
 
 type EditCustomerPageProps = {
   customerData: FormValues;
   customerTypes: { id: number; customertype: string }[];
   pickrequirement: { id: number; requirement: string }[];
-  paymentmode: { id: number; paymentmode: string }[];
+  paymentmode: PaymentMode[];
   employee: Employee[];
 };
 
 const EditCustomerPage = ({ customerData, customerTypes, pickrequirement, paymentmode, employee }: EditCustomerPageProps) => {
-  return <EditCustomerForm customerData={customerData} customerTypes={customerTypes} pickrequirement={pickrequirement} paymentmode={paymentmode} deliveryPersons={employee} />;
+  return (
+    <EditCustomerForm
+      customerData={customerData}
+      customerTypes={customerTypes}
+      pickrequirement={pickrequirement}
+      paymentmode={paymentmode}
+      deliveryPersons={employee} // Ensure this matches the expected type
+    />
+  );
 };
 
-export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = async (context : any) => {
+//@ts-ignore
+
+export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = async (context: any) => {
   const { query } = context;
   const id = query.customerid as string | undefined;
 
-  console.log(id , "idddddddddd")
-
   if (!id) {
+
     return {
+
       notFound: true,
     };
   }
 
   try {
-    // const customerData = await prisma.customer.findUnique({
-    //   where: { id: parseInt(id, 10) },
-    // });
-
-    // const customerData = await prisma.$queryRaw `SELECT c.*, json_build_object( 'empid',ep.empid, 'firstname',ep.firstname,'lastname',ep.lastname) AS delivery_person FROM customer c LEFT JOIN employee_personal ep ON c.delivery_person = ep.empid where c.customerid=941`;
     const customerData = await prisma.$queryRaw`
-  SELECT
-    c.*,
-    json_build_object(
-      'empid', ep.empid,
-      'firstname', ep.firstname,
-      'lastname', ep.lastname
-    ) AS delivery_person
-  FROM
-    customer c
-  LEFT JOIN
-    employee_personal ep
-  ON
-    c.delivery_person = ep.empid
-  WHERE
-    c.customerid = ${Number(id)}
-`;
+      SELECT
+        c.*,
+        json_build_object(
+          'empid', ep.empid,
+          'firstname', ep.firstname,
+          'lastname', ep.lastname
+        ) AS delivery_person
+      FROM
+        customer c
+      LEFT JOIN
+        employee_personal ep
+      ON
+        c.delivery_person = ep.empid
+      WHERE
+        c.customerid = ${Number(id)}
+    `;
+    
     if (!customerData) {
       return {
         notFound: true,
@@ -97,33 +111,35 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
 
     const serializedEmployee = employee.map(emp => ({
       ...emp,
+      empid: emp.empid ? emp.empid.toString() : '', // Convert empid to string or default to empty string if null
       doj: serializeDate(emp.doj),
       salarypaydate: serializeDate(emp.salarypaydate),
       dob: serializeDate(emp.dob),
     }));
 
+    const serializedPaymentMode = paymentmode.map(pm => ({
+      ...pm,
+      requirement: 'Default Requirement' // Replace this with actual requirement if available
+    }));
+
     return {
+
       props: {
-        customerData: JSON.stringify(customerData),
-        // ...customerData,
-        // datefirstcontacted: serializeDate(customerData.datefirstcontacted),
-        // dateofbirth: serializeDate(customerData.dateofbirth),
+        customerData: JSON.parse(JSON.stringify(customerData)), // Ensure correct serialization
         customerTypes,
         pickrequirement,
-        paymentmode,
+        paymentmode: serializedPaymentMode,
         employee: serializedEmployee,
       },
     };
   } catch (error) {
     console.error(error);
+    
     return {
+
       notFound: true,
     };
   }
 };
 
 export default EditCustomerPage;
-
-function json_build_object(arg0: string, empid: any, arg2: string, firstname: any, arg4: string, lastname: any) {
-  throw new Error('Function not implemented.');
-}

@@ -1,7 +1,7 @@
-// firebase.js
-import firebase, {getApps, initializeApp} from 'firebase/app'
-import 'firebase/auth'
-import { GoogleAuthProvider, getAuth, setPersistence, signInWithPopup } from 'firebase/auth';
+// firebase.service.ts
+
+import { getApps, initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, setPersistence, signInWithPopup } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyCF7k6j7LbGbAZMLGBXR7Vk-MF5aPkt2Lg",
@@ -13,31 +13,26 @@ const firebaseConfig = {
   measurementId: "G-F0985EKPXX"
 };
 
-let app
-if (!getApps.length) {
-  app = initializeApp(firebaseConfig)
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
 }
 
 // firebase authentication
 const firebaseAuth = getAuth(app);
 
 // google auth provider 
-
 const firebaseGoogleAuthProvider = new GoogleAuthProvider();
 firebaseGoogleAuthProvider.setCustomParameters({ prompt: "select_account" });
 
-
-
+// Uncomment and use as needed
 // setPersistence(firebaseAuth, browserLocalPersistence)
 //   .then(() => {
 //     console.log('Session persistence set successfully');
-//     // You can initialize other Firebase services or perform additional actions here
 //   })
 //   .catch((error) => {
 //     console.error('Error setting persistence:', error);
 //   });
-
-
 
 export {
   firebaseAuth,
@@ -45,5 +40,4 @@ export {
   GoogleAuthProvider,
   signInWithPopup,
   setPersistence,
-}
-export default firebase
+};

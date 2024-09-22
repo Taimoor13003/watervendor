@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from 'next/types';
 import prisma from 'src/lib/prisma'; // Ensure your Prisma client is correctly configured
 import EditAccountForm from './EditAccountForm';
 
@@ -21,6 +21,8 @@ const AccountPage = ({ accountData }: AccountPageProps) => {
   return <EditAccountForm accountData={accountData} />;
 };
 
+//@ts-ignore
+
 export const getServerSideProps: GetServerSideProps<AccountPageProps> = async () => {
   try {
     const accountData = await prisma.accounts_head.findFirst(); // Adjust query as needed
@@ -32,6 +34,7 @@ export const getServerSideProps: GetServerSideProps<AccountPageProps> = async ()
     };
   } catch (error) {
     console.error(error);
+    
     return {
       notFound: true,
     };

@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from 'next/types';
 import prisma from 'src/lib/prisma'; // Ensure your Prisma client is correctly configured
 import AccountTable from 'src/views/orders/table/AccountTable';
 
@@ -17,6 +17,8 @@ const AccountPage = ({ accounts }: AccountPageProps) => {
   return <AccountTable data={accounts} />;
 };
 
+//@ts-ignore
+
 export const getServerSideProps: GetServerSideProps<AccountPageProps> = async () => {
   try {
     const accounts = await prisma.accounts_head.findMany();
@@ -27,7 +29,9 @@ export const getServerSideProps: GetServerSideProps<AccountPageProps> = async ()
       },
     };
   } catch (error) {
+    
     console.error(error);
+
     return {
       notFound: true,
     };

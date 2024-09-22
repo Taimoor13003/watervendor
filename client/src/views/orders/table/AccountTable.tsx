@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useCallback, ChangeEvent } from 'react';
+import React, { useEffect, useState, ChangeEvent, useCallback } from 'react';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Fab from '@mui/material/Fab';
-import { DataGrid, GridColDef, GridRenderCellParams, GridSortModel } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { useRouter } from 'next/router';
 import DialougeComponent from './DialougeComponent';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
@@ -17,43 +17,31 @@ type SortType = 'asc' | 'desc' | undefined | null;
 const AccountTable = ({ data }: { data: any[] }) => {
   const [total, setTotal] = useState<number>(0);
   const [rows, setRows] = useState<any[]>([]);
-  const [sort, setSort] = useState<SortType>('asc');
-  const [sortColumn, setSortColumn] = useState<string>('accountname');
+  const [sort] = useState<SortType>('asc');
+  const [sortColumn] = useState<string>('accountname');
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
-  const [searchValue, setSearchValue] = useState<string>('');
   const [open, setOpen] = useState<boolean>(false);
   const router = useRouter();
   const [searchText, setSearchText] = useState<string>('');
   const [filteredData, setFilteredData] = useState<DataGridRowType[]>([]);
   const filterFields = ['accountname', 'accountnumber', 'balance'];
 
-  function loadServerRows(currentPage: number, data: DataGridRowType[]) {
-    return data.slice(currentPage * paginationModel.pageSize, (currentPage + 1) * paginationModel.pageSize);
-  }
+  console.log(total, rows, sort, sortColumn);
+
+  const loadServerRows = useCallback(
+    (currentPage: number, data: DataGridRowType[]) => {
+      return data.slice(currentPage * paginationModel.pageSize, (currentPage + 1) * paginationModel.pageSize);
+    },
+    [paginationModel.pageSize] // Only recalculate when pageSize changes
+  );
 
   useEffect(() => {
     setRows(loadServerRows(paginationModel.page, data));
     setTotal(data.length);
-  }, [data]);
+  }, [data, loadServerRows, paginationModel.page]);
 
-  const fetchTableData = useCallback(
-    async (sort: SortType, q: string, column: string) => {
-      console.log(sort, q, column);
-    },
-    []
-  );
+  console.log(data, 'acc data');
 
-  const handleSortModel = (newModel: GridSortModel) => {
-    if (newModel.length) {
-      setSort(newModel[0].sort);
-      setSortColumn(newModel[0].field);
-      fetchTableData(newModel[0].sort, searchValue, newModel[0].field);
-    } else {
-      setSort('asc');
-      setSortColumn('accountname');
-    }
-  };
-console.log(data,"acc data")
   const escapeRegExp = (value: string) => {
     return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
   };
@@ -104,7 +92,6 @@ console.log(data,"acc data")
         </Typography>
       ),
     },
-   
     {
       flex: 0.25,
       minWidth: 290,

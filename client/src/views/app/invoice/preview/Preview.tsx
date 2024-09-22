@@ -23,7 +23,7 @@ import SendInvoiceDrawer from 'src/views/apps/invoice/shared-drawer/SendInvoiceD
 const InvoicePreview = ({ id }: InvoiceLayoutProps) => {
   // ** State
   const [error, setError] = useState<boolean>(false)
-  const [data, setData] = useState<null | SingleInvoiceType>(null)
+  const [data, setData] = useState<null | SingleInvoiceType[]>(null)
   const [addPaymentOpen, setAddPaymentOpen] = useState<boolean>(false)
   const [sendInvoiceOpen, setSendInvoiceOpen] = useState<boolean>(false)
 
@@ -54,8 +54,7 @@ const InvoicePreview = ({ id }: InvoiceLayoutProps) => {
             <PreviewActions
               id={id}
               toggleAddPaymentDrawer={toggleAddPaymentDrawer}
-              toggleSendInvoiceDrawer={toggleSendInvoiceDrawer}
-            />
+              toggleSendInvoiceDrawer={toggleSendInvoiceDrawer} startDate={undefined} endDate={undefined}            />
           </Grid>
         </Grid>
         <SendInvoiceDrawer open={sendInvoiceOpen} toggle={toggleSendInvoiceDrawer} />

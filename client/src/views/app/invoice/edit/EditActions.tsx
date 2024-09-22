@@ -19,7 +19,7 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 import Icon from 'src/@core/components/icon'
 
 interface Props {
-  id: string | undefined
+  id: string | null
   toggleAddPaymentDrawer: () => void
   toggleSendInvoiceDrawer: () => void
 }

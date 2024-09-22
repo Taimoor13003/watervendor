@@ -1,5 +1,4 @@
 // ** Next Import
-import Link from 'next/link'
 
 // ** MUI Imports
 import Card from '@mui/material/Card'
@@ -23,7 +22,9 @@ const OptionsWrapper = styled(Box)<BoxProps>(() => ({
   alignItems: 'center',
   justifyContent: 'space-between'
 }))
-
+const printHandler = () =>{
+window.print()
+}
 const AddActions = () => {
   return (
     <Grid container spacing={6}>
@@ -34,19 +35,11 @@ const AddActions = () => {
               <Icon fontSize='1.125rem' icon='tabler:send' />
               Send Invoice
             </Button>
-            <Button
-              fullWidth
-              sx={{ mb: 2 }}
-              variant='tonal'
-              component={Link}
-              color='secondary'
-              href='/apps/invoice/preview/4987'
-            >
-              Preview
+           
+            <Button fullWidth variant='tonal' color='secondary' onClick={printHandler}>
+              Print Invoice
             </Button>
-            <Button fullWidth variant='tonal' color='secondary'>
-              Save
-            </Button>
+           
           </CardContent>
         </Card>
       </Grid>

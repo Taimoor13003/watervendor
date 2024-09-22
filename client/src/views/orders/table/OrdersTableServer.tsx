@@ -1,263 +1,249 @@
-// ** React Imports
-import { useEffect, useState, useCallback, ChangeEvent } from 'react'
+import React from 'react'
 
-// ** MUI Imports
-import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import Typography from '@mui/material/Typography'
-import CardHeader from '@mui/material/CardHeader'
-import { DataGrid, GridSortModel, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import { DateType } from 'src/types/forms/reactDatepickerTypes'
-import Fab from '@mui/material/Fab'
-
-// ** Icon Imports
-import Icon from 'src/@core/components/icon'
-
-
-// ** ThirdParty Components
-import axios from 'axios'
-
-// ** Custom Components
-import ServerSideToolbar from 'src/views/table/data-grid/ServerSideToolbar'
-
-// ** Types Imports
-import { DataGridRowType } from 'src/@fake-db/types'
-import DatePicker from 'react-datepicker'
-import CustomInput from './DatePicker/CustomInput'
-import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
-import Grid from '@mui/material/Grid';
-import { useRouter } from 'next/router';
-
-import CustomAvatar from 'src/@core/components/mui/avatar'
-import DialougeComponent from './DialougeComponent'
-
-// ** Types Imports
-import { ThemeColor } from 'src/@core/layouts/types'
-
-type SortType = 'asc' | 'desc' | undefined | null
-
-// ** Utils Import
-import { getInitials } from 'src/@core/utils/get-initials'
-import Button from '@mui/material/Button'
-
-// ** renders client column
-
-const renderClient = (params: GridRenderCellParams) => {
-  const { row } = params
-  const stateNum = Math.floor(Math.random() * 6)
-  const states = ['success', 'error', 'warning', 'info', 'primary', 'secondary']
-  const color = states[stateNum]
-
-  if (row.avatar.length) {
-    return <CustomAvatar src={`/images/avatars/${row.avatar}`} sx={{ mr: 3, width: '1.875rem', height: '1.875rem' }} />
-  } else {
-    return (
-      <CustomAvatar
-        skin='light'
-        color={color as ThemeColor}
-        sx={{ mr: 3, fontSize: '.8rem', width: '1.875rem', height: '1.875rem' }}
-      >
-        {getInitials(row.full_name ? row.full_name : 'John Doe')}
-      </CustomAvatar>
-    )
-  }
-}
-
-
-const OrderTableServerSide = () => {
-  // ** States
-  const [total, setTotal] = useState<number>(0)
-  const [sort, setSort] = useState<SortType>('asc')
-  const [rows, setRows] = useState<DataGridRowType[]>([])
-  const [searchValue, setSearchValue] = useState<string>('')
-  const [sortColumn, setSortColumn] = useState<string>('full_name')
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 7 })
-  const [open, setOpen] = useState<boolean>(false)
-  const [date, setDate] = useState<DateType>(new Date())
-  const router = useRouter()
-
-  function loadServerRows(currentPage: number, data: DataGridRowType[]) {
-    return data.slice(currentPage * paginationModel.pageSize, (currentPage + 1) * paginationModel.pageSize)
-  }
-
-  const fetchTableData = useCallback(
-    async (sort: SortType, q: string, column: string) => {
-      await axios
-        .get('/api/table/data', {
-          params: {
-            q,
-            sort,
-            column
-          }
-        })
-        .then(res => {
-          setTotal(res.data.total)
-          setRows(loadServerRows(paginationModel.page, res.data.data))
-        })
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [paginationModel]
-  )
-
-  useEffect(() => {
-    fetchTableData(sort, searchValue, sortColumn)
-  }, [fetchTableData, searchValue, sort, sortColumn])
-
-  const handleSortModel = (newModel: GridSortModel) => {
-    if (newModel.length) {
-      setSort(newModel[0].sort)
-      setSortColumn(newModel[0].field)
-      fetchTableData(newModel[0].sort, searchValue, newModel[0].field)
-    } else {
-      setSort('asc')
-      setSortColumn('full_name')
-    }
-  }
-
-  const handleSearch = (value: string) => {
-    setSearchValue(value)
-    fetchTableData(sort, value, sortColumn)
-  }
-
-  const columns: GridColDef[] = [
-    {
-      flex: 0.25,
-      minWidth: 290,
-      field: 'full_name',
-      headerName: 'Order Number',
-      renderCell: (params: GridRenderCellParams) => {
-        const { row } = params
-
-        return (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {renderClient(params)}
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-                {row.full_name}
-              </Typography>
-              <Typography noWrap variant='caption'>
-                {row.email}
-              </Typography>
-            </Box>
-          </Box>
-        )
-      }
-    },
-    {
-      flex: 0.175,
-      minWidth: 110,
-      field: 'salary',
-      headerName: 'Customer Name',
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.salary}
-        </Typography>
-      )
-    }
-    ,
-    {
-      flex: 0.175,
-      type: 'date',
-      minWidth: 120,
-      headerName: 'Date',
-      field: 'start_date',
-      valueGetter: params => new Date(params.value),
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.start_date}
-        </Typography>
-      )
-    }
-
-    , {
-      flex: 0.25,
-      minWidth: 290,
-      field: 'Actions',
-      headerName: 'Actions',
-      renderCell: (params: GridRenderCellParams) => {
-        const { 
-          // row
-         } = params
-
-        return (
-
-
-          <Box display="flex" gap={3}>
-            <Button variant='contained' onClick={() => router.push('/app/vouchers/create')}>Edit</Button>
-            <Button variant='contained' onClick={() => setOpen(true)}>Delete</Button>
-          </Box>
-
-        )
-      }
-    }
-  ]
-
+const OrdersTableServer = () => {
   return (
-    <Card>
-      <DatePickerWrapper>
-        <CardHeader title='Orders' />
-        <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
-          <Box display='flex' gap={2}>
-            <DatePicker
-              selected={date}
-              id='basic-input'
-              popperPlacement={'bottom-start'}
-              onChange={(date: Date) => setDate(date)}
-              placeholderText='Click to select a date'
-              customInput={<CustomInput label='From' />}
-            />
-            <DatePicker
-              selected={date}
-              id='basic-input'
-              popperPlacement={'bottom-start'}
-              onChange={(date: Date) => setDate(date)}
-              placeholderText='Click to select a date'
-              customInput={<CustomInput label='To' />}
-            />
-            <Button variant='contained'>Go</Button>
-
-          </Box>
-          <Box>
-            <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
-              <Icon icon='tabler:plus' />
-              Create New Orderooooo
-            </Fab>
-          </Box>
-        </Grid>
-
-        <DataGrid
-          autoHeight
-          pagination
-          rows={rows}
-          rowCount={total}
-          columns={columns || []}
-          checkboxSelection
-          sortingMode='server'
-          paginationMode='server'
-          pageSizeOptions={[7, 10, 25, 50]}
-          paginationModel={paginationModel}
-          onSortModelChange={handleSortModel}
-          slots={{ toolbar: ServerSideToolbar }}
-          onPaginationModelChange={setPaginationModel}
-          slotProps={{
-            baseButton: {
-              size: 'medium',
-              variant: 'tonal'
-            },
-            toolbar: {
-              value: searchValue,
-              clearSearch: () => handleSearch(''),
-              onChange: (event: ChangeEvent<HTMLInputElement>) => handleSearch(event.target.value)
-            }
-          }}
-        />
-      </DatePickerWrapper>
-
-
-      <DialougeComponent open={open} setOpen={setOpen} />
-
-    </Card>
+    <div>
+      sada khusbu
+    </div>
   )
 }
 
-export default OrderTableServerSide
+export default OrdersTableServer
+
+
+
+// import React, { useEffect, useState, useCallback, ChangeEvent, useRef } from 'react';
+// import Card from '@mui/material/Card';
+// import CardHeader from '@mui/material/CardHeader';
+// import Typography from '@mui/material/Typography';
+// import Box from '@mui/material/Box';
+// import Grid from '@mui/material/Grid';
+// import Button from '@mui/material/Button';
+// import Fab from '@mui/material/Fab';
+// import { DataGrid, GridColDef, GridRenderCellParams, GridSortModel } from '@mui/x-data-grid';
+// import { useRouter } from 'next/router';
+// import { DatePicker } from '@mui/x-date-pickers';
+// import DialougeComponent from './DialougeComponent';
+// import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
+// import moment from 'moment';
+// import axios from 'axios';
+// import CustomInput from './DatePicker/CustomInput'; // Make sure this path is correct
+
+// type SortType = 'asc' | 'desc' | undefined | null;
+
+// const OrderTableServerSide = () => {
+//   const [total, setTotal] = useState<number>(0);
+//   const [rows, setRows] = useState<any[]>([]);
+//   const [sort, setSort] = useState<SortType>('asc');
+//   const [sortColumn, setSortColumn] = useState<string>('firstname');
+//   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+//   const [, setSearchValue] = useState<string>('');
+//   const [open, setOpen] = useState<boolean>(false);
+//   const [searchText, setSearchText] = useState<string>('');
+//   const [startDateRange, setStartDateRange] = useState<Date | null>(null);
+//   const [endDateRange, setEndDateRange] = useState<Date | null>(null);
+
+//   const router = useRouter();
+//   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
+
+//   const fetchTableData = useCallback(async () => {
+//     if (debounceTimeout.current) {
+//       clearTimeout(debounceTimeout.current);
+//     }
+//     debounceTimeout.current = setTimeout(async () => {
+//       try {
+//         const response = await axios.get('/api/orders', {
+//           params: {
+//             page: paginationModel.page + 1,
+//             limit: paginationModel.pageSize,
+//             sort: sort || 'asc',
+//             sortColumn: sortColumn || 'firstname',
+//             searchText: searchText,
+//             fromDate: startDateRange ? startDateRange.toISOString() : null,
+//             toDate: endDateRange ? endDateRange.toISOString() : null,
+//           },
+//         });
+//         const updatedRows = response.data.data.map((row: any) => ({
+//           ...row,
+//           id: row.orderid,
+//         }));
+//         setRows(updatedRows);
+//         setTotal(response.data.count);
+//         setPaginationModel(prev => ({ ...prev, page: 0 })); // Reset to page 1 when search text changes
+
+//       } catch (error) {
+//         console.error('Failed to fetch data:', error);
+//       }
+//     }, 1200); 
+//   }, [paginationModel.page, paginationModel.pageSize, sort, sortColumn, searchText, startDateRange, endDateRange]);
+
+//   useEffect(() => {
+//     fetchTableData();
+//   }, [paginationModel.page, paginationModel.pageSize, sort, sortColumn, searchText, startDateRange, endDateRange,fetchTableData]);
+
+//   const handleSortModel = (newModel: GridSortModel) => {
+//     if (newModel.length) {
+//       setSort(newModel[0].sort);
+//       setSortColumn(newModel[0].field);
+//     } else {
+//       setSort('asc');
+//       setSortColumn('firstname');
+//     }
+//   };
+
+//   const handleSearch = (searchValue: string) => {
+//     setSearchText(searchValue);
+//     setSearchValue(searchValue);
+//     setPaginationModel(prev => ({ ...prev, page: 0 })); // Reset to page 1 when search text changes
+//   };
+
+//   const handleGoClick = () => {
+//     fetchTableData(); // Fetch data between selected dates
+//   };
+
+//   const onDelete = () => {
+//     alert('Delete Function');
+//   };
+
+//   const columns: GridColDef[] = [
+//     {
+//       flex: 0.25,
+//       minWidth: 290,
+//       field: 'orderno',
+//       headerName: 'Order Number',
+//       renderCell: (params: GridRenderCellParams) => (
+//         <Box sx={{ display: 'flex', alignItems: 'center' }}>
+//           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+//             <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
+//               {params.row.orderno}
+//             </Typography>
+//             <Typography noWrap variant='caption'>
+//               {params.row.orderno}
+//             </Typography>
+//           </Box>
+//         </Box>
+//       ),
+//     },
+//     {
+//       flex: 0.175,
+//       minWidth: 110,
+//       field: 'firstname',
+//       headerName: 'Customer Name',
+//       renderCell: (params: GridRenderCellParams) => (
+//         <Typography variant='body2' sx={{ color: 'text.primary' }}>
+//           {params.row.firstname} {params.row.lastname}
+//         </Typography>
+//       ),
+//     },
+//     {
+//       flex: 0.175,
+//       type: 'date',
+//       minWidth: 120,
+//       headerName: 'Order Date',
+//       field: 'orderdate',
+//       valueGetter: params => new Date(params.value),
+//       renderCell: (params: GridRenderCellParams) => (
+//         <Typography variant='body2' sx={{ color: 'text.primary' }}>
+//           {moment(params.row.orderdate).format('DD-MM-YYYY')}
+//         </Typography>
+//       ),
+//     },
+//     {
+//       flex: 0.25,
+//       minWidth: 290,
+//       field: 'actions',
+//       headerName: 'Actions',
+//       renderCell: (params: GridRenderCellParams) => (
+//         <Box display='flex' gap={3}>
+//           <Button variant='contained' onClick={() => router.push(`/app/orders/edit?orderid=${params.row.orderid}`)}>
+//             Edit
+//           </Button>
+//           <Button variant='contained' onClick={() => setOpen(true)}>
+//             Delete
+//           </Button>
+//         </Box>
+//       ),
+//     },
+//   ];
+
+//   return (
+//     <Card>
+      
+//         <CardHeader title='Order Table' />
+//         <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
+//           <Box>
+//             <DatePicker
+//               isClearable
+//               selectsRange
+//               monthsShown={2}
+//               endDate={endDateRange}
+//               selected={startDateRange}
+//               startDate={startDateRange}
+//               shouldCloseOnSelect={false}
+//               id='date-range-picker-months'
+//               onChange={(dates: [Date | null, Date | null]) => {
+//                 setStartDateRange(dates[0]);
+//                 setEndDateRange(dates[1]);
+//               }}
+//               customInput={
+//                 <CustomInput
+//                   dates={[startDateRange, endDateRange]}
+//                   setDates={(dates) => {
+//                     setStartDateRange(dates[0]);
+//                     setEndDateRange(dates[1]);
+//                   }}
+//                   label='Invoice Date'
+//                   end={endDateRange as Date}
+//                   start={startDateRange as Date}
+//                 />
+//               }
+//             />
+//             <Button variant='contained' onClick={handleGoClick}>Go</Button>
+//           </Box>
+//           <Box>
+//             <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
+//               Create New Orderrrrrrrrrrr
+//             </Fab>
+//           </Box>
+//         </Grid>
+
+//         <DataGrid
+//           autoHeight
+//           columns={columns}
+//           pageSizeOptions={[7, 10, 25, 50]}
+//           paginationModel={paginationModel}
+//           rowCount={total}
+//           paginationMode='server'
+//           sortingMode='server'
+//           onPaginationModelChange={setPaginationModel}
+//           onSortModelChange={handleSortModel}
+//           rows={rows}
+//           getRowId={row => row.orderid}
+//           sx={{
+//             '& .MuiSvgIcon-root': {
+//               fontSize: '1.125rem',
+//             },
+//           }}
+//           slots={{
+//             toolbar: QuickSearchToolbar,
+//           }}
+//           slotProps={{
+//             baseButton: {
+//               size: 'medium',
+//               variant: 'outlined',
+//             },
+//             toolbar: {
+//               value: searchText,
+//               clearSearch: () => handleSearch(''),
+//               onChange: (event: ChangeEvent<HTMLInputElement>) => handleSearch(event.target.value),
+//             },
+//           }}
+//         />
+  
+
+//       <DialougeComponent open={open} setOpen={setOpen} onDelete={onDelete} />
+//     </Card>
+//   );
+// };
+
+// export default OrderTableServerSide;

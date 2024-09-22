@@ -1,27 +1,19 @@
-// ** React Imports
 import { useState, useEffect } from 'react'
 
-// ** Next Import
 import Link from 'next/link'
 
-// ** MUI Imports
 import Grid from '@mui/material/Grid'
 import Alert from '@mui/material/Alert'
 
-// ** Types
 import { SingleInvoiceType, InvoiceLayoutProps } from 'src/types/apps/invoiceTypes'
 
-// ** Third Party Components
 import axios from 'axios'
-
-// ** Demo Components Imports
 import EditCard from './EditCard'
 import EditActions from './EditActions'
 import AddPaymentDrawer from 'src/views/apps/invoice/shared-drawer/AddPaymentDrawer'
 import SendInvoiceDrawer from 'src/views/apps/invoice/shared-drawer/SendInvoiceDrawer'
 
 const InvoiceEdit = ({ id }: InvoiceLayoutProps) => {
-  // ** State
   const [error, setError] = useState<boolean>(false)
   const [data, setData] = useState<null | SingleInvoiceType>(null)
   const [addPaymentOpen, setAddPaymentOpen] = useState<boolean>(false)

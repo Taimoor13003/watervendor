@@ -1,26 +1,20 @@
-// ** React Imports
 import { ChangeEvent, useState } from 'react'
 
-// ** MUI Imports
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import Typography from '@mui/material/Typography'
 import CardHeader from '@mui/material/CardHeader'
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
 
-// ** Custom Components
 import CustomChip from 'src/@core/components/mui/chip'
 import CustomAvatar from 'src/@core/components/mui/avatar'
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar'
 
-// ** Types Imports
 import { ThemeColor } from 'src/@core/layouts/types'
 import { DataGridRowType } from 'src/@fake-db/types'
 
-// ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
 
-// ** Data Import
 import { rows } from 'src/@fake-db/table/static-data'
 
 interface StatusObj {
@@ -30,7 +24,6 @@ interface StatusObj {
   }
 }
 
-// ** renders client column
 const renderClient = (params: GridRenderCellParams) => {
   const { row } = params
   const stateNum = Math.floor(Math.random() * 6)
@@ -146,7 +139,9 @@ const columns: GridColDef[] = [
 ]
 
 const TableColumns = () => {
-  // ** States
+
+//@ts-ignore
+
   const [data] = useState<DataGridRowType[]>(rows)
   const [searchText, setSearchText] = useState<string>('')
   const [filteredData, setFilteredData] = useState<DataGridRowType[]>([])

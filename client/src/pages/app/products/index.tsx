@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from 'next/types';
 import { PrismaClient } from '@prisma/client'; // Adjust the import as needed
 import ProductsTable from 'src/views/orders/table/ProductsTable';
 
@@ -19,6 +19,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
     };
   } catch (error) {
     console.error(error);
+    
     return {
       props: {
         products: [], 
@@ -39,6 +40,7 @@ type ProductsPageProps = {
 
 const ProductsPage = ({ products }: ProductsPageProps) => {
   console.log(products,"data")
+
   return (
     <div>
       <ProductsTable products={products} />

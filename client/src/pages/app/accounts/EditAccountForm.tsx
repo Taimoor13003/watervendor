@@ -9,18 +9,17 @@ import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
 
 type FormValues = {
   accountcode: string;
   accountname: string;
   accounttype: number;
   openingbalance: number;
-  remarks: string;
+  remarks: string | null;
 };
 
 type EditAccountFormProps = {
-  accountData: FormValues;
+  accountData: FormValues | null;
 };
 
 const schema = yup.object().shape({
@@ -33,6 +32,8 @@ const schema = yup.object().shape({
 
 const EditAccountForm = ({ accountData }: EditAccountFormProps) => {
   const { control, handleSubmit, formState: { errors }} = useForm<FormValues>({
+    
+    //@ts-ignore
     defaultValues: accountData,
     mode: 'onChange',
     resolver: yupResolver(schema),
@@ -41,7 +42,6 @@ const EditAccountForm = ({ accountData }: EditAccountFormProps) => {
   const onSubmit = (data: FormValues) => {
     toast.success('Form Submitted');
     console.log(data);
-    // Handle form submission logic here
   };
 
   console.log(accountData, "data");

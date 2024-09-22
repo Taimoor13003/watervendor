@@ -10,12 +10,16 @@ import CardContent from '@mui/material/CardContent'
 import Icon from 'src/@core/components/icon'
 
 interface Props {
-  id: string | undefined
-  toggleAddPaymentDrawer: () => void
-  toggleSendInvoiceDrawer: () => void
+  id: string | null,
+  startDate:any,
+  endDate:any,
+  toggleAddPaymentDrawer: () => void,
+  toggleSendInvoiceDrawer: () => void,
 }
 
-const PreviewActions = ({ id, toggleSendInvoiceDrawer, toggleAddPaymentDrawer }: Props) => {
+const PreviewActions = ({ id,startDate,endDate, toggleSendInvoiceDrawer, toggleAddPaymentDrawer }: Props) => {
+  console.log(id,'id')
+  
   return (
     <Card>
       <CardContent>
@@ -33,7 +37,7 @@ const PreviewActions = ({ id, toggleSendInvoiceDrawer, toggleAddPaymentDrawer }:
           variant='tonal'
           component={Link}
           color='secondary'
-          href={`/apps/invoice/print/${id}`}
+          href={`/apps/invoice/print/?customerid=${id}&startdate=${startDate}&enddate=${endDate}`}
         >
           Print
         </Button>

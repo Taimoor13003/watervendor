@@ -44,6 +44,7 @@ const EditProductsForm = ({ productData }: EditProductFormProps) => {
   const onSubmit = (data: FormValues) => {
     toast.success('Form Submitted');
     console.log(data);
+    
     // Handle form submission logic here
   };
 
@@ -106,22 +107,37 @@ const EditProductsForm = ({ productData }: EditProductFormProps) => {
             </Grid>
 
             <Grid item xs={12}>
-              <Controller
-                name='totalunits'
-                control={control}
-                render={({ field }) => (
-                  <CustomTextField
-                    fullWidth
-                    label='Total Units'
-                    type='number'
-                    placeholder='Enter total units'
-                    error={Boolean(errors.totalunits)}
-                    helperText={errors.totalunits?.message}
-                    {...field}
-                  />
-                )}
-              />
-            </Grid>
+  <Controller
+    name='totalunits'
+    control={control}
+    rules={{
+      required: true,
+      validate: value => value <= 99999 || 'Total units cannot be more than 99999',
+    }}
+    render={({ field: { value, onChange } }) => (
+      <CustomTextField
+        fullWidth
+        label='Total Units'
+        type='number'
+        placeholder='Enter total units'
+        error={Boolean(errors.totalunits)}
+        helperText={errors.totalunits?.message}
+        onChange={e => {
+          const inputValue = e.target.value;
+
+          // Allow only up to 5 digits
+          if (inputValue.length <= 5 && (!isNaN(parseInt(inputValue)) || inputValue === '')) {
+            onChange(e);
+          }
+        }}
+        value={value}
+        inputProps={{ max: 99999, maxLength: 5 }}
+      />
+    )}
+  />
+</Grid>
+
+
 
             <Grid item xs={12}>
               <Controller
@@ -130,7 +146,7 @@ const EditProductsForm = ({ productData }: EditProductFormProps) => {
                 render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    label='Rate Per Unit (Cash)'
+                    label='Rate Per Unit'
                     type='number'
                     placeholder='Enter rate per unit (cash)'
                     error={Boolean(errors.rateperunitcash)}
@@ -141,23 +157,7 @@ const EditProductsForm = ({ productData }: EditProductFormProps) => {
               />
             </Grid>
 
-            <Grid item xs={12}>
-              <Controller
-                name='rateperunitcoupon'
-                control={control}
-                render={({ field }) => (
-                  <CustomTextField
-                    fullWidth
-                    label='Rate Per Unit (Coupon)'
-                    type='number'
-                    placeholder='Enter rate per unit (coupon)'
-                    error={Boolean(errors.rateperunitcoupon)}
-                    helperText={errors.rateperunitcoupon?.message}
-                    {...field}
-                  />
-                )}
-              />
-            </Grid>
+           
 
             <Grid item xs={12}>
               <Controller

@@ -3,15 +3,17 @@
   import { useRouter } from 'next/router';
 
   import CustomerTable from 'src/views/orders/table/CustomerTable';
+
     // @ts-ignore
 
   import prisma from 'src/lib/prisma';
+
     // @ts-ignore
 
   function Index({ customers }) {
     const router = useRouter();
     const { q } = router.query;
-    console.log(customers);
+    console.log(customers,q);
 
     return (
       <div>

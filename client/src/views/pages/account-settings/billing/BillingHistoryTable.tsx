@@ -1,10 +1,7 @@
-// ** React Imports
-import { useState, useEffect, forwardRef } from 'react'
+import { useState, useEffect} from 'react'
 
-// ** Next Import
 import Link from 'next/link'
 
-// ** MUI Imports
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import Button from '@mui/material/Button'
@@ -18,25 +15,17 @@ import CardContent from '@mui/material/CardContent'
 import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { SelectChangeEvent } from '@mui/material/Select'
 
-// ** Icon Imports
 import Icon from 'src/@core/components/icon'
 
-// ** Third Party Imports
-import format from 'date-fns/format'
 
-// ** Store & Actions Imports
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchData, deleteInvoice } from 'src/store/apps/invoice'
-
-// ** Types Imports
 import { RootState, AppDispatch } from 'src/store'
 import { ThemeColor } from 'src/@core/layouts/types'
 import { InvoiceType } from 'src/types/apps/invoiceTypes'
 
-// ** Utils Import
 import { getInitials } from 'src/@core/utils/get-initials'
 
-// ** Custom Components Imports
 import CustomChip from 'src/@core/components/mui/chip'
 import CustomAvatar from 'src/@core/components/mui/avatar'
 import OptionsMenu from 'src/@core/components/option-menu'
@@ -49,25 +38,16 @@ interface InvoiceStatusObj {
   }
 }
 
-interface CustomInputProps {
-  dates: Date[]
-  label: string
-  end: number | Date
-  start: number | Date
-  setDates?: (value: Date[]) => void
-}
 
 interface CellType {
   row: InvoiceType
 }
 
-// ** Styled component for the link in the dataTable
 const LinkStyled = styled(Link)(({ theme }) => ({
   textDecoration: 'none',
   color: `${theme.palette.primary.main} !important`
 }))
 
-// ** Vars
 const invoiceStatusObj: InvoiceStatusObj = {
   Paid: { color: 'success', icon: 'tabler:circle-half-2' },
   Sent: { color: 'secondary', icon: 'tabler:circle-check' },
@@ -77,8 +57,10 @@ const invoiceStatusObj: InvoiceStatusObj = {
   'Partial Payment': { color: 'warning', icon: 'tabler:chart-pie' }
 }
 
-// ** renders client column
 const renderClient = (row: InvoiceType) => {
+
+  //@ts-ignore
+
   if (row.avatar.length) {
     return <CustomAvatar src={row.avatar} sx={{ mr: 2.5, width: 38, height: 38 }} />
   } else {
@@ -193,27 +175,12 @@ const defaultColumns: GridColDef[] = [
   }
 ]
 
-/* eslint-disable */
-const CustomInput = forwardRef((props: CustomInputProps, ref) => {
-  const startDate = props.start !== null ? format(props.start, 'MM/dd/yyyy') : ''
-  const endDate = props.end !== null ? ` - ${format(props.end, 'MM/dd/yyyy')}` : null
-
-  const value = `${startDate}${endDate !== null ? endDate : ''}`
-  props.start === null && props.dates.length && props.setDates ? props.setDates([]) : null
-  const updatedProps = { ...props }
-  delete updatedProps.setDates
-
-  return <CustomTextField fullWidth inputRef={ref} {...updatedProps} label={props.label || ''} value={value} />
-})
-/* eslint-enable */
 
 const BillingHistoryTable = () => {
-  // ** State
   const [value, setValue] = useState<string>('')
   const [statusValue, setStatusValue] = useState<string>('')
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 })
 
-  // ** Hooks
   const dispatch = useDispatch<AppDispatch>()
   const store = useSelector((state: RootState) => state.invoice)
 

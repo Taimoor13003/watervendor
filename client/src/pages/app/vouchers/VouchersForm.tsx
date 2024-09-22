@@ -224,6 +224,25 @@ const FormValidationSchema = () => {
                 )}
               />
             </Grid>
+            <Grid item xs={12}>
+              <Controller
+                name='lastName'
+                control={control}
+                rules={{ required: true }}
+                render={({ field: { value, onChange } }) => (
+                  <CustomTextField
+                    fullWidth
+                    value={value}
+                    label='Debit Amount'
+                    onChange={onChange}
+                    placeholder='Carter'
+                    error={Boolean(errors.lastName)}
+                    aria-describedby='validation-schema-last-name'
+                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                  />
+                )}
+              />
+            </Grid>
             <Button>Move</Button>
 
 

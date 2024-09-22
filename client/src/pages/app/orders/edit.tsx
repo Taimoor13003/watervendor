@@ -1,5 +1,5 @@
-import { GetServerSideProps } from 'next';
-import prisma from 'src/lib/prisma'; // Ensure your Prisma client is correctly configured
+import { GetServerSideProps } from 'next/types';
+import prisma from 'src/lib/prisma';
 import EditOrderForm from './EditOrderForm';
 import { serializeDate } from 'src/@core/utils/date';
 
@@ -22,7 +22,8 @@ type Order = {
   deliveredbyvehicleregid: string;
   rate_per_bottle: number;
   reqbottles: number;
-  
+  employeefirstname: string;
+  employeelastname: string;
 };
 
 type PaymentMode = {
@@ -44,27 +45,36 @@ type OrderPageProps = {
 };
 
 const EditOrderPage = ({ orders, paymentmode, orderdetails }: OrderPageProps) => {
+
+//@ts-ignore
+
   return <EditOrderForm data={orders} paymentmode={paymentmode} orderdetails={orderdetails} />;
 };
+
+//@ts-ignore
 
 export const getServerSideProps: GetServerSideProps<OrderPageProps> = async (context) => {
   const { query } = context;
   const id = query.orderid as string | undefined;
 
   if (!id) {
-    return {
-      notFound: true,
-    };
+    return { notFound: true };
   }
 
   try {
-    // Fetch order data
     const orders = await prisma.$queryRaw<Order[]>`
-      SELECT o.*, c.*
+      SELECT 
+      ep.empid, ep.firstname as employeeFirstName, ep.lastname as employeeLastName,
+      c.customerid, c.firstname as customerFirstName, c.lastname as customerLastName,
+      od.returnqty, od.productid, od.bottlereturndate,
+      p.productname,
+      o.*
       FROM orders o
       LEFT JOIN customer c ON o.customerid = c.customerid
+      LEFT JOIN employee_personal ep ON ep.empid = o.deliveredbyempid 
+      LEFT JOIN order_details od ON o.orderid = od.orderid 
+      LEFT JOIN products p ON p.id = od.productid
       WHERE o.orderid = ${Number(id)}
-      ORDER BY o.deliverydate DESC
     `;
 
     const paymentmode = await prisma.pick_paymentmode.findMany();
@@ -72,31 +82,26 @@ export const getServerSideProps: GetServerSideProps<OrderPageProps> = async (con
       where: { orderid: Number(id) },
     });
 
-    // Serialize dates
     const serializedOrders = orders.map(order => ({
       ...order,
       orderdate: serializeDate(order.orderdate),
       invoicedate: serializeDate(order.invoicedate),
       invoicelastprintdate: serializeDate(order.invoicelastprintdate),
       deliverydate: serializeDate(order.deliverydate),
-      bottlesReturnedDate: serializeDate(order.bottlesReturnedDate),
-
-      // Combine names into fullName
-      fullName: `${order.firstname} ${order.lastname}`,
+      bottlereturndatedate: serializeDate(order.bottlereturndatedate),
     }));
 
     return {
       props: {
-        orders: serializedOrders.length ? serializedOrders[0] : {},
+        orders: serializedOrders.length ? serializedOrders[0] : {} as Order,
         paymentmode: paymentmode || [],
-        orderdetails:JSON.stringify(orderdetails) || [],
+        orderdetails: orderdetails || [],
       },
     };
   } catch (error) {
     console.error(error);
-    return {
-      notFound: true,
-    };
+    
+    return { notFound: true };
   }
 };
 

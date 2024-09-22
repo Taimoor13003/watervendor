@@ -1,4 +1,4 @@
-import React, { useEffect, useState, ChangeEvent } from 'react';
+import React, { useEffect, useState, ChangeEvent, useRef, useCallback } from 'react';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
@@ -12,48 +12,53 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import DialougeComponent from './DialougeComponent';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 import moment from 'moment';
+import { PrismaClient } from '@prisma/client'; // Adjust the import as needed
+import axios from 'axios';
 
-type Voucher = {
-  id: number;
-  voucherCode: string;
-  voucherType: string;
-  amount: number;
-  voucherdate: string; // Date as ISO string
-};
+const prisma = new PrismaClient();
+console.log(prisma);
 
-const VoucherTable = ({ vouchers }: { vouchers: Voucher[] }) => {
-  const [rows, setRows] = useState<Voucher[]>([]);
+const VoucherTable = () => {
+  const [rows, setRows] = useState([]);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState<string>('');
-  const [filteredData, setFilteredData] = useState<Voucher[]>([]);
   const [open, setOpen] = useState<boolean>(false);
+  const [total, setTotal] = useState<number>(0);
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    // Convert date strings to Date objects
-    const updatedRows = vouchers.map(row => ({
-      ...row,
-      voucherdate: new Date(row.voucherdate), // Convert string to Date object
-    }));
-    setRows(updatedRows);
-  }, [vouchers]);
-
-  // Function to handle search and filter data
-  const handleSearch = (searchValue: string) => {
-    setSearchText(searchValue);
-    const searchRegex = new RegExp(escapeRegExp(searchValue), 'i');
-    const filteredRows = vouchers.filter(row => {
-      return Object.keys(row).some(field => {
-        return searchRegex.test(row[field as keyof Voucher] as unknown as string);
+  // Updated fetchData function wrapped in useCallback
+  const fetchData = useCallback(async () => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current);
+    }
+    setIsLoading(true);
+    debounceTimeout.current = setTimeout(async () => {
+      const adjustedPage = paginationModel.page + 1;
+      const { data: { data, count } } = await axios.get(`/api/vouchers`, {
+        params: {
+          page: adjustedPage,
+          limit: paginationModel.pageSize,
+          searchText: searchText,
+        },
       });
-    });
-    setFilteredData(filteredRows.length ? filteredRows : []);
+      setRows(data);
+      setTotal(count);
+      setIsLoading(false);
+    }, 1200); // Adjust debounce delay as needed
+  }, [paginationModel.page, paginationModel.pageSize, searchText]);
+
+  // Handle search text change
+  const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearchText(event.target.value);
+    setPaginationModel((prev) => ({ ...prev, page: 0 }));
   };
 
-  // Escape special characters for regex search
-  const escapeRegExp = (value: string) => {
-    return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
-  };
+  // useEffect with fetchData as a dependency
+  useEffect(() => {
+    fetchData();
+  }, [paginationModel.page, paginationModel.pageSize, searchText, fetchData]);
 
   // Columns configuration for DataGrid
   const columns: GridColDef[] = [
@@ -79,7 +84,6 @@ const VoucherTable = ({ vouchers }: { vouchers: Voucher[] }) => {
         </Typography>
       ),
     },
-   
     {
       flex: 0.175,
       type: 'date',
@@ -94,19 +98,15 @@ const VoucherTable = ({ vouchers }: { vouchers: Voucher[] }) => {
       ),
     },
     {
-      flex: 0.175,
-      type: 'number',
-      minWidth: 120,
-      field: 'amount',
+      flex: 0.25,
+      minWidth: 180,
+      field: 'voucheramount',
       headerName: 'Voucher Amount',
-      renderCell: (params: GridRenderCellParams) => {
-        const amount = params.row.amount;
-        return (
-          <Typography variant='body2' sx={{ color: 'text.primary' }}>
-            {amount != null && !isNaN(amount) ? amount.toFixed(2) : 'N/A'}
-          </Typography>
-        );
-      },
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.voucheramount}
+        </Typography>
+      ),
     },
     {
       flex: 0.25,
@@ -146,8 +146,11 @@ const VoucherTable = ({ vouchers }: { vouchers: Voucher[] }) => {
           paginationModel={paginationModel}
           slots={{ toolbar: QuickSearchToolbar }}
           onPaginationModelChange={setPaginationModel}
-          rows={filteredData.length ? filteredData : rows}
+          paginationMode="server"
+          rows={rows}
           getRowId={(row) => row.id}
+          rowCount={total}
+          loading={isLoading}
           sx={{
             '& .MuiSvgIcon-root': {
               fontSize: '1.125rem',
@@ -160,8 +163,8 @@ const VoucherTable = ({ vouchers }: { vouchers: Voucher[] }) => {
             },
             toolbar: {
               value: searchText,
-              clearSearch: () => handleSearch(''),
-              onChange: (event: ChangeEvent<HTMLInputElement>) => handleSearch(event.target.value),
+              clearSearch: () => setSearchText(''),
+              onChange: (event: ChangeEvent<HTMLInputElement>) => handleSearch(event),
             },
           }}
         />

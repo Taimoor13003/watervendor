@@ -1,4 +1,4 @@
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps } from 'next/types';
 import { PrismaClient } from '@prisma/client'; // Adjust the import as needed
 import EditVoucherForm from './EditVoucherForm';
 
@@ -7,26 +7,37 @@ const prisma = new PrismaClient();
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
     const vouchers = await prisma.vouchers.findMany();
+    const vouchertrans = await prisma.voucher_trans.findMany();
 
-    // Serialize dates to strings
     const serializedVouchers = vouchers.map(voucher => ({
       ...voucher,
-      voucherdate: voucher.voucherdate.toISOString(), // Corrected to use `voucher.voucherdate`
+      voucherdate: voucher.voucherdate ? voucher.voucherdate.toISOString() : null, // Handle null case
     }));
 
     return {
       props: {
         vouchers: serializedVouchers,
+        vouchertrans, // Pass vouchertrans data to the component
       },
     };
   } catch (error) {
     console.error(error);
+
     return {
       props: {
-        vouchers: [], // Return an empty array in case of error
+        vouchers: [],
+        vouchertrans: [], 
       },
     };
   }
+};
+
+type VoucherTrans = {
+  id: number;
+  voucherId: number;
+  transactionCode: string;
+  transactionDate: string;
+  amount: number;
 };
 
 type VoucherProps = {
@@ -34,16 +45,17 @@ type VoucherProps = {
     id: number;
     voucherCode: string;
     amount: number;
-    voucherdate: string; // Date as ISO string
-    // Add other relevant fields here if needed
+    voucherdate: string | null; // Update type to handle null
   }[];
+  vouchertrans: VoucherTrans[]; // Include the vouchertrans prop
 };
 
-const EditVoucher = ({ vouchers }: VoucherProps) => {
+const EditVoucher = ({ vouchers, vouchertrans }: VoucherProps) => {
   return (
-    <div>
-      <EditVoucherForm vouchers={vouchers} />
-    </div>
+    
+    //@ts-ignore
+  
+      <EditVoucherForm vouchers={vouchers} vouchertrans={vouchertrans} />
   );
 };
 
