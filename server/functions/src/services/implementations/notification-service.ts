@@ -63,7 +63,7 @@ export class NotificationService implements INotificationService {
     catch (err) {
       response.setServerError(err);
     }
-    return response;
+    return response;    
   }
 
 

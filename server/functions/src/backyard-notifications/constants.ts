@@ -35,7 +35,7 @@ export class ValidationErrors {
     public static TopicRequired: string = "Topic is required";
 }
 
-export class FirebaseConstants {
-    public static readonly ServerKey = "AAAAhSZNkQo:APA91bGjT_9DLyAHcQB7tFLUWZPk5rm7i3ePPxlZMWFvuKNsRsSCpwistAP-Pf8TvUjvjY-MxYEHCQZoV_-YrQl51AeoSCPfqUExF4XyyemcnOPylUq8kdu2qhGbHXdzurZ1z7VZzGzj";
+// export class FirebaseConstants {
+//     public static readonly ServerKey = "AAAAhSZNkQo:APA91bGjT_9DLyAHcQB7tFLUWZPk5rm7i3ePPxlZMWFvuKNsRsSCpwistAP-Pf8TvUjvjY-MxYEHCQZoV_-YrQl51AeoSCPfqUExF4XyyemcnOPylUq8kdu2qhGbHXdzurZ1z7VZzGzj";
     
-}
+// }
