@@ -1,28 +1,26 @@
 // ** React Import
-import { ElementType, forwardRef } from 'react'
+import { forwardRef, ElementType } from 'react'
 
 // ** MUI Import
 import Paper from '@mui/material/Paper'
 import Autocomplete, { AutocompleteProps } from '@mui/material/Autocomplete'
 
+// CustomAutocomplete with simplified generics and correct typing
 const CustomAutocomplete = forwardRef(
   <
     T,
     Multiple extends boolean | undefined,
     DisableClearable extends boolean | undefined,
-    FreeSolo extends boolean | undefined,
-    ChipComponent extends ElementType
+    FreeSolo extends boolean | undefined
   >(
-    props: AutocompleteProps<T, Multiple, DisableClearable, FreeSolo, ChipComponent>,
+    props: AutocompleteProps<T, Multiple, DisableClearable, FreeSolo, "div">, // Assuming default component is "div"
     ref: any
   ) => {
     return (
-      // eslint-disable-next-line lines-around-comment
-      // @ts-expect-error - AutocompleteProps is not compatible with PaperProps
       <Autocomplete
         {...props}
         ref={ref}
-        PaperComponent={props => <Paper {...props} className='custom-autocomplete-paper' />}
+        PaperComponent={(paperProps) => <Paper {...paperProps} className='custom-autocomplete-paper' />}
       />
     )
   }

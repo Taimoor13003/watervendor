@@ -17,6 +17,8 @@ interface RowData {
 
 const AccountDetailsTable = ({ data }: { data: RowData[] }) => {
 
+
+  
   const totalDebitAmount = data.reduce((sum, row) => sum + (row.debitamount || 0), 0);
   const totalCreditAmount = data.reduce((sum, row) => sum + (row.creditamount || 0), 0);
 

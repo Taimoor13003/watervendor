@@ -4,6 +4,9 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import AccountDetailsTable from 'src/views/orders/table/AccountDetailsTable';
 
 interface Account {
   accountcode: string;
@@ -12,14 +15,26 @@ interface Account {
 
 interface Voucher {
   id: number;
-  paymentmode: string; // Ensure this matches the API response
+  paymentmode: string;
+}
+
+interface RowData {
+  id: number;
+  voucherno: string;
+  accountcode: string;
+  voucherdate: string;
+  debitamount: number;
+  creditamount: number;
 }
 
 const AccountAndVoucherPage = () => {
   const [accountCode, setAccountCode] = useState<string>('');
   const [voucherType, setVoucherType] = useState<number | ''>('');
+  const [voucherPeriodFrom, setVoucherPeriodFrom] = useState<string>('');
+  const [voucherPeriodTo, setVoucherPeriodTo] = useState<string>('');
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [accountDetails, setAccountDetails] = useState<RowData[]>([]); // State to store fetched account details
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
@@ -27,11 +42,9 @@ const AccountAndVoucherPage = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await axios.get<{ accounts: Account[] }>('/api/accountnames');
-        setAccounts(response.data.accounts);
-
+        const accountResponse = await axios.get<{ accounts: Account[] }>('/api/accountnames');
+        setAccounts(accountResponse.data.accounts);
         const voucherResponse = await axios.get<{ vouchers: Voucher[] }>('/api/vouchersdropdown');
-        console.log('Vouchers fetched:', voucherResponse.data.vouchers); // Debug log
         setVouchers(voucherResponse.data.vouchers);
       } catch (error) {
         setError('Failed to fetch data.');
@@ -42,6 +55,27 @@ const AccountAndVoucherPage = () => {
 
     fetchData();
   }, []);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError(''); // Clear previous error messages
+    try {
+      const response = await axios.get<{ result: RowData[] }>('/api/accountdetails', {
+        params: {
+          accountcode: accountCode,
+          vouchertype: voucherType,
+          voucherperiodfrom: voucherPeriodFrom,
+          voucherperiodto: voucherPeriodTo,
+        },
+      });
+      setAccountDetails(response.data.result); // Store the result in state
+    } catch (error) {
+      setError('Failed to fetch data from account details API.');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div>
@@ -73,14 +107,46 @@ const AccountAndVoucherPage = () => {
         >
           {vouchers.map((voucher) => (
             <MenuItem key={voucher.id} value={voucher.id}>
-              {voucher.paymentmode} {/* Ensure correct field here */}
+              {voucher.paymentmode}
             </MenuItem>
           ))}
         </Select>
       </FormControl>
 
-      {loading && <p>Loading...</p>}
+      <TextField
+        fullWidth
+        label="Voucher Period From"
+        type="date"
+        value={voucherPeriodFrom}
+        onChange={(e) => setVoucherPeriodFrom(e.target.value)}
+        InputLabelProps={{ shrink: true }}
+        margin="normal"
+        required
+      />
+
+      <TextField
+        fullWidth
+        label="Voucher Period To"
+        type="date"
+        value={voucherPeriodTo}
+        onChange={(e) => setVoucherPeriodTo(e.target.value)}
+        InputLabelProps={{ shrink: true }}
+        margin="normal"
+        required
+      />
+
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleSubmit}
+        disabled={loading}
+      >
+        {loading ? 'Loading...' : 'Submit'}
+      </Button>
+
       {error && <p>{error}</p>}
+
+      {accountDetails.length > 0 && <AccountDetailsTable data={accountDetails} />}
     </div>
   );
 };
