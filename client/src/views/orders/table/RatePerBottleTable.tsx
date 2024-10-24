@@ -9,7 +9,6 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 import { DataGridRowType } from 'src/@fake-db/types';
 
-// type SortType = 'asc' | 'desc' | undefined | null;
 
 const RatePerBottle = ({ data, ratePerBottle }: { data: any[], ratePerBottle: number }) => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
@@ -18,7 +17,6 @@ const RatePerBottle = ({ data, ratePerBottle }: { data: any[], ratePerBottle: nu
   const filterFields = ['firstname', 'lastname', 'customertype', 'paymentmode', 'telephoneoffice', 'telephoneres'];
 console.log(ratePerBottle,"rd")
   useEffect(() => {
-    // Filter the data based on the rate per bottle
     const filtered = data.filter(row => row.rate_per_bottle === ratePerBottle);
     setFilteredData(filtered);
   }, [data, ratePerBottle]);
@@ -84,18 +82,7 @@ console.log(ratePerBottle,"rd")
           {params.row.paymentmode}
         </Typography>
       ),
-    },
-    {
-      flex: 0.175,
-      minWidth: 120,
-      headerName: 'Req. (Bottles)',
-      field: 'telephoneres',
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.telephoneres}
-        </Typography>
-      ),
-    },
+    }
   ];
 
   return (

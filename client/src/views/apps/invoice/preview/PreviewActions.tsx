@@ -51,10 +51,7 @@ const PreviewActions = ({ id,startDate,endDate, toggleSendInvoiceDrawer, toggleA
         >
           Edit Invoice
         </Button>
-        <Button fullWidth variant='contained' sx={{ '& svg': { mr: 2 } }} onClick={toggleAddPaymentDrawer}>
-          <Icon fontSize='1.125rem' icon='tabler:currency-dollar' />
-          Add Payment
-        </Button>
+        
       </CardContent>
     </Card>
   )

@@ -67,10 +67,11 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
               src='/images/avatars/5.-Manfaat-ISO-22000-Bagi-Bisnis.webp'
               alt="Left" 
               width={150}
-              height={80} 
+              height={100} 
             />
           </Box>
-          <Typography variant="h6">Centered Text</Typography>
+          <Image src="/images/avatars/WhatsApp Image 2024-09-04 at 01.17.42_00181990.jpg" alt="Right"  width={330} height={150} />
+
           <Box>
             <Image src="/images/avatars/pngwing.com.png" alt="Right"  width={150} height={80} />
           </Box>

@@ -31,7 +31,7 @@ const InvoiceAdd = () => {
     try {
       const response = await axios.get('/api/invoice', {
         params: {
-          customerids: id,  // Should be a comma-separated list if multiple IDs
+          customerids: id,  
           startDate: handleDateFormat(date1),
           endDate: handleDateFormat(date2),
         },
@@ -40,13 +40,13 @@ const InvoiceAdd = () => {
     } catch (error) {
       console.error('Error fetching data:', error);
     }
-  }, [id, date1, date2]); // Add dependencies
+  }, [id, date1, date2]); 
 
   useEffect(() => {
     if (id && date1 && date2) {
       fetchData();
     }
-  }, [id, date1, date2, fetchData]); // Add fetchData to dependencies
+  }, [id, date1, date2, fetchData]); 
 
   console.log(invoiceData, 'invoiceData');
 
@@ -64,10 +64,12 @@ const InvoiceAdd = () => {
                 startDate={date1}
                 endDate={date2}
                 toggleAddPaymentDrawer={() => {
-                  // Placeholder for future implementation
+                  console.log('Add Payment Drawer triggered');
+
                 }}
                 toggleSendInvoiceDrawer={() => {
-                  // Placeholder for future implementation
+                  console.log('Send Invoice Drawer triggered');
+
                 }}
               />
             </Grid>
