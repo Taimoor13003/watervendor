@@ -92,13 +92,13 @@ const InvoicePrint = () => {
         <Grid item xs={12}>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '20px', boxSizing: 'border-box' }}>
             <Box sx={{ flex: 1, textAlign: 'left' }}>
-              <Image src='/images/avatars/5.-Manfaat-ISO-22000-Bagi-Bisnis.webp' alt="Left" width={250} height={110} />
+              <Image src='/images/avatars/5.-Manfaat-ISO-22000-Bagi-Bisnis.webp' alt="Left" width={240} height={100} />
             </Box>
             <Box sx={{ flex: 1, textAlign: 'center' }}>
-              <Image src='/images/avatars/WhatsApp Image 2024-09-04 at 01.17.42_00181990.jpg' alt="Center" width={350} height={150} />
+              <Image src='/images/avatars/WhatsApp Image 2024-09-04 at 01.17.42_00181990.jpg' alt="Center" width={400} height={200} />
             </Box>
             <Box sx={{ flex: 1, textAlign: 'right' }}>
-              <Image src="/images/avatars/pngwing.com.png" alt="Right" width={250} height={110} />
+              <Image src="/images/avatars/pngwing.com.png" alt="Right" width={240} height={100} />
             </Box>
           </Box>
         </Grid>

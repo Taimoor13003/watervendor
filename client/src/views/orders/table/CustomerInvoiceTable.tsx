@@ -1,8 +1,4 @@
 import { useState, useEffect, forwardRef } from 'react';
-
-// ** Next Import
-// import Link from 'next/link';
-
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
@@ -40,9 +36,6 @@ interface CustomInputProps {
 interface CellType {
   row: InvoiceType;
 }
-
-
-
 
 const CustomInput = forwardRef((props: CustomInputProps, ref) => {
   const startDate = props.start !== null ? format(props.start, 'MM/dd/yyyy') : '';
@@ -200,20 +193,7 @@ const InvoiceList = ({ data }: { data: any[] }) => {
             <CardContent>
               <Grid container spacing={6}>
                 <Grid item xs={12} sm={6}>
-                  <CustomTextField
-                    select
-                    fullWidth
-                    label='Invoice Status'
-                    SelectProps={{ value: statusValue, onChange: e => handleStatusValue(e) }}
-                  >
-                    <MenuItem value=''>None</MenuItem>
-                    <MenuItem value='downloaded'>Downloaded</MenuItem>
-                    <MenuItem value='draft'>Draft</MenuItem>
-                    <MenuItem value='paid'>Paid</MenuItem>
-                    <MenuItem value='partial payment'>Partial Payment</MenuItem>
-                    <MenuItem value='past due'>Past Due</MenuItem>
-                    <MenuItem value='sent'>Sent</MenuItem>
-                  </CustomTextField>
+                  
                 </Grid>
                 <Grid item xs={12} sm={6}>
                   <DatePicker

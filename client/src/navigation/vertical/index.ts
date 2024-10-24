@@ -34,35 +34,24 @@ const devNavItems: VerticalNavItemsType = [
     icon: 'tabler:file-text',
     path: '/app/accounts'
   },
+  
   {
     title: 'Reports',
-    path: '/app/reportFolder'
-  },
-  {
-    title: 'Customer Invoice',
-    path: '/app/customerinvoice'
-  },
-  {
-    title: 'Account Reports',
-    path: '/app/accountsreports'
-  },
-  {
-    title: 'Dashboards',
     icon: 'tabler:smart-home',
     badgeContent: 'new',
     badgeColor: 'error',
     children: [
       {
-        title: 'Analytics',
-        path: '/dashboards/analytics'
+        title: 'Reports by Rate',
+        path: '/app/reportFolder'
       },
       {
-        title: 'CRM',
-        path: '/dashboards/crm'
+        title: 'Customer Invoice',
+        path: '/app/customerinvoice'
       },
       {
-        title: 'eCommerce',
-        path: '/dashboards/ecommerce'
+        title: 'Account Reports',
+        path: '/app/accountsreports'
       }
     ]
   },
@@ -504,30 +493,30 @@ const prodNavItems :  VerticalNavItemsType = [
     path: '/app/accounts'
   },
   {
-    title: 'Dashboards',
+    title: 'Reports',
     icon: 'tabler:smart-home',
     badgeContent: 'new',
     badgeColor: 'error',
     children: [
       {
-        title: 'Analytics',
-        path: '/dashboards/analytics'
+        title: 'Reports by Rate',
+        path: '/app/reportFolder'
       },
       {
-        title: 'CRM',
-        path: '/dashboards/crm'
+        title: 'Customer Invoice',
+        path: '/app/customerinvoice'
       },
       {
-        title: 'eCommerce',
-        path: '/dashboards/ecommerce'
+        title: 'Account Reports',
+        path: '/app/accountsreports'
       }
     ]
-  }     
+  },
 ]
 
 
 const navigation = (): VerticalNavItemsType => {
-  // Use type assertion to ensure TypeScript understands `env` as an `Environment`
+
   switch (env as Environment) {
     case "production":
       return prodNavItems;

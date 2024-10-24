@@ -31,7 +31,7 @@ type FormValues = {
   requirement: string;
   delivery_person: { empid: string; firstname: string; lastname: string };
   reqbottles: string;
-  tax: string; // Added tax field
+  tax: string; 
 };
 
 type EditCustomerFormProps = {
@@ -71,9 +71,15 @@ const schema = yup.object().shape({
 
 const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymentmode, deliveryPersons }: EditCustomerFormProps) => {
 
+  
+  console.log(customerData)
+  
   // @ts-ignore
-  customerData = JSON.parse(customerData)[0]
+    // customerData = JSON.parse(customerData)[0]
+    
+    customerData = customerData[0]
 
+    
   const { control, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
     defaultValues: customerData,
     mode: 'onChange',

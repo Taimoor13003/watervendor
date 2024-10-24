@@ -151,7 +151,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                   <CustomTextField
                     fullWidth
                     value={value}
-                    label='Tax'
+                    label='Tax (Percentage)'
                     onChange={e => {
                       const inputValue = parseFloat(e.target.value);
                       if (inputValue <= 100 || e.target.value === '') {
@@ -264,7 +264,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    label='Office Telephone#'
+                    label='WhatsAPP Number#'
                     placeholder='123456'
                     error={Boolean(errors.telephoneoffice)}
                     helperText={errors.telephoneoffice?.message}

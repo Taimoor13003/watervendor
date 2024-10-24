@@ -1,13 +1,10 @@
-// ** Next Import
 import Link from 'next/link';
 
-// ** MUI Imports
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import { GridRowId } from '@mui/x-data-grid';
 import MenuItem from '@mui/material/MenuItem';
 
-// ** Custom Component Import
 import CustomTextField from 'src/@core/components/mui/text-field';
 
 interface TableHeaderProps {
@@ -21,7 +18,6 @@ interface TableHeaderProps {
 }
 
 const TableHeader = (props: TableHeaderProps) => {
-  // ** Props
   const { value, selectedRows, handleFilter, selectedRowIds, startDate, endDate, isDataReady } = props;
 
   return (
@@ -36,37 +32,16 @@ const TableHeader = (props: TableHeaderProps) => {
         justifyContent: 'space-between'
       }}
     >
-      <CustomTextField
-        select
-        defaultValue='Actions'
-        sx={{ mr: 4, mb: 2 }}
-        SelectProps={{
-          displayEmpty: true,
-          disabled: selectedRows && selectedRows.length === 0,
-          renderValue: (selected) => (selected as string)?.length === 0 ? 'Actions' : (selected as string),
-        }}
-      >
-        <MenuItem disabled value='Actions'>
-          Actions
-        </MenuItem>
-        <MenuItem value='Delete'>Delete</MenuItem>
-        <MenuItem value='Edit'>Edit</MenuItem>
-        <MenuItem value='Send'>Send</MenuItem>
-      </CustomTextField>
+     
 
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
-        <CustomTextField
-          value={value}
-          sx={{ mr: 4, mb: 2 }}
-          placeholder='Search Invoice'
-          onChange={(e) => handleFilter(e.target.value)}
-        />
+        
         <Button
           sx={{ mb: 2 }}
           component={Link}
           variant='contained'
           href={`/app/customerinvoice/add2?customerid=${selectedRowIds.join(',')}&startDate=${startDate ? startDate.toISOString() : ''}&endDate=${endDate ? endDate.toISOString() : ''}`}
-          disabled={!isDataReady} // Disable the button if data is not ready
+          disabled={!isDataReady} 
         >
           Create Invoice
         </Button>
