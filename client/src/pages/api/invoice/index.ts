@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       [key: string]: any;
     }> = await prisma.$queryRaw`
       SELECT invoicedate AS "InvoiceDate", c.reqbottles, c.rate_per_bottle, c.firstname, c.lastname,
-             c.addressres, o.*, o.customerid
+             c.addressres, o.*, o.customerid , c.accountno
       FROM orders o
       LEFT JOIN customer c ON o.customerid = c.customerid
       WHERE o.customerid IN (${Prisma.join(ci)})

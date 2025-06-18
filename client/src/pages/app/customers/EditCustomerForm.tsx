@@ -78,8 +78,6 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
     // customerData = JSON.parse(customerData)[0]
     
     customerData = customerData[0]
-
-    
   const { control, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
     defaultValues: customerData,
     mode: 'onChange',
@@ -431,38 +429,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='delivery_person'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange, onBlur } }) => (
-                  <FormControl fullWidth error={Boolean(errors.delivery_person)}>
-                    <InputLabel>Delivery Person</InputLabel>
-                    <Select
-                      label='Delivery Person'
-                      fullWidth
-                      value={value?.empid || ''}
-                      onChange={(e) => {
-                        const selectedEmpid = e.target.value;
-                        const selectedPerson = deliveryPersons.find(person => person.empid === selectedEmpid);
-                        if (selectedPerson) {
-                          onChange(selectedPerson); // Pass the whole object if necessary
-                        }
-                      }}
-                      onBlur={onBlur}
-                    >
-                      {deliveryPersons.map((person) => (
-                        <MenuItem key={person.id} value={person.empid}>
-                          {person.firstname} {person.lastname}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {errors.delivery_person && <FormHelperText>{errors.delivery_person.message}</FormHelperText>}
-                  </FormControl>
-                )}
-              />
-            </Grid>
+           
             <Grid item xs={12}>
               <Controller
                 name='reqbottles'

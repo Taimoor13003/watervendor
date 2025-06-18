@@ -3,7 +3,8 @@ import { VerticalNavItemsType } from 'src/@core/layouts/types'
 
 type Environment = "development" | "production";
 
-const env: Environment = "development"; // Change to "production" as needed
+// const env: Environment = "development"; // Change to "production" as needed
+const env: Environment = "production"; // Change to "production" as needed
 
 const devNavItems: VerticalNavItemsType = [
   {
@@ -52,6 +53,22 @@ const devNavItems: VerticalNavItemsType = [
       {
         title: 'Account Reports',
         path: '/app/accountsreports'
+      },
+      {
+        title: 'Customer Outstanding Report',
+        path: '/app/customeroutstanding'
+      },
+      {
+        title: 'General Journal Report',
+        path: '/app/generaljournalreport'
+      },
+      {
+        title: 'Product Reports',
+        path: '/app/productreport'
+      },
+      {
+        title: 'Monthly Profit/Loss',
+        path: '/app/profitlossreport'
       }
     ]
   },
@@ -495,7 +512,7 @@ const prodNavItems :  VerticalNavItemsType = [
   {
     title: 'Reports',
     icon: 'tabler:smart-home',
-    badgeContent: 'new',
+    // badgeContent: 'new',
     badgeColor: 'error',
     children: [
       {
@@ -509,6 +526,26 @@ const prodNavItems :  VerticalNavItemsType = [
       {
         title: 'Account Reports',
         path: '/app/accountsreports'
+      },
+      {
+        title: 'Customer Outstanding Report',
+        path: '/app/customeroutstanding'
+      },
+      {
+        title: 'General Journal Report',
+        path: '/app/generaljournalreport'
+      },
+      {
+        title: 'Product Reports',
+        path: '/app/productreport'
+      },
+      {
+        title: 'Monthly Profit/Loss',
+        path: '/app/profitlossreport'
+      },
+      {
+        title: 'Accounts Receivables',
+        path: '/app/accountsreceivable'
       }
     ]
   },

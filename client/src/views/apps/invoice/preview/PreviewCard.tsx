@@ -43,7 +43,7 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
     
     return format(date, 'dd/MM/yyyy');
   };
-  
+  console.log(firstItem.accountno,'alllllllllllll')
   const currentDate = format(new Date(), 'EEEE, dd MMMM, yyyy');
 
   const totalAmountDue = datanew.reduce((total: number, item) => {
@@ -86,7 +86,7 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
           <b>Date: </b> {currentDate}
         </Typography>
         <Typography>
-          Account no.# {currentDate}
+          Account no.# {firstItem.accountno}
         </Typography>
         <Divider />
         <Typography variant="h1" align='center'>Invoice Summary</Typography>

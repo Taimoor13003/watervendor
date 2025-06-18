@@ -1,182 +1,174 @@
-// ** React Imports
+// src/views/apps/invoice/AccountForm.tsx
+import React, { useEffect, useState } from 'react'
+import axios from 'axios'
+import { useForm, Controller } from 'react-hook-form'
+import * as yup from 'yup'
+import { yupResolver } from '@hookform/resolvers/yup'
+import toast from 'react-hot-toast'
 
-// ** MUI Imports
+// MUI Components
 import Card from '@mui/material/Card'
-import Grid from '@mui/material/Grid'
-import Button from '@mui/material/Button'
 import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
+import Grid from '@mui/material/Grid'
+import Button from '@mui/material/Button'
+import MenuItem from '@mui/material/MenuItem'
 
-// ** Custom Component Import
+// Your custom text‐field wrapper
 import CustomTextField from 'src/@core/components/mui/text-field'
 
-// ** Third Party Imports
-import * as yup from 'yup'
-import toast from 'react-hot-toast'
-import { useForm, Controller } from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
-
-
-const defaultValues = {
-  email: '',
-  lastName: '',
-  password: '',
-  firstName: ''
+interface Account {
+  accountcode: string
+  accountname: string
 }
 
-const showErrors = (field: string, valueLen: number, min: number) => {
-  if (valueLen === 0) {
-    return `${field} field is required`
-  } else if (valueLen > 0 && valueLen < min) {
-    return `${field} must be at least ${min} characters`
-  } else {
-    return ''
-  }
+interface FormValues {
+  accountCode: string
+  accountType: string
+  accountName: string
+  openingBalance: string
+  remarks: string
 }
 
 const schema = yup.object().shape({
-  email: yup.string().email().required(),
-  lastName: yup
-    .string()
-    .min(3, obj => showErrors('lastName', obj.value.length, obj.min))
-    .required(),
-  password: yup
-    .string()
-    .min(8, obj => showErrors('password', obj.value.length, obj.min))
-    .required(),
-  firstName: yup
-    .string()
-    .min(3, obj => showErrors('firstName', obj.value.length, obj.min))
-    .required()
+  accountCode:    yup.string().required('Account Code is required'),
+  accountType:    yup.string().required('Account Type is required'),
+  accountName:    yup.string().required('Account Name is required'),
+  openingBalance: yup.string().required('Opening Balance is required'),
+  remarks:        yup.string()
 })
 
-const FormValidationSchema = () => {
-  // ** States
-  // const [state, setState] = useState<State>({
-  //   password: '',
-  //   showPassword: false
-  // })
-
-  // ** Hook
+const AccountForm: React.FC = () => {
+  const [accounts, setAccounts] = useState<Account[]>([])
   const {
     control,
     handleSubmit,
     formState: { errors }
-  } = useForm({
-    defaultValues,
-    mode: 'onChange',
+  } = useForm<FormValues>({
+    defaultValues: {
+      accountCode:    '',
+      accountType:    '',
+      accountName:    '',
+      openingBalance: '',
+      remarks:        ''
+    },
+    mode:     'onChange',
     resolver: yupResolver(schema)
   })
-  const onSubmit = () => toast.success('Form Submitted')
+
+  useEffect(() => {
+    axios
+      .get<{ accounts: Account[] }>('/api/accountnames')
+      .then(res => setAccounts(res.data.accounts))
+      .catch(err => {
+        console.error(err)
+        toast.error('Could not load account list')
+      })
+  }, [])
+
+  const onSubmit = (data: FormValues) => {
+    console.log(data)
+    toast.success('Form Submitted')
+  }
 
   return (
     <Card>
-      <CardHeader title='Accounts' />
+      <CardHeader title="Accounts" />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={5}>
-            <Grid item xs={12}>
-              <Controller
-                name='firstName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Account Code'
-                    onChange={onChange}
-                    placeholder='Leonard'
-                    error={Boolean(errors.firstName)}
-                    aria-describedby='validation-schema-first-name'
-                    {...(errors.firstName && { helperText: errors.firstName.message })}
-                  />
 
+            {/* Account Code as dropdown */}
+            <Grid item xs={12}>
+              <Controller
+                name="accountCode"
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    select
+                    fullWidth
+                    label="Account Code"
+                    {...field}
+                    error={Boolean(errors.accountCode)}
+                    helperText={errors.accountCode?.message}
+                  >
+                    {accounts.map(acc => (
+                      <MenuItem key={acc.accountcode} value={acc.accountcode}>
+                        {acc.accountcode} – {acc.accountname}
+                      </MenuItem>
+                    ))}
+                  </CustomTextField>
                 )}
               />
             </Grid>
+
+            {/* All other fields remain plain text inputs */}
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name="accountType"
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    value={value}
-                    label='Account Type'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    label="Account Type"
+                    placeholder="e.g. Asset"
+                    {...field}
+                    error={Boolean(errors.accountType)}
+                    helperText={errors.accountType?.message}
                   />
                 )}
               />
             </Grid>
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name="accountName"
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    value={value}
-                    label='Account Name'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    label="Account Name"
+                    placeholder="e.g. Cash"
+                    {...field}
+                    error={Boolean(errors.accountName)}
+                    helperText={errors.accountName?.message}
                   />
                 )}
               />
             </Grid>
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name="openingBalance"
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    value={value}
-                    label='Opening Balance'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    label="Opening Balance"
+                    placeholder="0.00"
+                    {...field}
+                    error={Boolean(errors.openingBalance)}
+                    helperText={errors.openingBalance?.message}
                   />
                 )}
               />
             </Grid>
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name="remarks"
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    value={value}
                     label="Remarks / Note"
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    placeholder="Optional"
+                    {...field}
                   />
                 )}
               />
             </Grid>
 
-
-
-
+            {/* Submit button */}
             <Grid item xs={12}>
-              <Button type='submit' variant='contained'>
+              <Button type="submit" variant="contained">
                 Submit
               </Button>
             </Grid>
@@ -187,4 +179,4 @@ const FormValidationSchema = () => {
   )
 }
 
-export default FormValidationSchema
+export default AccountForm

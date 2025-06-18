@@ -29,7 +29,7 @@ interface RowData {
 
 const AccountAndVoucherPage = () => {
   const [accountCode, setAccountCode] = useState<string>('');
-  const [voucherType, setVoucherType] = useState<number | ''>('');
+  const [voucherType, setVoucherTypeValue] = useState<number | ''>('');
   const [voucherPeriodFrom, setVoucherPeriodFrom] = useState<string>('');
   const [voucherPeriodTo, setVoucherPeriodTo] = useState<string>('');
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -101,7 +101,7 @@ const AccountAndVoucherPage = () => {
         <Select
           labelId="vouchertype-label"
           value={voucherType}
-          onChange={(e) => setVoucherType(e.target.value as number)}
+          onChange={(e) => setVoucherTypeValue(e.target.value as number)}
           label="Voucher Type"
           required
         >

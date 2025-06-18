@@ -1,4 +1,4 @@
-import React, {useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
@@ -18,7 +18,7 @@ const OrderTableServerSide = ({ data }: { data: any[] }) => {
   const [searchText, setSearchText] = useState<string>('');
   const [filteredData, setFilteredData] = useState<DataGridRowType[]>([]);
   const filterFields = ['firstname', 'lastname', 'customertype', 'paymentmode', 'telephoneoffice', 'telephoneres'];
-const [open,setOpen] = useState(false)
+  const [open, setOpen] = useState(false)
 
   const router = useRouter();
 
@@ -130,7 +130,7 @@ const [open,setOpen] = useState(false)
     },
   ];
 
- 
+
   return (
     <Card>
       <DatePickerWrapper>

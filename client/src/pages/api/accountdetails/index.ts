@@ -22,6 +22,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     AND v.vouchertype = ${type} AND ah.accountcode = ${accountcode} 
 `;
 
+console.log( `SELECT * FROM voucher_trans vt
+  LEFT JOIN accounts_head ah ON ah.accountcode = vt.accountcode
+  LEFT JOIN vouchers v ON vt.voucherno = v.voucherno
+  LEFT JOIN accounts_head ah2 ON ah2.accountcode = vt.accountcode
+  WHERE v.voucherdate BETWEEN ${fromDate} AND ${toDate}
+  AND v.vouchertype = ${type} AND ah.accountcode = ${accountcode}`,'queryyyyyyyy')
+
+  
     return res.status(200).json({ result });
 
   } catch (error) {

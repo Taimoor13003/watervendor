@@ -22,3 +22,8 @@ code:not([class*='language-']):after {
 code[class*='language-'] {
   padding: 0;
 }
+
+.print-footer{
+  background-color: #DCF0FB;
+  text-align: center;
+}
