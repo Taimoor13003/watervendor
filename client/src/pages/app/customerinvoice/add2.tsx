@@ -1,83 +1,86 @@
-import { useEffect, useState, useCallback } from 'react';
-import Grid from '@mui/material/Grid';
-import axios from 'axios';
-import PreviewCard from 'src/views/apps/invoice/preview/PreviewCard';
-import { useRouter } from 'next/router';
-import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
-import PreviewActions from 'src/views/apps/invoice/preview/PreviewActions';
+// src/pages/app/customerinvoice/add2.tsx
+import { useEffect, useState, useCallback } from 'react'
+import Grid from '@mui/material/Grid'
+import Button from '@mui/material/Button'
+import axios from 'axios'
+import { useRouter } from 'next/router'
+import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
+import PreviewCard from 'src/views/apps/invoice/preview/PreviewCard'
+import PreviewActions from 'src/views/apps/invoice/preview/PreviewActions'
 
-const InvoiceAdd = () => {
-  const [invoiceData, setInvoiceData] = useState<any>({}); // Changed to object for grouped data
+const InvoiceAdd: React.FC = () => {
+  const router = useRouter()
+  const { customerid, startDate, endDate } = router.query
 
-  const router = useRouter();
-  const id = router.query.customerid;
-  const date1 = router.query.startDate;
-  const date2 = router.query.endDate;
+  // parse out all IDs from the `?customerid=` param (it may be "905,1723" etc)
+  const bulkIds = typeof customerid === 'string'
+    ? customerid.split(',').filter(Boolean)
+    : []
 
-  const handleDateFormat = (date: any) => {
-    const inputDate = new Date(date);
-    const year = inputDate.getFullYear();
-    const month = String(inputDate.getMonth() + 1).padStart(2, '0');
-    const day = String(inputDate.getDate()).padStart(2, '0');
-    const hours = String(inputDate.getHours()).padStart(2, '0');
-    const minutes = String(inputDate.getMinutes()).padStart(2, '0');
-    const seconds = String(inputDate.getSeconds()).padStart(2, '0');
-    const milliseconds = String(inputDate.getMilliseconds()).padStart(3, '0');
-
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
-  };
+  // fetch grouped invoice data for each of those IDs
+  const [invoiceData, setInvoiceData] = useState<Record<string, any[]>>({})
 
   const fetchData = useCallback(async () => {
+    if (!bulkIds.length || !startDate || !endDate) return
     try {
-      const response = await axios.get('/api/invoice', {
+      const resp = await axios.get('/api/invoice', {
         params: {
-          customerids: id,  
-          startDate: handleDateFormat(date1),
-          endDate: handleDateFormat(date2),
-        },
-      });
-      setInvoiceData(response.data);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+          customerids: bulkIds.join(','),
+          startDate,
+          endDate
+        }
+      })
+      setInvoiceData(resp.data)
+    } catch (err) {
+      console.error('Error fetching grouped invoice data:', err)
     }
-  }, [id, date1, date2]); 
+  }, [bulkIds.join(','), startDate, endDate])
 
   useEffect(() => {
-    if (id && date1 && date2) {
-      fetchData();
-    }
-  }, [id, date1, date2, fetchData]); 
+    fetchData()
+  }, [fetchData])
 
-  console.log(invoiceData, 'invoiceData');
+  const handleBulkPrint = () => {
+    if (!bulkIds.length) return
+    router.push(
+      `/apps/invoice/print?customerids=${bulkIds.join(',')}` +
+      `&startdate=${encodeURIComponent(startDate as string)}` +
+      `&enddate=${encodeURIComponent(endDate as string)}`
+    )
+  }
 
   return (
     <DatePickerWrapper sx={{ '& .react-datepicker-wrapper': { width: 'auto' } }}>
+      <Button
+        variant="contained"
+        onClick={handleBulkPrint}
+        disabled={!bulkIds.length}
+        sx={{ mb: 4, ml: 2 }}
+      >
+        Print All Invoices
+      </Button>
+
       <Grid container spacing={6}>
-        {Object.keys(invoiceData).map((customerId) => (
-          <Grid container item xs={12} key={customerId} spacing={2}>
+        {bulkIds.map(id => (
+          <Grid container item xs={12} key={id} spacing={2}>
             <Grid item xl={9} md={8} xs={12}>
-              <PreviewCard data={invoiceData[customerId]} />
+              {/* render the one‐customer invoice summary */}
+              <PreviewCard data={invoiceData[id] || []} />
             </Grid>
             <Grid item xl={3} md={4} xs={12}>
               <PreviewActions
-                id={customerId}
-                startDate={date1}
-                endDate={date2}
-                toggleAddPaymentDrawer={() => {
-                  console.log('Add Payment Drawer triggered');
-
-                }}
-                toggleSendInvoiceDrawer={() => {
-                  console.log('Send Invoice Drawer triggered');
-
-                }}
+                id={id}
+                startDate={startDate}
+                endDate={endDate}
+                toggleAddPaymentDrawer={() => {/*…*/}}
+                toggleSendInvoiceDrawer={() => {/*…*/}}
               />
             </Grid>
           </Grid>
         ))}
       </Grid>
     </DatePickerWrapper>
-  );
-};
+  )
+}
 
-export default InvoiceAdd;
+export default InvoiceAdd

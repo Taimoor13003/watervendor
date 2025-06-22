@@ -47,17 +47,6 @@ const AccountDetailsTable = ({ data }: { data: RowData[] }) => {
       ),
     },
     {
-      flex: 0.15,
-      minWidth: 150,
-      field: 'accountcode',
-      headerName: 'Account Code',
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.accountcode}
-        </Typography>
-      ),
-    },
-    {
       flex: 0.2,
       minWidth: 200,
       field: 'voucherdate',

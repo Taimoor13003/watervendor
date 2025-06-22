@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types';
-import { PrismaClient } from '@prisma/client'; // Adjust the import as needed
+import { PrismaClient } from '@prisma/client'; 
 
 const prisma = new PrismaClient();
 
@@ -25,7 +25,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 OFFSET ${offset}
                 `;
 
-            // Optionally, you can fetch the total count for pagination metadata
             const totalCount = await prisma.vouchers.count();
 
             res.status(200).json({ data: vouchers, count: totalCount });

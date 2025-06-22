@@ -49,18 +49,15 @@ const VoucherTable = () => {
     }, 1200); // Adjust debounce delay as needed
   }, [paginationModel.page, paginationModel.pageSize, searchText]);
 
-  // Handle search text change
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchText(event.target.value);
     setPaginationModel((prev) => ({ ...prev, page: 0 }));
   };
 
-  // useEffect with fetchData as a dependency
   useEffect(() => {
     fetchData();
   }, [paginationModel.page, paginationModel.pageSize, searchText, fetchData]);
 
-  // Columns configuration for DataGrid
   const columns: GridColDef[] = [
     {
       flex: 0.25,

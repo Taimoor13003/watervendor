@@ -1,4 +1,4 @@
-import React, {useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
@@ -18,7 +18,8 @@ const OrderTableServerSide = ({ data }: { data: any[] }) => {
   const [searchText, setSearchText] = useState<string>('');
   const [filteredData, setFilteredData] = useState<DataGridRowType[]>([]);
   const filterFields = ['firstname', 'lastname', 'customertype', 'paymentmode', 'telephoneoffice', 'telephoneres'];
-const [open,setOpen] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [selectedId, setSelectedId] = useState<number | null>(null)
 
   const router = useRouter();
 
@@ -45,9 +46,30 @@ const [open,setOpen] = useState(false)
     }
   };
 
-  const onDelete = () => {
+  const handleConfirmDelete = async () => {
     alert('Delete Function');
+    
+    if(selectedId) {
+      // Call your delete API here with selectedId
+
+      await fetch(`/api/delete_customer?id=${selectedId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      
+
+      console.log(`Deleting customer with ID: ${selectedId}`);
+      // After deletion, you might want to refresh the data or remove the deleted item from the state
+      setOpen(false);
+      setSelectedId(null);
+    }
+
   };
+
+   const handleDeleteClick = (id: number) => {
+    setSelectedId(id)
+    setOpen(true)
+  }
 
   const columns: GridColDef[] = [
     {
@@ -122,7 +144,9 @@ const [open,setOpen] = useState(false)
           <Button variant='contained' onClick={() => router.push(`/app/customers/edit?customerid=${params.row.customerid}`)}>
             Edit
           </Button>
-          <Button variant='contained' onClick={() => setOpen(true)}>
+          <Button variant='contained' 
+          onClick={() => handleDeleteClick(params.row.id)}
+          >
             Delete
           </Button>
         </Box>
@@ -130,7 +154,7 @@ const [open,setOpen] = useState(false)
     },
   ];
 
- 
+
   return (
     <Card>
       <DatePickerWrapper>
@@ -171,7 +195,7 @@ const [open,setOpen] = useState(false)
         />
       </DatePickerWrapper>
 
-      <DialougeComponent open={open} setOpen={setOpen} onDelete={onDelete} />
+      <DialougeComponent open={open} setOpen={setOpen} onDelete={handleConfirmDelete} />
     </Card>
   );
 };

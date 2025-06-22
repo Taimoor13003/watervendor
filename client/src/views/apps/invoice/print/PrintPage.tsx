@@ -1,176 +1,235 @@
-import { useEffect, useState } from 'react';
-import Grid from '@mui/material/Grid';
-import Table from '@mui/material/Table';
-import Divider from '@mui/material/Divider';
-import TableRow from '@mui/material/TableRow';
-import TableHead from '@mui/material/TableHead';
-import TableBody from '@mui/material/TableBody';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import { styled } from '@mui/material/styles';
-import TableCell from '@mui/material/TableCell';
-import axios from 'axios';
-import { useRouter } from 'next/router';
-import { format } from 'date-fns';
-import Image from 'next/image';
+// src/views/apps/invoice/print/PrintPage.tsx
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import { useRouter } from 'next/router'
+import axios from 'axios'
+import { format } from 'date-fns'
 
+import Box from '@mui/material/Box'
+import Grid from '@mui/material/Grid'
+import Typography from '@mui/material/Typography'
+import Divider from '@mui/material/Divider'
+import Table from '@mui/material/Table'
+import TableHead from '@mui/material/TableHead'
+import TableBody from '@mui/material/TableBody'
+import TableRow from '@mui/material/TableRow'
+import TableCell from '@mui/material/TableCell'
+import { styled } from '@mui/material/styles'
+import { GlobalStyles } from '@mui/material'
 
 const MUITableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: 0,
-  paddingLeft: '0 !important',
-  paddingRight: '0 !important',
-  paddingTop: `${theme.spacing(1)} !important`,
-  paddingBottom: `${theme.spacing(1)} !important`,
-}));
+  padding: theme.spacing(1),
+  fontSize: theme.typography.body1.fontSize
+}))
 
-const InvoicePrint = () => {
-  const [error, setError] = useState<boolean>(false);
-  const [invoiceData, setInvoiceData] = useState<any>([]);
-  const router = useRouter();
-  const { query } = router;
-  const id = query.customerid;
-  const date1 = query.startdate;
-  const date2 = query.enddate;
-  console.log(error)
+const PrintPage: React.FC = () => {
+  const router = useRouter()
+  const { query } = router
 
-  const totalBottlesDelivered = Object.values(invoiceData).flat().reduce((total: number, item: any) => total + (item.orderqty || 0), 0);
-  const totalBottlesReturned = Object.values(invoiceData).flat().reduce((total: number, item: any) => total + (item.reqbottles || 0), 0);
-  const totalAmountDue = Object.values(invoiceData).flat().reduce((total: number, item: any) => total + (item.orderqty || 0) * (item.rate_per_bottle || 0), 0);
-
-  const firstItem = Object.values(invoiceData).flat()[0] || {};
-
-  //@ts-ignore
-
-  const firstname = firstItem?.firstname || 'N/A';
-
-  //@ts-ignore
-
-  const lastname = firstItem?.lastname || 'N/A';
-  
-  //@ts-ignore
-
-  const address = firstItem?.addressres || 'N/A';
-
-  const formatDate = (dateString: any) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    
-    return format(date, 'dd/MM/yyyy');
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axios.get('/api/invoice', {
-          params: {
-            customerids: id,
-            startDate: date1,
-            endDate: date2,
-          },
-        });
-        setInvoiceData(response.data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError(true);
-      }
-    };
-
-    if (id && date1 && date2) {
-      fetchData();
+  // Normalize into array of IDs
+  const ids: string[] = useMemo(() => {
+    if (typeof query.customerids === 'string') {
+      return query.customerids.split(',').filter(Boolean)
     }
-  }, [id, date1, date2]);
-
-  useEffect(() => {
-    if (id && typeof id === "string" && invoiceData[id]) {
-      window.print();
+    if (typeof query.customerid === 'string') {
+      return [query.customerid]
     }
-  }, [id, invoiceData]);
+    return []
+  }, [query.customerids, query.customerid])
+
+  const startDate = query.startdate as string
+  const endDate   = query.enddate   as string
+
+  const [data, setData] = useState<Record<string, any[]>>({})
+  const [dataLoaded, setDataLoaded] = useState(false)
+
+  // We have 3 logos per invoice block
+  const totalLogos = ids.length * 3
+  const [logosLoaded, setLogosLoaded] = useState(0)
+  const onLogoLoad = useCallback(() => setLogosLoaded(n => n + 1), [])
+
+  // Fetch invoice data
+  useEffect(() => {
+    if (!ids.length || !startDate || !endDate) return
+    axios
+      .get('/api/invoice', { params: { customerids: ids.join(','), startDate, endDate } })
+      .then(res => setData(res.data))
+      .catch(() => {
+        console.error('Failed to fetch invoice data')
+      })
+      .finally(() => setDataLoaded(true))
+  }, [ids, startDate, endDate])
+
+  // Once data _and_ logos are all loaded, trigger print
+  useEffect(() => {
+    if (dataLoaded && logosLoaded >= totalLogos) {
+      window.print()
+    }
+  }, [dataLoaded, logosLoaded, totalLogos])
+
+  const fmt = (d: string) => {
+    try { return format(new Date(d), 'dd/MM/yyyy') }
+    catch { return '—' }
+  }
 
   return (
-    <Box sx={{ p: 12, pb: 6 }}>
-      <Grid container>
-        <Grid item xs={12}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '20px', boxSizing: 'border-box' }}>
-            <Box sx={{ flex: 1, textAlign: 'left' }}>
-              <Image src='/images/avatars/5.-Manfaat-ISO-22000-Bagi-Bisnis.webp' alt="Left" width={240} height={100} />
+    <>
+      <GlobalStyles styles={{
+        '@page': { margin: 0 },
+        '@media print': {
+          body: { margin: 0, backgroundColor: '#fff' }
+        }
+      }} />
+
+      <Box sx={{ backgroundColor: '#fff', color: '#000', p: 4 }}>
+        {ids.map(cid => {
+          const rows = Array.isArray(data[cid]) ? data[cid] : []
+          if (!rows.length) return null
+
+          // Compute totals
+          const totDel = rows.reduce((s,r) => s + (r.orderqty||0), 0)
+          const totRet = rows.reduce((s,r) => s + (r.reqbottles||0), 0)
+          const totAmt = rows.reduce((s,r) => s + (r.orderqty||0)*(r.rate_per_bottle||0), 0)
+
+          const first = rows[0]
+
+          return (
+            <Box
+              key={cid}
+              sx={{
+                position:       'relative',     // for screen-only absolute footer
+                mb:             6,
+                pb:             '2rem',         // space for footer on screen
+                pageBreakAfter: 'always'
+              }}
+            >
+              {/* HEADER WITH LOGOS */}
+              <Grid
+                container
+                alignItems="center"
+                sx={{
+                  mb: 2,
+                  '& img': {
+                    display: 'inline-block',
+                    objectFit: 'contain',
+                    maxHeight: 100,
+                    WebkitPrintColorAdjust: 'exact'
+                  }
+                }}
+              >
+                <Grid item xs={4} textAlign="left">
+                  <img
+                    src="/images/avatars/5.-Manfaat-ISO-22000-Bagi-Bisnis.webp"
+                    alt="ISO 22000"
+                    width={180}
+                    height={80}
+                    onLoad={onLogoLoad}
+                  />
+                </Grid>
+                <Grid item xs={4} textAlign="center">
+                  <img
+                    src="/images/avatars/output-onlinepngtools.png"
+                    alt="Rivielle"
+                    width={300}
+                    height={100}
+                    onLoad={onLogoLoad}
+                  />
+                </Grid>
+                <Grid item xs={4} textAlign="right">
+                  <img
+                    src="/images/avatars/pngwing.com.png"
+                    alt="Pakistan Standards"
+                    width={180}
+                    height={80}
+                    onLoad={onLogoLoad}
+                  />
+                </Grid>
+              </Grid>
+
+              {/* CUSTOMER INFO */}
+              <Typography variant="h6" fontWeight={700}>
+                {first.firstname} {first.lastname}
+              </Typography>
+              <Typography><b>Address:</b> {first.addressres}</Typography>
+              <Typography><b>Date:</b> {format(new Date(), 'EEEE, dd MMMM, yyyy')}</Typography>
+              <Typography><b>Account no.:</b> {first.accountno}</Typography>
+
+              {/* DIVIDER + LABEL */}
+              <Divider sx={{ borderBottomWidth: 2, my: 2 }} />
+              <Box sx={{ textAlign: 'center', border: '1px solid rgba(0,0,0,0.7)', py: 1, mb: 1 }}>
+                <Typography letterSpacing={4} fontWeight={700}>INVOICE DETAILS</Typography>
+              </Box>
+
+              {/* DETAILS TABLE */}
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <MUITableCell><b>Invoice Date</b></MUITableCell>
+                    <MUITableCell align="right"><b>Bottles Delivered</b></MUITableCell>
+                    <MUITableCell align="right"><b>Bottles Returned</b></MUITableCell>
+                    <MUITableCell align="right"><b>Rate</b></MUITableCell>
+                    <MUITableCell align="right"><b>Total</b></MUITableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.map((r,i) => {
+                    const amt = (r.orderqty||0)*(r.rate_per_bottle||0)
+                    return (
+                      <TableRow key={i}>
+                        <MUITableCell>{fmt(r.InvoiceDate)}</MUITableCell>
+                        <MUITableCell align="right">{r.orderqty}</MUITableCell>
+                        <MUITableCell align="right">{r.reqbottles}</MUITableCell>
+                        <MUITableCell align="right">{r.rate_per_bottle.toFixed(2)}</MUITableCell>
+                        <MUITableCell align="right">{amt.toFixed(2)}</MUITableCell>
+                      </TableRow>
+                    )
+                  })}
+                  <TableRow>
+                    <MUITableCell><b>TOTAL</b></MUITableCell>
+                    <MUITableCell align="right"><b>{totDel}</b></MUITableCell>
+                    <MUITableCell align="right"><b>{totRet}</b></MUITableCell>
+                    <MUITableCell/>
+                    <MUITableCell align="right"><b>{totAmt.toFixed(2)}</b></MUITableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+
+              {/* NOTE & THANK YOU */}
+              <Box mt={2}>
+                <Typography><b>Note:</b> Total amount due is Rs:{totAmt.toFixed(2)} only.</Typography>
+                <Typography>Thank you.</Typography>
+              </Box>
+
+              {/* INLINE FOOTER */}
+              <Box
+                className="page-footer"
+                sx={{
+                  position: 'absolute',
+                  bottom:   0,
+                  left:     0,
+                  right:    0,
+                  px:       2,
+                  py:       1,
+                  backgroundColor:     '#DCF0FB',
+                  borderTop:           '1px solid rgba(0,0,0,0.2)',
+                  fontSize:            '0.75rem',
+                  color:               '#000',
+                  WebkitPrintColorAdjust: 'exact',
+                  printColorAdjust:       'exact',
+                  textAlign:           'center',
+                  '@media print': {
+                    position: 'fixed'
+                  }
+                }}
+              >
+                Plot C-3-28, Block-B, Korangi Industrial Area, Karachi │ Cell: 0300-2734089, 0332-4422385 │ Ph: 021-35151000
+              </Box>
             </Box>
-            <Box sx={{ flex: 1, textAlign: 'center' }}>
-              <Image src='/images/avatars/WhatsApp Image 2024-09-04 at 01.17.42_00181990.jpg' alt="Center" width={400} height={200} />
-            </Box>
-            <Box sx={{ flex: 1, textAlign: 'right' }}>
-              <Image src="/images/avatars/pngwing.com.png" alt="Right" width={240} height={100} />
-            </Box>
-          </Box>
-        </Grid>
-        <Grid item xs={12}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: { sm: 'flex-end', xs: 'flex-start' } }}>
-            <Typography variant='h4' sx={{ mb: 2 }}>
-            </Typography>
-          </Box>
-        </Grid>
-      </Grid>
+          )
+        })}
+      </Box>
+    </>
+  )
+}
 
-      <Grid>
-        <Typography variant='h5'>
-          <b>Name: </b> {`${firstname} ${lastname}`}
-        </Typography>
-        <Typography>
-          <b>Address: </b> {address}
-        </Typography>
-        <Typography>
-
-
- 
-          <b>Start Date: </b> {formatDate(date1)}
-        </Typography>
-        <Typography>
-
-
-
-          <b>End Date: </b> {formatDate(date2)}
-        </Typography>
-        <Typography>
-          <b>Account no.# </b> {id}
-        </Typography>
-        <Divider sx={{ my: theme => `${theme.spacing(6)} !important` }} />
-        <Typography variant='h1' align='center'>Invoice Details</Typography>
-      </Grid>
-      <Divider sx={{ my: theme => `${theme.spacing(6)} !important` }} />
-
-      <Table>
-        <TableHead>
-          <TableRow>
-            <MUITableCell>Invoice Date</MUITableCell>
-            <MUITableCell align='right'>Bottles Delivered</MUITableCell>
-            <MUITableCell align='right'>Bottles Returned</MUITableCell>
-            <MUITableCell align='right'>Rate</MUITableCell>
-            <MUITableCell align='right'>Total</MUITableCell>
-            <Divider />
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {Object.keys(invoiceData).map((invoiceKey) => (
-            invoiceData[invoiceKey].map((item: any, index: number) => (
-              <TableRow key={index}>
-                <MUITableCell>{formatDate(item?.InvoiceDate)}</MUITableCell>
-                <MUITableCell align='right'>{item?.orderqty}</MUITableCell>
-                <MUITableCell align='right'>{item?.reqbottles}</MUITableCell>
-                <MUITableCell align='right'>{item?.rate_per_bottle}</MUITableCell>
-                <MUITableCell align='right'>{(item?.rate_per_bottle * item?.orderqty).toFixed(2)}</MUITableCell>
-              </TableRow>
-            ))
-          ))}
-          <TableRow>
-            <MUITableCell sx={{ fontWeight: 'bold' }}>Total</MUITableCell>
-            <MUITableCell align='right'>{totalBottlesDelivered}</MUITableCell>
-            <MUITableCell align='right'>{totalBottlesReturned}</MUITableCell>
-            <MUITableCell />
-            <MUITableCell align='right'>{totalAmountDue.toFixed(2)}</MUITableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </Box>
-  );
-};
-
-export default InvoicePrint;
+export default PrintPage

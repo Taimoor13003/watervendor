@@ -1,3 +1,4 @@
+// this api will be used to give account code and account name for dropdown 
 import type { NextApiRequest, NextApiResponse } from 'next/types';
 import { PrismaClient } from '@prisma/client';
 

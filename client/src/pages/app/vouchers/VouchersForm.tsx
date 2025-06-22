@@ -1,261 +1,348 @@
-// ** React Imports
+// src/pages/app/vouchers/VouchersForm.tsx
 
-// ** MUI Imports
-import Card from '@mui/material/Card'
-import Grid from '@mui/material/Grid'
-import Button from '@mui/material/Button'
-import CardHeader from '@mui/material/CardHeader'
-import CardContent from '@mui/material/CardContent'
-
-// ** Custom Component Import
-import CustomTextField from 'src/@core/components/mui/text-field'
-
-// ** Third Party Imports
+import React, { useEffect, useState } from 'react'
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  Grid,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
+  TextField,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  TableContainer,
+  Paper
+} from '@mui/material'
+import { useForm, Controller, useWatch } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import toast from 'react-hot-toast'
-import { useForm, Controller } from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
+import { vouchertypes } from 'src/constant'
 
-// ** Icon Imports
-// import Icon from 'src/@core/components/icon'
-
-// interface State {
-//   password: string
-//   showPassword: boolean
-// }
-
-const defaultValues = {
-  email: '',
-  lastName: '',
-  password: '',
-  firstName: ''
-}
-
-const showErrors = (field: string, valueLen: number, min: number) => {
-  if (valueLen === 0) {
-    return `${field} field is required`
-  } else if (valueLen > 0 && valueLen < min) {
-    return `${field} must be at least ${min} characters`
-  } else {
-    return ''
-  }
-}
-
-const schema = yup.object().shape({
-  email: yup.string().email().required(),
-  lastName: yup
-    .string()
-    .min(3, obj => showErrors('lastName', obj.value.length, obj.min))
-    .required(),
-  password: yup
-    .string()
-    .min(8, obj => showErrors('password', obj.value.length, obj.min))
-    .required(),
-  firstName: yup
-    .string()
-    .min(3, obj => showErrors('firstName', obj.value.length, obj.min))
-    .required()
+// ------------ validation schema ------------
+const schema = yup.object({
+  voucherNo: yup.string(),
+  vouchertype: yup.string().required('Voucher Type is required'),
+  description: yup.string().required('Description is required'),
+  voucherdate: yup.date().required('Voucher Date is required'),
+  accountCode: yup.string().required('Account Code is required'),
+  creditAmount: yup
+    .number()
+    .typeError('Credit must be a number')
+    .min(0, 'Cannot be negative')
+    .required('Credit Amount is required'),
+  debitAmount: yup
+    .number()
+    .typeError('Debit must be a number')
+    .min(0, 'Cannot be negative')
+    .required('Debit Amount is required'),
 })
 
-const FormValidationSchema = () => {
-  // ** States
-  // const [state, setState] = useState<State>({
-  //   password: '',
-  //   showPassword: false
-  // })
+type FormValues = yup.InferType<typeof schema>
 
-  // ** Hook
+const VouchersForm: React.FC = () => {
+  // 1) form setup, now including getValues
   const {
     control,
     handleSubmit,
-    formState: { errors }
-  } = useForm({
-    defaultValues,
-    mode: 'onChange',
-    resolver: yupResolver(schema)
+    reset,
+    getValues,
+    formState: { errors, isSubmitting }
+  } = useForm<FormValues>({
+    resolver: yupResolver(schema),
+    defaultValues: {
+      voucherNo: '',
+      vouchertype: '',
+      description: '',
+      // @ts-ignore
+      voucherdate: '',
+      accountCode: '',
+      creditAmount: 0,
+      debitAmount: 0
+    }
   })
 
-  // const handleClickShowPassword = () => {
-  //   setState({ ...state, showPassword: !state.showPassword })
-  // }
+  const selectedType = useWatch({ control, name: 'vouchertype' })
 
-  const onSubmit = () => toast.success('Form Submitted')
+  const [codes, setCodes] = useState<string[]>([])
+  const [loadingCodes, setLoadingCodes] = useState(false)
+
+  useEffect(() => {
+    if (!selectedType) {
+      setCodes([])
+      return
+    }
+    const url =
+      selectedType === 'Received Voucher'
+        ? '/api/recieved'
+        : '/api/accountnames'
+
+    setLoadingCodes(true)
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCodes(data.map((d: any) => d.accountno))
+        } else if (Array.isArray(data.accounts)) {
+          setCodes(data.accounts.map((a: any) => a.accountcode))
+        } else {
+          setCodes([])
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load account codes:', err)
+        setCodes([])
+      })
+      .finally(() => setLoadingCodes(false))
+  }, [selectedType])
+
+  // 4) transaction rows + totals
+  const [rows, setRows] = useState<
+    { accountCode: string; debit: number; credit: number }[]
+  >([])
+  const [totals, setTotals] = useState({ debit: 0, credit: 0 })
+
+  const onMove = () => {
+    const vals = getValues()
+    const ac = vals.accountCode
+    const db = Number(vals.debitAmount)
+    const cr = Number(vals.creditAmount)
+    if (!ac || (db === 0 && cr === 0)) return
+
+    const next = [...rows, { accountCode: ac, debit: db, credit: cr }]
+    setRows(next)
+    setTotals({
+      debit: next.reduce((s, r) => s + r.debit, 0),
+      credit: next.reduce((s, r) => s + r.credit, 0)
+    })
+
+    // reset just debit & credit fields
+    reset({ ...vals, debitAmount: 0, creditAmount: 0 })
+  }
+
+  // 5) final submit
+  const onSubmit = async (vals: FormValues) => {
+    try {
+      await fetch('/api/vouchers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...vals, transactions: rows })
+      })
+      toast.success('Voucher created!')
+      reset()
+      setRows([])
+      setTotals({ debit: 0, credit: 0 })
+    } catch (err) {
+      console.error(err)
+      toast.error('Failed to create voucher')
+    }
+  }
 
   return (
     <Card>
-      <CardHeader title='Vouchers' />
+      <CardHeader title='Create Voucher' />
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Grid container spacing={5}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <Grid container spacing={4}>
+            {/* Voucher # */}
             <Grid item xs={12}>
               <Controller
-                name='firstName'
+                name='voucherNo'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Voucher #'
-                    onChange={onChange}
-                    placeholder='Leonard'
-                    error={Boolean(errors.firstName)}
-                    aria-describedby='validation-schema-first-name'
-                    {...(errors.firstName && { helperText: errors.firstName.message })}
-                  />
+                render={({ field }) => (
+                  <TextField {...field} fullWidth disabled label='Voucher #' />
+                )}
+              />
+            </Grid>
 
+            {/* Voucher Type */}
+            <Grid item xs={12}>
+              <Controller
+                name='vouchertype'
+                control={control}
+                render={({ field }) => (
+                  <FormControl fullWidth error={!!errors.vouchertype}>
+                    <InputLabel>Voucher Type</InputLabel>
+                    <Select {...field} label='Voucher Type'>
+                      {vouchertypes.map(t => (
+                        <MenuItem key={t.id} value={t.name}>
+                          {t.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    {errors.vouchertype && (
+                      <p style={{ color: 'red', marginTop: 4, fontSize: 12 }}>
+                        {errors.vouchertype.message}
+                      </p>
+                    )}
+                  </FormControl>
                 )}
               />
             </Grid>
+
+            {/* Description */}
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name='description'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
+                render={({ field }) => (
+                  <TextField
+                    {...field}
                     fullWidth
-                    value={value}
-                    label='Voucher Type'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
                     label='Description'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    error={!!errors.description}
+                    helperText={errors.description?.message}
                   />
                 )}
               />
             </Grid>
+
+            {/* Voucher Date */}
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name='voucherdate'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
+                render={({ field }) => (
+                  <TextField
+                    {...field}
                     fullWidth
-                    value={value}
                     label='Voucher Date'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    type='date'
+                    InputLabelProps={{ shrink: true }}
+                    error={!!errors.voucherdate}
+                    helperText={errors.voucherdate?.message}
                   />
                 )}
               />
             </Grid>
 
+            {/* Transaction heading */}
+            <Grid item xs={12}>
+              <h3>Voucher Transaction</h3>
+            </Grid>
 
-            <h3>Voucher Transaction</h3>
+            {/* Account Code */}
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name='accountCode'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Account Code'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
+                render={({ field }) => (
+                  <FormControl fullWidth error={!!errors.accountCode}>
+                    <InputLabel>Account Code</InputLabel>
+                    <Select {...field} label='Account Code'>
+                      {loadingCodes ? (
+                        <MenuItem disabled>
+                          <CircularProgress size={20} />
+                        </MenuItem>
+                      ) : (
+                        codes.map(c => (
+                          <MenuItem key={c} value={c}>
+                            {c}
+                          </MenuItem>
+                        ))
+                      )}
+                    </Select>
+                    {errors.accountCode && (
+                      <p style={{ color: 'red', marginTop: 4, fontSize: 12 }}>
+                        {errors.accountCode.message}
+                      </p>
+                    )}
+                  </FormControl>
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            {/* Credit & Debit */}
+            <Grid item xs={6}>
               <Controller
-                name='lastName'
+                name='creditAmount'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
+                render={({ field }) => (
+                  <TextField
+                    {...field}
                     fullWidth
-                    value={value}
-                    label='Cheque/ Inv #'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
                     label='Credit Amount'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    type='number'
+                    error={!!errors.creditAmount}
+                    helperText={errors.creditAmount?.message}
                   />
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <Controller
-                name='lastName'
+                name='debitAmount'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
+                render={({ field }) => (
+                  <TextField
+                    {...field}
                     fullWidth
-                    value={value}
                     label='Debit Amount'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    type='number'
+                    error={!!errors.debitAmount}
+                    helperText={errors.debitAmount?.message}
                   />
                 )}
               />
             </Grid>
-            <Button>Move</Button>
 
-
+            {/* Move */}
             <Grid item xs={12}>
-              <Button type='submit' variant='contained'>
-                Submit
+              <Button onClick={onMove} variant='outlined'>
+                Move
+              </Button>
+            </Grid>
+
+            {/* Submit */}
+            <Grid item xs={12}>
+              <Button
+                type='submit'
+                variant='contained'
+                disabled={isSubmitting}
+              >
+                Submit Voucher
               </Button>
             </Grid>
           </Grid>
         </form>
+
+        {/* Transactions Table */}
+        <TableContainer component={Paper} sx={{ mt: 4 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Account Code</TableCell>
+                <TableCell align='right'>Debit Amount</TableCell>
+                <TableCell align='right'>Credit Amount</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map((r, i) => (
+                <TableRow key={i}>
+                  <TableCell>{r.accountCode}</TableCell>
+                  <TableCell align='right'>{r.debit.toFixed(2)}</TableCell>
+                  <TableCell align='right'>{r.credit.toFixed(2)}</TableCell>
+                </TableRow>
+              ))}
+              <TableRow>
+                <TableCell><strong>Totals</strong></TableCell>
+                <TableCell align='right'><strong>{totals.debit.toFixed(2)}</strong></TableCell>
+                <TableCell align='right'><strong>{totals.credit.toFixed(2)}</strong></TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
       </CardContent>
     </Card>
   )
 }
 
-export default FormValidationSchema
+export default VouchersForm

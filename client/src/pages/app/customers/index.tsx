@@ -27,7 +27,16 @@
   export const getServerSideProps = async () => {
     // @ts-ignore
 
-    const customers = await prisma.customer.findMany();
+    let customers = []
+
+    try {
+      customers = await prisma.customer.findMany({
+      where: { isdeleted: { not: true } }
+    });
+    } catch (error) {
+      customers = [];
+    }
+
 
     // Serialize all date fields
     // @ts-ignore

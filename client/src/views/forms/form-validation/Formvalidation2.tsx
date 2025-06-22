@@ -1,298 +1,144 @@
-// ** React Imports
-
-// ** MUI Imports
-import Card from '@mui/material/Card'
-import Grid from '@mui/material/Grid'
-import Button from '@mui/material/Button'
-import CardHeader from '@mui/material/CardHeader'
-import CardContent from '@mui/material/CardContent'
-
-// ** Custom Component Import
+import React, { useEffect } from 'react'
+import {
+  Card, Grid, Button, CardHeader, CardContent,
+  FormControl, InputLabel, Select, MenuItem, CircularProgress
+} from '@mui/material'
 import CustomTextField from 'src/@core/components/mui/text-field'
-
-// ** Third Party Imports
-import * as yup from 'yup'
-import toast from 'react-hot-toast'
 import { useForm, Controller } from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
-
-// ** Icon Imports
-// import Icon from 'src/@core/components/icon'
-
-// interface State {
-//   password: string
-//   showPassword: boolean
-// }
+import toast from 'react-hot-toast'
 
 const defaultValues = {
-  email: '',
-  lastName: '',
-  password: '',
-  firstName: ''
+  customerid: '',
+  productId: '',
+  paymentMode: '',
+  orderDate: '',
+  orderStatus: '',
+  quantity: '',
+  remarks: '',
+  unitPrice: '',
+  totalAmount: '',
+  bottleReturnedDate: '',
+  returnedQty: '',
+  deliveryDate: '',
+  deliveryAddress: '',
+  deliveryNotes: '',
+  invoiceNo: '',
+  invoiceDate: '',
+  telephone: ''
 }
-
-const showErrors = (field: string, valueLen: number, min: number) => {
-  if (valueLen === 0) {
-    return `${field} field is required`
-  } else if (valueLen > 0 && valueLen < min) {
-    return `${field} must be at least ${min} characters`
-  } else {
-    return ''
-  }
-}
-
-const schema = yup.object().shape({
-  email: yup.string().email().required(),
-  lastName: yup
-    .string()
-    .min(3, obj => showErrors('lastName', obj.value.length, obj.min))
-    .required(),
-  password: yup
-    .string()
-    .min(8, obj => showErrors('password', obj.value.length, obj.min))
-    .required(),
-  firstName: yup
-    .string()
-    .min(3, obj => showErrors('firstName', obj.value.length, obj.min))
-    .required()
-})
-
-const FormValidationSchema = () => {
-  // ** States
-  // const [state, setState] = useState<State>({
-  //   password: '',
-  //   showPassword: false
-  // })
-
-  // ** Hook
+// @ts-ignore
+const FormValidationSchema = ({ customers }) => {
   const {
     control,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
+    reset,
+    setValue
   } = useForm({
     defaultValues,
-    mode: 'onChange',
-    resolver: yupResolver(schema)
+    mode: 'onChange'
   })
 
-  // const handleClickShowPassword = () => {
-  //   setState({ ...state, showPassword: !state.showPassword })
-  // }
+  const onSubmit = (data: any) => {
+    console.log('Submitted data:', data)
+    toast.success('Order Submitted!')
+    reset()
+  }
 
-  const onSubmit = () => toast.success('Form Submitted')
+const handleCustomerChange = async (customerid: number) => {
+  try {
+    const res = await fetch(`/api/customer-info?id=${customerid}`); // <-- changed to query param
+    const data = await res.json();
+    setValue('paymentMode', data.paymentmode || '');
+    setValue('deliveryAddress', data.addressres || '');
+  } catch (error) {
+    console.error('Failed to fetch customer details:', error);
+  }
+};
+
 
   return (
     <Card>
-      <CardHeader title='Orders' />
+      <CardHeader title='Create Order' />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={5}>
-            <Grid item xs={12}>
-              <Controller
-                name='firstName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Order Number'
-                    onChange={onChange}
-                    placeholder='Leonard'
-                    error={Boolean(errors.firstName)}
-                    aria-describedby='validation-schema-first-name'
-                    {...(errors.firstName && { helperText: errors.firstName.message })}
-                  />
 
+            <Grid item xs={12}>
+              <Controller
+                name='customerid'
+                control={control}
+                rules={{ required: true }}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel id='customer-label'>Customer</InputLabel>
+                    <Select
+                      {...field}
+                      labelId='customer-label'
+                      label='Customer'
+                      value={field.value || ''}
+                      onChange={e => {
+                        field.onChange(e)                     // update form state
+                        // @ts-ignore
+                        handleCustomerChange(e.target.value) // call your fetch function
+                      }}
+                    >
+
+                      {customers.map((cust: { customerid: readonly string[] | React.Key | null | undefined; firstname: any; lastname: any }) => (
+                        // @ts-ignore
+                        <MenuItem key={cust.customerid} value={cust.customerid}>
+                          {`${cust.firstname ?? ''} ${cust.lastname ?? ''}`}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 )}
               />
             </Grid>
+
+
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name='productId'
                 control={control}
                 rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Customer Name'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel id='product-label'>Product ID</InputLabel>
+                    <Select
+                      {...field}
+                      labelId='product-label'
+                      label='Product ID'
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                    >
+                      <MenuItem value='Bottle'>Bottle</MenuItem>
+                    </Select>
+                  </FormControl>
                 )}
               />
             </Grid>
+            {/* Payment Mode */}
             <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Product ID'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
+              <Controller name='paymentMode' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Payment Mode' placeholder='Payment Mode' />
+              )} />
             </Grid>
+
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name='orderDate'
                 control={control}
                 rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    value={value}
-                    label='Payment Mode'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
+                    {...field}
+                    type='date'
                     label='Order Date'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Order Status'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Quantity'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Delivery/Remarks Notes'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Unit Price'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Unit Price'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Bottle Returned Date'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    InputLabelProps={{ shrink: true }}
+                    error={Boolean(errors.orderDate)}
+                    helperText={errors.orderDate?.message}
                   />
                 )}
               />
@@ -300,88 +146,105 @@ const FormValidationSchema = () => {
 
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name="orderStatus"
                 control={control}
                 rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Returned Quantity'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel id="order-status-label">Order Status</InputLabel>
+                    <Select
+                      {...field}
+                      labelId="order-status-label"
+                      label="Order Status"
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                    >
+                      <MenuItem value="New">New</MenuItem>
+                      <MenuItem value="Completed">Completed</MenuItem>
+                      <MenuItem value="Cancel">Cancel</MenuItem>
+                    </Select>
+                  </FormControl>
                 )}
               />
             </Grid>
 
             <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Delivery Date'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
+              <Controller name='quantity' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Quantity' placeholder='Quantity' />
+              )} />
             </Grid>
             <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Delivery Address'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
+              <Controller name='returnedQty' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Returned Quantity' placeholder='Returned Quantity' />
+              )} />
             </Grid>
             <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Delivery Remarks/Notes'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
-                  />
-                )}
-              />
+              <Controller name='unitPrice' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Unit Price' placeholder='Unit Price' />
+              )} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Controller name='totalAmount' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Total Amount' placeholder='Total Amount' />
+              )} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Controller name='remarks' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Delivery/Remarks Notes' placeholder='Remarks' />
+              )} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Controller name='bottleReturnedDate' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Bottle Returned Date' placeholder='Returned Date' />
+              )} />
+            </Grid>
+
+
+
+            <Grid item xs={12}>
+              <Controller name='deliveryDate' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Delivery Date' placeholder='Delivery Date' />
+              )} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Controller name='deliveryAddress' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Delivery Address' placeholder='Delivery Address' />
+              )} />
             </Grid>
 
 
             <Grid item xs={12}>
-              <Button type='submit' variant='contained'>
-                Submit
-              </Button>
+              <Controller name='invoiceNo' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Invoice No' placeholder='Invoice No' />
+              )} />
             </Grid>
+
+            <Grid item xs={12}>
+              <Controller name='invoiceDate' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Invoice Date' placeholder='Invoice Date' />
+              )} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Controller name='telephone' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Telephone' placeholder='Telephone' />
+              )} />
+            </Grid>
+            <Grid item xs={12}>
+              <Controller name='deliveryNotes' control={control} render={({ field }) => (
+                <CustomTextField fullWidth {...field} label='Delivery Remarks/Notes' placeholder='Delivery Notes' />
+              )} />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Button type='submit' variant='contained'>Submit</Button>
+            </Grid>
+
+
           </Grid>
         </form>
       </CardContent>
