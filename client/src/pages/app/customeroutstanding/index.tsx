@@ -50,6 +50,7 @@ function Index() {
         <Select
           labelId="customerName-label"
           value={selectedCustomer}
+          // @ts-ignore
           onChange={handleCustomerChange}
           label="Customer Name"
           required

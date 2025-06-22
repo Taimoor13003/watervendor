@@ -54,7 +54,9 @@ const PrintPage: React.FC = () => {
     axios
       .get('/api/invoice', { params: { customerids: ids.join(','), startDate, endDate } })
       .then(res => setData(res.data))
-      .catch(() => {})
+      .catch(() => {
+        console.error('Failed to fetch invoice data')
+      })
       .finally(() => setDataLoaded(true))
   }, [ids, startDate, endDate])
 

@@ -1,5 +1,5 @@
 // File: src/pages/api/recieved/index.ts
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiRequest, NextApiResponse } from 'next/types';
 import prisma from 'src/lib/prisma'    // adjust this path to wherever your prisma client lives
 
 export default async function handler(

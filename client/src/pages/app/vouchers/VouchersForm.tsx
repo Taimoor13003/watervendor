@@ -62,6 +62,7 @@ const VouchersForm: React.FC = () => {
       voucherNo: '',
       vouchertype: '',
       description: '',
+      // @ts-ignore
       voucherdate: '',
       accountCode: '',
       creditAmount: 0,

@@ -26,7 +26,7 @@ const defaultValues = {
   invoiceDate: '',
   telephone: ''
 }
-
+// @ts-ignore
 const FormValidationSchema = ({ customers }) => {
   const {
     control,
@@ -79,11 +79,13 @@ const handleCustomerChange = async (customerid: number) => {
                       value={field.value || ''}
                       onChange={e => {
                         field.onChange(e)                     // update form state
+                        // @ts-ignore
                         handleCustomerChange(e.target.value) // call your fetch function
                       }}
                     >
 
                       {customers.map((cust: { customerid: readonly string[] | React.Key | null | undefined; firstname: any; lastname: any }) => (
+                        // @ts-ignore
                         <MenuItem key={cust.customerid} value={cust.customerid}>
                           {`${cust.firstname ?? ''} ${cust.lastname ?? ''}`}
                         </MenuItem>

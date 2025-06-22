@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from 'next/types';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();

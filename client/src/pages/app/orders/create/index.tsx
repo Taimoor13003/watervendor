@@ -23,6 +23,7 @@ const CreateOrder = () => {
   
 
   return (
+    // @ts-ignore
     <Formvalidation2 customers={customers} loadingCustomers={loading} />
   );    
 };

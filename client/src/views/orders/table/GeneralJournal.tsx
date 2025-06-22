@@ -98,7 +98,7 @@ const GeneralJournalReport: React.FC<GeneralJournalReportProps> = ({ data }) => 
       field: 'debitamount',
       headerName: 'Debit Amount',
       renderCell: (params: GridRenderCellParams) => {
-        let obj = params.row.transactions.find((transaction: any) => transaction.debitamount > 0) || {}
+        const obj = params.row.transactions.find((transaction: any) => transaction.debitamount > 0) || {}
         return (
           <ul style={{ margin: 0, padding: '0 0 0 1rem', listStyle: "none" }}>
             <li>{obj?.debitamount || 0}</li>
@@ -113,7 +113,7 @@ const GeneralJournalReport: React.FC<GeneralJournalReportProps> = ({ data }) => 
       field: 'creditamount',
       headerName: 'Credit Amount',
       renderCell: (params: GridRenderCellParams) => {
-        let obj = params.row.transactions.find((transaction: any) => transaction.creditamount > 0) || {}
+        const obj = params.row.transactions.find((transaction: any) => transaction.creditamount > 0) || {}
         return (
           <ul style={{ margin: 0, padding: '0 0 0 1rem', listStyle: "none" }}>
             <li>{obj?.debitamount || 0}</li>

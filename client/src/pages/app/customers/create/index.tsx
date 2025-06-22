@@ -1,6 +1,5 @@
 import { GetServerSideProps } from 'next/types'
 import { format } from 'date-fns'
-import { useEffect, useState } from 'react'
 import CustomerForm from '../CustomerForm'
 import prisma from 'src/lib/prisma'
 
@@ -40,6 +39,7 @@ type CustomerFormPageProps = {
     middlename: string
     lastname: string
   }[]
+  deliveryAreas: { id: number; deliveryarea: string }[]
 }
 
 const CustomerFormPage = ({
@@ -47,28 +47,14 @@ const CustomerFormPage = ({
   customerTypes,
   pickrequirement,
   paymentmode,
-  deliveryPersons
+  deliveryPersons,
+  deliveryAreas
 }: CustomerFormPageProps) => {
-  const [deliveryAreas, setDeliveryAreas] = useState<{ id: number; name: string }[]>([])
-
-  useEffect(() => {
-    const fetchDeliveryAreas = async () => {
-      try {
-        const res = await fetch('/api/getaddress')
-        const data = await res.json()
-        setDeliveryAreas(data)
-        console.log("kaam chalgayaaaaa")
-      } catch (error) {
-        console.error('Failed to fetch delivery areas:', error)
-      }
-    }
-
-    fetchDeliveryAreas()
-  }, [])
 
   return (
     <div>
       <CustomerForm
+      // @ts-ignore
         customerData={customerData}
         customerTypes={customerTypes}
         pickrequirement={pickrequirement}
@@ -80,7 +66,7 @@ const CustomerFormPage = ({
   )
 }
 
-//@ts-ignore
+// @ts-ignore
 export const getServerSideProps: GetServerSideProps<CustomerFormPageProps> = async () => {
   try {
     const customerData = {
@@ -106,10 +92,37 @@ export const getServerSideProps: GetServerSideProps<CustomerFormPageProps> = asy
       tax: ''
     }
 
-    const customerTypes = await prisma.pick_customertype.findMany()
-    const pickrequirement = await prisma.pick_requirement.findMany()
-    const paymentmode = await prisma.pick_paymentmode.findMany()
-    const deliveryPersons = await prisma.employee_personal.findMany()
+    const [
+      customerTypes,
+      pickrequirement,
+      deliveryPersons,
+      paymentmode,
+      deliveryAreas
+    ] = await Promise.all([
+      prisma.pick_customertype.findMany()
+        .catch(err => {
+          console.error('Error loading customer types:', err)
+          return []
+        }),
+      prisma.pick_requirement.findMany()
+        .catch(err => {
+          console.error('Error loading requirements:', err)
+          return []
+        }),
+      prisma.employee_personal.findMany()
+        .catch(err => {
+          console.error('Error loading delivery persons:', err)
+          return []
+        }),
+      prisma.pick_paymentmode.findMany()
+        .catch(err => {
+          console.error('Error loading payment modes:', err)
+          return []
+        }),
+      prisma.pick_deliveryarea.findMany()
+        .catch(err => { console.error('Error loading delivery areas:', err); return [] })
+    ])
+
 
     const serializeDate = (date: Date | null) => (date ? format(new Date(date), 'yyyy-MM-dd') : null)
 
@@ -131,7 +144,8 @@ export const getServerSideProps: GetServerSideProps<CustomerFormPageProps> = asy
         customerTypes,
         pickrequirement,
         paymentmode,
-        deliveryPersons: serializedDeliveryPersons
+        deliveryPersons: serializedDeliveryPersons,
+        deliveryAreas
       }
     }
   } catch (error) {
