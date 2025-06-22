@@ -16,14 +16,19 @@ import AnalyticsWebsiteAnalyticsSlider from 'src/views/dashboards/analytics/Anal
 import KeenSliderWrapper from 'src/@core/styles/libs/keen-slider'
 import ApexChartWrapper from 'src/@core/styles/libs/react-apexcharts'
 import CardStatsWithAreaChart from 'src/@core/components/card-statistics/card-stats-with-area-chart'
+import { Typography } from '@mui/material'
 
 const AnalyticsDashboard = () => {
-
-// useEffect(() =>{
-
-// console.log(prisma)
-
-// },[])
+return (
+  <> 
+    {/* main page heading */}
+    <Grid container spacing={6}>
+      <Grid item xs={12}>
+        <Typography variant='h1' textAlign={'center'} >Welcome</Typography>
+      </Grid>
+      </Grid>
+  </>
+)
 
   return (
     <ApexChartWrapper>
