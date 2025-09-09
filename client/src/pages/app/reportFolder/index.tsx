@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import RatePerBottleTable from 'src/views/orders/table/RatePerBottleTable';
 import { Box, Button, TextField, Typography, CircularProgress, Paper } from '@mui/material';
+import toast from 'react-hot-toast';
 
 const InputComponent = () => {
   const [ratePerBottle, setRatePerBottle] = useState<number | ''>('');
@@ -14,14 +15,18 @@ const InputComponent = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`/api/getCustomers?rate=${encodeURIComponent(ratePerBottle.toString())}`);
+      const response = await fetch(`/api/getCustomersByBottleRate?rate=${encodeURIComponent(ratePerBottle.toString())}`);
       if (!response.ok) throw new Error('Network response was not ok');
-      
+
       const data = await response.json();
       console.log('Fetched data:', data);
+      if (Array.isArray(data) && data.length === 0) {
+        toast.error(`No customers found with bottle rate: ${ratePerBottle}`, { duration: 4000 });
+      }
       setTableData(data);
     } catch (error) {
       console.error('Failed to fetch data:', error);
+      toast.error(`Something went wrong`, { duration: 4000 });
     } finally {
       setLoading(false);
     }
@@ -36,16 +41,22 @@ const InputComponent = () => {
       {/* White box wrapper */}
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2, mt: 3, maxWidth: 600, mx: 'auto' }}>
         <form onSubmit={handleSubmit} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+
           <TextField
             id="ratePerBottle"
             label="Rate per Bottle"
             type="number"
-            value={ratePerBottle}
-            onChange={(e) => setRatePerBottle(Number(e.target.value))}
+            value={ratePerBottle === 0 ? '' : ratePerBottle}
+            onChange={(e) => {
+              setRatePerBottle(Number(e.target.value));
+            }}
             required
             variant="outlined"
             sx={{ flex: 1 }}
+            inputProps={{ min: 0 }}
+
           />
+
           <Button variant="contained" color="primary" type="submit" disabled={loading}>
             {loading ? 'Loading...' : 'Submit'}
           </Button>
