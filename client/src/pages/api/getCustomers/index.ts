@@ -7,6 +7,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const data = await prisma.pick_deliveryarea.findMany()
 
+    console.log('Fetched delivery areas:', data)
+
     res.status(200).json(data)
   } catch (error) {
     console.error('Failed to fetch delivery areas:', error)
