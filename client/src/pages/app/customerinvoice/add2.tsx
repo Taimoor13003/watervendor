@@ -7,10 +7,12 @@ import { useRouter } from 'next/router'
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
 import PreviewCard from 'src/views/apps/invoice/preview/PreviewCard'
 import PreviewActions from 'src/views/apps/invoice/preview/PreviewActions'
+import toast from 'react-hot-toast'
 
 const InvoiceAdd: React.FC = () => {
   const router = useRouter()
   const { customerid, startDate, endDate } = router.query
+  const [loading, setLoading] = useState(false)
 
   // parse out all IDs from the `?customerid=` param (it may be "905,1723" etc)
   const bulkIds = typeof customerid === 'string'
@@ -22,6 +24,8 @@ const InvoiceAdd: React.FC = () => {
 
   const fetchData = useCallback(async () => {
     if (!bulkIds.length || !startDate || !endDate) return
+    if (loading) return
+    setLoading(true)
     try {
       const resp = await axios.get('/api/invoice', {
         params: {
@@ -31,8 +35,9 @@ const InvoiceAdd: React.FC = () => {
         }
       })
       setInvoiceData(resp.data)
+      setLoading(false)
     } catch (err) {
-      console.error('Error fetching grouped invoice data:', err)
+      toast.error('Error fetching grouped invoice data')
     }
   }, [bulkIds.join(','), startDate, endDate])
 
@@ -48,6 +53,11 @@ const InvoiceAdd: React.FC = () => {
       `&enddate=${encodeURIComponent(endDate as string)}`
     )
   }
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
+
 
   return (
     <DatePickerWrapper sx={{ '& .react-datepicker-wrapper': { width: 'auto' } }}>
@@ -72,8 +82,8 @@ const InvoiceAdd: React.FC = () => {
                 id={id}
                 startDate={startDate}
                 endDate={endDate}
-                toggleAddPaymentDrawer={() => {/*…*/}}
-                toggleSendInvoiceDrawer={() => {/*…*/}}
+                toggleAddPaymentDrawer={() => {/*…*/ }}
+                toggleSendInvoiceDrawer={() => {/*…*/ }}
               />
             </Grid>
           </Grid>

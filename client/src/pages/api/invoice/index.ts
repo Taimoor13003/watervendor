@@ -33,7 +33,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       LEFT JOIN customer c ON o.customerid = c.customerid
       WHERE o.customerid IN (${Prisma.join(ci)})
         AND orderdate BETWEEN ${new Date(startDate as string).toISOString()}::timestamp
-        AND ${new Date(endDate as string).toISOString()}::timestamp;
+        AND ${new Date(endDate as string).toISOString()}::timestamp
+        ORDER BY invoicedate ASC;;
     `;
 
     // Group data by customer ID
@@ -45,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       acc[id].push(item);
 
       return acc;
-      
+
     }, {});
 
     res.status(200).json(groupedData);
