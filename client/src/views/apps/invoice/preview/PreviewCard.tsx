@@ -137,7 +137,13 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
                 </TableRow>
               );
             })}
-            <TableRow>
+            <TableRow
+              sx={{
+                '& .MuiTableCell-root': {
+                  fontWeight: 700
+                }
+              }}
+            >
               <TableCell>Total</TableCell>
               <TableCell>{totalBottlesDelivered}</TableCell>
               <TableCell>{totalBottlesReturned}</TableCell>

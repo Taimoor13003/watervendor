@@ -72,8 +72,9 @@ export default async function handler(
             typeof body.istaxable === 'boolean'
               ? body.istaxable
               : false,
-          // gender:       body.gender       || null,
-          // tax:          body.tax          ? parseInt(body.tax, 10) : null,
+          gender:       body?.gender       || 'Mr',
+          tax:          body.tax          ? parseInt(body.tax, 10) : null,
+          modifydate: new Date(),
         }
       })
     })
