@@ -60,6 +60,7 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '20px',
+            gap: 2
           }}
         >
           <Box>
@@ -70,7 +71,18 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
               height={100} 
             />
           </Box>
-          <Image src="/images/avatars/WhatsApp Image 2024-09-04 at 01.17.42_00181990.jpg" alt="Right"  width={330} height={150} />
+          {/* Center logo: crop 2px from the right to hide embedded separator line */}
+          <Image
+            src="/images/avatars/WhatsApp Image 2024-09-04 at 01.17.42_00181990.jpg"
+            alt="Center"
+            width={330}
+            height={150}
+            style={{
+              objectFit: 'contain',
+              display: 'block',
+              clipPath: 'inset(0 2px 0 0)'
+            }}
+          />
 
           <Box>
             <Image src="/images/avatars/pngwing.com.png" alt="Right"  width={150} height={80} />
