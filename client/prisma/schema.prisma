@@ -157,6 +157,8 @@ model customer {
   rate_per_bottle      Int?
   delivery_person      Int?
   istaxable            Boolean?
+  gender               String? @db.VarChar(10)
+  tax               Int?
 }
 
 model customer_comments {
