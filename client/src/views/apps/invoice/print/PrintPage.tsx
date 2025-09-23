@@ -3,6 +3,8 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/router'
 import axios from 'axios'
 import { format } from 'date-fns'
+import html2canvas from 'html2canvas'
+import jsPDF from 'jspdf'
 
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
@@ -60,12 +62,56 @@ const PrintPage: React.FC = () => {
       .finally(() => setDataLoaded(true))
   }, [ids, startDate, endDate])
 
-  // Once data _and_ logos are all loaded, trigger print
+  const action = (query.action as string) || ''
+
+  const generateAndDownloadPdf = useCallback(async () => {
+    // Capture each invoice block and add to a single PDF
+    const blocks = Array.from(document.querySelectorAll('.invoice-block')) as HTMLElement[]
+    if (!blocks.length) return
+
+    // A4 portrait in jsPDF is 210 x 297 mm. We'll use px units via internal conversion.
+    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' })
+
+    for (let i = 0; i < blocks.length; i++) {
+      const el = blocks[i]
+      // Improve quality with scale
+      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#ffffff' })
+      const imgData = canvas.toDataURL('image/png')
+
+      const pageWidth = pdf.internal.pageSize.getWidth()
+      const pageHeight = pdf.internal.pageSize.getHeight()
+
+      const imgWidth = pageWidth - 20 // 10mm margin each side
+      const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+      const marginLeft = 10
+      const marginTop = 10
+
+      if (i > 0) pdf.addPage()
+      pdf.addImage(imgData, 'PNG', marginLeft, marginTop, imgWidth, Math.min(imgHeight, pageHeight - 20), undefined, 'FAST')
+    }
+
+    const fileBase = blocks.length === 1 ? (blocks[0].getAttribute('data-account') || 'Invoice') : 'Invoices'
+    const fileName = `${fileBase}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`
+
+    pdf.save(fileName)
+
+    // Close tab after a short delay to ensure save dialog triggers
+    setTimeout(() => {
+      window.close()
+    }, 500)
+  }, [])
+
+  // Once data and logos are all loaded, either print or download
   useEffect(() => {
     if (dataLoaded && logosLoaded >= totalLogos) {
-      window.print()
+      if (action === 'download') {
+        generateAndDownloadPdf()
+      } else {
+        window.print()
+      }
     }
-  }, [dataLoaded, logosLoaded, totalLogos])
+  }, [action, dataLoaded, logosLoaded, totalLogos, generateAndDownloadPdf])
 
   const fmt = (d: string) => {
     try { return format(new Date(d), 'dd/MM/yyyy') }
@@ -102,6 +148,8 @@ const PrintPage: React.FC = () => {
                 pb:             '2rem',         // space for footer on screen
                 pageBreakAfter: 'always'
               }}
+              className="invoice-block"
+              data-account={first.accountno}
             >
               {/* HEADER WITH LOGOS */}
               <Grid

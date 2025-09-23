@@ -10,48 +10,66 @@ import CardContent from '@mui/material/CardContent'
 import Icon from 'src/@core/components/icon'
 
 interface Props {
-  id: string | null,
-  startDate:any,
-  endDate:any,
-  toggleAddPaymentDrawer: () => void,
-  toggleSendInvoiceDrawer: () => void,
+  id: string | null
+  startDate: any
+  endDate: any
+  toggleAddPaymentDrawer: () => void
+  toggleSendInvoiceDrawer: () => void
 }
 
-const PreviewActions = ({ id,startDate,endDate, toggleSendInvoiceDrawer, toggleAddPaymentDrawer }: Props) => {
-  console.log(id,'id')
-  
+const PreviewActions = ({ id, startDate, endDate, toggleSendInvoiceDrawer, toggleAddPaymentDrawer }: Props) => {
+  console.log(id, 'id')
+
   return (
     <Card>
       <CardContent>
-        <Button fullWidth variant='contained' onClick={toggleSendInvoiceDrawer} sx={{ mb: 2, '& svg': { mr: 2 } }}>
-          <Icon fontSize='1.125rem' icon='tabler:send' />
-          Send Invoice
-        </Button>
-        <Button fullWidth sx={{ mb: 2 }} color='secondary' variant='tonal'>
+        
+        <Button
+          fullWidth
+          sx={{ mb: 2 }}
+          // color='secondary'
+          // variant='tonal'
+          variant='contained'
+          component={Link}
+          // target='_blank'
+          href={`/apps/invoice/print/?customerid=${id}&startdate=${startDate}&enddate=${endDate}&action=download`}
+        >
           Download
         </Button>
         <Button
           fullWidth
           sx={{ mb: 2 }}
-          target='_blank'
-          variant='tonal'
+          // target='_blank'
+          variant='contained'
           component={Link}
-          color='secondary'
+          // color='secondary'
           href={`/apps/invoice/print/?customerid=${id}&startdate=${startDate}&enddate=${endDate}`}
         >
           Print
         </Button>
+
+        <Button
+          fullWidth
+          variant='contained'
+          onClick={toggleSendInvoiceDrawer}
+          sx={{ mb: 2, '& svg': { mr: 2 } }}
+          disabled={true}
+        >
+          <Icon fontSize='1.125rem' icon='tabler:send' />
+          Send Invoice {'>'} disabled
+        </Button>
+
         <Button
           fullWidth
           sx={{ mb: 2 }}
           variant='tonal'
           component={Link}
-          color='secondary'
+          // color='secondary'
           href={`/apps/invoice/edit/${id}`}
+          disabled={true}
         >
-          Edit Invoice
+          Edit Invoice {'>'} disabled
         </Button>
-        
       </CardContent>
     </Card>
   )

@@ -45,16 +45,17 @@ const FormValidationSchema = ({ customers }) => {
     reset()
   }
 
-const handleCustomerChange = async (customerid: number) => {
-  try {
-    const res = await fetch(`/api/customer-info?id=${customerid}`); // <-- changed to query param
-    const data = await res.json();
-    setValue('paymentMode', data.paymentmode || '');
-    setValue('deliveryAddress', data.addressres || '');
-  } catch (error) {
-    console.error('Failed to fetch customer details:', error);
-  }
-};
+  const handleCustomerChange = async (customerid: number) => {
+    try {
+      const res = await fetch(`/api/customer-info?id=${customerid}`); // <-- changed to query param
+      const data = await res.json();
+      setValue('paymentMode', data.paymentmode || '');
+      setValue('deliveryAddress', data.addressres || '');
+      setValue('unitPrice', data.rate_per_bottle || '');
+    } catch (error) {
+      console.error('Failed to fetch customer details:', error);
+    }
+  };
 
 
   return (
@@ -109,10 +110,13 @@ const handleCustomerChange = async (customerid: number) => {
                       {...field}
                       labelId='product-label'
                       label='Product ID'
-                      value={field.value || ''}
+                      // value={field.value || ''}
+                      value='Bottle'
                       onChange={field.onChange}
+                      disabled={true} // Assuming you want to disable this field
+
                     >
-                      <MenuItem value='Bottle'>Bottle</MenuItem>
+                      <MenuItem selected value='Bottle'>Bottle</MenuItem>
                     </Select>
                   </FormControl>
                 )}
@@ -120,9 +124,18 @@ const handleCustomerChange = async (customerid: number) => {
             </Grid>
             {/* Payment Mode */}
             <Grid item xs={12}>
-              <Controller name='paymentMode' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Payment Mode' placeholder='Payment Mode' />
-              )} />
+              <Controller
+                name='paymentMode'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    {...field}
+                    label='Payment Mode'
+                    placeholder='Payment Mode'
+                    disabled={true}
+                  />
+                )} />
             </Grid>
 
             <Grid item xs={12}>
@@ -179,9 +192,17 @@ const handleCustomerChange = async (customerid: number) => {
               )} />
             </Grid>
             <Grid item xs={12}>
-              <Controller name='unitPrice' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Unit Price' placeholder='Unit Price' />
-              )} />
+              <Controller name='unitPrice' 
+              control={control} 
+              render={({ field }) => (
+                <CustomTextField 
+                fullWidth 
+                {...field} 
+                label='Unit Price' 
+                placeholder='Unit Price'
+                disabled={true}
+              />
+            )} />
             </Grid>
 
             <Grid item xs={12}>

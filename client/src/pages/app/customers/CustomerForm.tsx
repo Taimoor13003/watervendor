@@ -55,7 +55,7 @@ type EditCustomerFormProps = {
 const schema = yup.object().shape({
   firstname: yup.string().required(),
   lastname: yup.string().required(),
-  datefirstcontacted: yup.string().required(),
+  datefirstcontacted: yup.string(),
   customertype: yup.string().required(),
   dateofbirth: yup.string(),
   telephoneres: yup.string(),

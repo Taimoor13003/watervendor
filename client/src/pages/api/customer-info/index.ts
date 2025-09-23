@@ -13,7 +13,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       select: {
         paymentmode: true,
-        addressres: true
+        addressres: true,
+        rate_per_bottle: true,
       }
     })
 
