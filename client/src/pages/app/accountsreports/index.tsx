@@ -6,6 +6,11 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Grid from '@mui/material/Grid';
+import Typography from '@mui/material/Typography';
+import Alert from '@mui/material/Alert';
 import AccountDetailsTable from 'src/views/orders/table/AccountDetailsTable';
 
 interface Account {
@@ -38,6 +43,12 @@ const AccountAndVoucherPage = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>('');
 
+  // Derived validation: From date should not be after To date
+  const isDateRangeValid =
+    !voucherPeriodFrom ||
+    !voucherPeriodTo ||
+    new Date(voucherPeriodFrom).getTime() <= new Date(voucherPeriodTo).getTime();
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -57,6 +68,10 @@ const AccountAndVoucherPage = () => {
   }, []);
 
   const handleSubmit = async () => {
+    if (!isDateRangeValid) {
+      setError('Voucher Period From cannot be later than Voucher Period To.');
+      return;
+    }
     setLoading(true);
     setError(''); // Clear previous error messages
     try {
@@ -78,76 +93,135 @@ const AccountAndVoucherPage = () => {
   };
 
   return (
-    <div>
-      <FormControl fullWidth margin="normal">
-        <InputLabel id="accountcode-label">Account Name</InputLabel>
-        <Select
-          labelId="accountcode-label"
-          value={accountCode}
-          onChange={(e) => setAccountCode(e.target.value as string)}
-          label="Account Name"
-          required
-        >
-          {accounts.map((account) => (
-            <MenuItem key={account.accountcode} value={account.accountcode}>
-              {account.accountname}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+    <Box sx={{ p: { xs: 2, md: 4 } }}>
+      <Typography variant="h4" fontWeight={700} textAlign="center" gutterBottom>
+        Account Reports
+      </Typography>
 
-      <FormControl fullWidth margin="normal">
-        <InputLabel id="vouchertype-label">Voucher Type</InputLabel>
-        <Select
-          labelId="vouchertype-label"
-          value={voucherType}
-          onChange={(e) => setVoucherTypeValue(e.target.value as number)}
-          label="Voucher Type"
-          required
-        >
-          {vouchers.map((voucher) => (
-            <MenuItem key={voucher.id} value={voucher.id}>
-              {voucher.paymentmode}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <Paper elevation={3} sx={{ p: { xs: 2, md: 4 }, borderRadius: 2, mb: 4 }}>
+        <Typography variant="h6" mb={2}>Filter Criteria</Typography>
 
-      <TextField
-        fullWidth
-        label="Voucher Period From"
-        type="date"
-        value={voucherPeriodFrom}
-        onChange={(e) => setVoucherPeriodFrom(e.target.value)}
-        InputLabelProps={{ shrink: true }}
-        margin="normal"
-        required
-      />
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel id="accountcode-label">Account Name</InputLabel>
+              <Select
+                labelId="accountcode-label"
+                value={accountCode}
+                onChange={(e) => setAccountCode(e.target.value as string)}
+                label="Account Name"
+                required
+              >
+                {accounts.map((account) => (
+                  <MenuItem key={account.accountcode} value={account.accountcode}>
+                    {account.accountname}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-      <TextField
-        fullWidth
-        label="Voucher Period To"
-        type="date"
-        value={voucherPeriodTo}
-        onChange={(e) => setVoucherPeriodTo(e.target.value)}
-        InputLabelProps={{ shrink: true }}
-        margin="normal"
-        required
-      />
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel id="vouchertype-label">Voucher Type</InputLabel>
+              <Select
+                labelId="vouchertype-label"
+                value={voucherType}
+                onChange={(e) => setVoucherTypeValue(e.target.value as number)}
+                label="Voucher Type"
+                required
+              >
+                {vouchers.map((voucher) => (
+                  <MenuItem key={voucher.id} value={voucher.id}>
+                    {voucher.paymentmode}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-      <Button
-        variant="contained"
-        color="primary"
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? 'Loading...' : 'Submit'}
-      </Button>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Voucher Period From"
+              type="date"
+              value={voucherPeriodFrom}
+              onChange={(e) => setVoucherPeriodFrom(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              error={!!voucherPeriodFrom && !!voucherPeriodTo && !isDateRangeValid}
+              helperText={
+                !!voucherPeriodFrom && !!voucherPeriodTo && !isDateRangeValid
+                  ? 'From date cannot be after To date.'
+                  : ' '
+              }
+              required
+            />
+          </Grid>
 
-      {error && <p>{error}</p>}
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Voucher Period To"
+              type="date"
+              value={voucherPeriodTo}
+              onChange={(e) => setVoucherPeriodTo(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              error={!!voucherPeriodFrom && !!voucherPeriodTo && !isDateRangeValid}
+              helperText={
+                !!voucherPeriodFrom && !!voucherPeriodTo && !isDateRangeValid
+                  ? 'To date must be on or after From date.'
+                  : ' '
+              }
+              required
+            />
+          </Grid>
 
-      {accountDetails.length > 0 && <AccountDetailsTable data={accountDetails} />}
-    </div>
+          <Grid item xs={12} display="flex" gap={2} justifyContent={{ xs: 'stretch', sm: 'flex-end' }}>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={() => {
+                setAccountCode('');
+                setVoucherTypeValue('' as any);
+                setVoucherPeriodFrom('');
+                setVoucherPeriodTo('');
+                setAccountDetails([]);
+                setError('');
+              }}
+            >
+              Reset
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleSubmit}
+              disabled={
+                loading ||
+                !accountCode ||
+                !voucherType ||
+                !voucherPeriodFrom ||
+                !voucherPeriodTo ||
+                !isDateRangeValid
+              }
+            >
+              {loading ? 'Loading...' : 'Run Report'}
+            </Button>
+          </Grid>
+
+          {error && (
+            <Grid item xs={12}>
+              <Alert severity="error">{error}</Alert>
+            </Grid>
+          )}
+        </Grid>
+      </Paper>
+
+      {accountDetails.length > 0 && (
+        <Box>
+          <AccountDetailsTable data={accountDetails} />
+        </Box>
+      )}
+    </Box>
   );
 };
 

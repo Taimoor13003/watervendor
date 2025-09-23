@@ -88,18 +88,11 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
             <Image src="/images/avatars/pngwing.com.png" alt="Right"  width={150} height={80} />
           </Box>
         </Box>
-        <Typography variant='h5'>
-          <b>Name: </b> {`${firstname} ${lastname}`}
-        </Typography>
-        <Typography>
-          <b>Address: </b> {address}
-        </Typography>
-        <Typography>
-          <b>Date: </b> {currentDate}
-        </Typography>
-        <Typography>
+        <Typography variant='h6'>
           Account no.# {firstItem.accountno}
         </Typography>
+        <br/>
+        
         <Divider />
         <Typography variant="h1" align='center'>Invoice Summary</Typography>
         <Divider />
