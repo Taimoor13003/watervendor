@@ -32,6 +32,7 @@ const OrderTableServerSide = () => {
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const [total, setTotal] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [rows, setRows] = useState<any[]>([]);
   const [sort, setSort] = useState<SortType>('asc');
   const [sortColumn, setSortColumn] = useState<string>('firstname');
@@ -45,6 +46,7 @@ const OrderTableServerSide = () => {
   const [tempEndDate, setTempEndDate] = useState<Date | null>(null);
 
   const fetchTableData = useCallback(async () => {
+    setIsLoading(true);
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 
     debounceTimeout.current = setTimeout(async () => {
@@ -70,6 +72,8 @@ const OrderTableServerSide = () => {
         setTotal(response.data.count);
       } catch (error) {
         console.error('Failed to fetch data:', error);
+      } finally {
+        setIsLoading(false);
       }
     }, 600);
   }, [paginationModel, sort, sortColumn, searchText, startDateRange, endDateRange]);
@@ -200,6 +204,7 @@ const OrderTableServerSide = () => {
 
       <DataGrid
         autoHeight
+        loading={isLoading}
         columns={columns}
         rows={rows}
         getRowId={row => row.orderid}

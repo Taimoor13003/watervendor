@@ -40,7 +40,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
       const query = `
-        SELECT o.orderid, o.orderno, o.orderdate, c.firstname, c.lastname, c.customerid
+        SELECT 
+          o.orderid, 
+          o.orderno, 
+          o.orderdate, 
+          c.firstname, 
+          c.lastname, 
+          c.customerid,
+          COUNT(*) OVER() as total_count
         FROM orders o
         LEFT JOIN customer c ON c.customerid = o.customerid
         ${whereClause}
@@ -49,18 +56,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         OFFSET ${offset}
       `;
 
-      const countQuery = `
-        SELECT COUNT(*) AS count
-        FROM orders o
-        LEFT JOIN customer c ON c.customerid = o.customerid
-        ${whereClause}
-      `;
+      const result = await prisma.$queryRawUnsafe<any[]>(query, ...values);
 
-      const orders = await prisma.$queryRawUnsafe(query, ...values);
-      const countResult: any = await prisma.$queryRawUnsafe(countQuery, ...values);
-      const totalCount = countResult?.[0]?.count || 0;
+      const orders = result.map(({ total_count, ...order }) => order);
+      const totalCount = result.length > 0 ? parseInt(result[0].total_count, 10) : 0;
 
-      res.status(200).json({ data: orders, count: parseInt(totalCount) });
+      res.status(200).json({ data: orders, count: totalCount });
     } catch (error: any) {
       console.error('🔥 Error in /api/orders:', error);
       res.status(500).json({ message: 'Failed to fetch orders' });
