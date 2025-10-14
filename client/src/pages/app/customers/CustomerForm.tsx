@@ -227,9 +227,9 @@ const EditCustomerForm = ({
               { name: 'delieverydate', label: 'Delivery Date', type: 'date', colSMSize: 6 },
               { name: 'depositamount', label: 'Deposit Amount', placeholder: '123456', colSMSize: 6, type: 'number' },
               { name: 'email', label: 'Email Address', colSMSize: 6, },
-              { name: 'addressres', label: 'Delivery Address', placeholder: '123456' },
-              { name: 'addressoffice', label: 'Office Address', placeholder: '123456' },
-              { name: 'notes', label: 'Notes', placeholder: 'Any specific information' },
+              { name: 'addressres', label: 'Delivery Address', placeholder: '123456', colSMSize: 6, multiline: true, rows: 2 },
+              { name: 'addressoffice', label: 'Office Address', placeholder: '123456', colSMSize: 6, multiline: true, rows: 2 },
+              { name: 'notes', label: 'Notes', placeholder: 'Any specific information', colSMSize: 12, multiline: true, rows: 4 },
             ].map((field) => (
               <Grid item 
               xs={field.colXSSize || 12}
@@ -259,7 +259,7 @@ const EditCustomerForm = ({
               <Divider sx={{ mt: 1, mb: 2 }} />
             </Grid>
             {/* Customer Type Dropdown */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="customertype"
                 control={control}
@@ -280,7 +280,7 @@ const EditCustomerForm = ({
             </Grid>
 
             {/* Requirement and Bottles Per Visit fields */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="requirement"
                 control={control}
@@ -300,7 +300,7 @@ const EditCustomerForm = ({
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="reqbottles"
                 control={control}
@@ -320,7 +320,7 @@ const EditCustomerForm = ({
             </Grid>
 
             {/* Payment Mode Dropdown */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="paymentmode"
                 control={control}
@@ -341,7 +341,7 @@ const EditCustomerForm = ({
             </Grid>
 
             {/* Delivery Person Dropdown */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="delivery_person"
                 control={control}
@@ -361,7 +361,7 @@ const EditCustomerForm = ({
             </Grid>
 
             {/* Delivery Area Dropdown with Add Button */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Grid container spacing={2} alignItems="center">
                 <Grid item xs={9}>
                   <Controller
@@ -431,7 +431,7 @@ const EditCustomerForm = ({
             </Grid>
 
             {/* Tax Field */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="tax"
                 control={control}
