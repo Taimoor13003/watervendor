@@ -17,7 +17,17 @@ const OrderTableServerSide = ({ data }: { data: any[] }) => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState<string>('');
   const [filteredData, setFilteredData] = useState<DataGridRowType[]>([]);
-  const filterFields = ['firstname', 'lastname', 'customertype', 'paymentmode', 'telephoneoffice', 'telephoneres'];
+  const filterFields = [
+    'firstname',
+    'middlename',
+    'lastname',
+    'customertype',
+    'paymentmode',
+    'telephoneoffice',
+    'telephoneres',
+    'accountno',
+    'email'
+  ];
   const [open, setOpen] = useState(false)
   const [selectedId, setSelectedId] = useState<number | null>(null)
 
@@ -30,20 +40,27 @@ const OrderTableServerSide = ({ data }: { data: any[] }) => {
 
   const handleSearch = (searchValue: string) => {
     setSearchText(searchValue);
-    const searchRegex = new RegExp(escapeRegExp(searchValue), 'i');
+    // Normalize multiple spaces to single and trim
+    const valueRaw = searchValue || '';
+    const value = valueRaw.replace(/\s+/g, ' ').trim();
+    const searchRegex = new RegExp(escapeRegExp(value), 'i');
     const filteredRows = data.filter(row => {
+      // Prefer matching the full name string first
+      const fullName = `${row.firstname || ''} ${row.middlename || ''} ${row.lastname || ''}`.replace(/\s+/g, ' ').trim();
+      if (fullName && searchRegex.test(fullName)) return true;
+
+      // Then fallback to individual fields
       return Object.keys(row).some(field => {
         if (filterFields.includes(field)) {
-          // @ts-ignore
-          return searchRegex.test(row[field]);
+          // @ts-ignore safe access for known fields
+          return searchRegex.test(String(row[field] ?? ''));
         }
+        return false;
       });
     });
-    if (searchValue.length) {
-      setFilteredData(filteredRows);
-    } else {
-      setFilteredData([]);
-    }
+    // Always set filteredData while typing, even if empty, so grid can show 0 results
+    if (value.length) setFilteredData(filteredRows);
+    else setFilteredData([]);
   };
 
   const handleConfirmDelete = async () => {
@@ -81,7 +98,7 @@ const OrderTableServerSide = ({ data }: { data: any[] }) => {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-              {params.row.firstname + ' ' + params.row.middlename + ' ' + params.row.lastname}
+              {[params.row.firstname, params.row.middlename, params.row.lastname].filter(Boolean).join(' ')}
             </Typography>
             <Typography noWrap variant='caption'>
               {params.row.email}
@@ -175,7 +192,7 @@ const OrderTableServerSide = ({ data }: { data: any[] }) => {
           paginationModel={paginationModel}
           slots={{ toolbar: QuickSearchToolbar }}
           onPaginationModelChange={setPaginationModel}
-          rows={filteredData.length ? filteredData : data}
+          rows={searchText.trim().length ? filteredData : data}
           sx={{
             '& .MuiSvgIcon-root': {
               fontSize: '1.125rem',

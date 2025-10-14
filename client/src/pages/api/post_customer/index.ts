@@ -74,6 +74,7 @@ export default async function handler(
               : false,
           gender:       body?.gender       || 'Mr',
           tax:          body.tax          ? parseInt(body.tax, 10) : null,
+          isdeleted: false,
           modifydate: new Date(),
         }
       })

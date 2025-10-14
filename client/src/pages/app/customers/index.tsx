@@ -1,6 +1,8 @@
 
   import React from 'react';
   import { useRouter } from 'next/router';
+  import { Customer } from 'src/types/customer';
+  import { customer as PrismaCustomer } from '@prisma/client';
 
   import CustomerTable from 'src/views/orders/table/CustomerTable';
 
@@ -10,7 +12,7 @@
 
     // @ts-ignore
 
-  function Index({ customers }) {
+  function Index({ customers }: { customers: Customer[] }) {
     const router = useRouter();
     const { q } = router.query;
     console.log(customers,q);
@@ -25,33 +27,30 @@
   export default Index;
 
   export const getServerSideProps = async () => {
-    // @ts-ignore
-
-    let customers = []
+    let customers: PrismaCustomer[] = []
 
     try {
       customers = await prisma.customer.findMany({
-      where: { isdeleted: { not: true } }
-    });
+        where: { isdeleted: { not: true } },
+        orderBy: { id: 'desc' }
+      });
     } catch (error) {
       customers = [];
     }
 
-
-    // Serialize all date fields
     // @ts-ignore
-
     const serializedCustomers = customers.map(customer => ({
       ...customer,
-      datefirstcontacted: customer.datefirstcontacted ? customer.datefirstcontacted.toISOString() : null,
+      accountclosedate: customer.accountclosedate ? customer.accountclosedate.toISOString() : null,
       dateofbirth: customer.dateofbirth ? customer.dateofbirth.toISOString() : null,
+      datefirstcontacted: customer.datefirstcontacted ? customer.datefirstcontacted.toISOString() : null,
+      deliverydate: customer.deliverydate ? customer.deliverydate.toISOString() : null,
+      modifydate: customer.modifydate ? customer.modifydate.toISOString() : null,
     }));
-
-    console.log(serializedCustomers[0], "serialized customers");
 
     return {
       props: {
         customers: serializedCustomers,
       },
     };
-  };
+  }

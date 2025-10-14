@@ -10,7 +10,8 @@ import toast from 'react-hot-toast';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 
-import { FormControl, InputLabel, Select, MenuItem, FormHelperText, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, FormHelperText, Dialog, DialogTitle, DialogContent, DialogActions, Divider, Typography, FormControlLabel, Switch, RadioGroup, Radio, CircularProgress } from '@mui/material';
+import { useRouter } from 'next/router';
 
 type FormValues = {
   firstname: string;
@@ -34,6 +35,10 @@ type FormValues = {
   reqbottles: string;
   tax: string;
   rate_per_bottle: string;
+  // UI-only fields that map to DB booleans
+  istaxable?: boolean;
+  isdepositvoucherdone?: boolean;
+  gender?: string;
 };
 
 type EditCustomerFormProps = {
@@ -61,17 +66,32 @@ const schema = yup.object().shape({
   telephoneres: yup.string(),
   telephoneoffice: yup.string(),
   addressres: yup.string(),
-  email: yup.string(),
+  email: yup.string().email('Enter a valid email address').nullable().transform(v => (v === '' ? null : v)),
   delieverydate: yup.string(),
   deliveryarea: yup.string(),
   paymentmode: yup.string().required(),
   notes: yup.string(),
   addressoffice: yup.string(),
-  depositamount: yup.string(),
+  depositamount: yup
+    .string()
+    .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
+    .nullable()
+    .transform(v => (v === '' ? null : v)),
   requirement: yup.string().required(),
-  reqbottles: yup.string().required(),
-  tax: yup.string(),
-  rate_per_bottle: yup.string(),
+  reqbottles: yup
+    .string()
+    .required('Bottles per visit is required')
+    .matches(/^\d+$/, 'Must be a whole number'),
+  tax: yup
+    .string()
+    .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
+    .nullable()
+    .transform(v => (v === '' ? null : v)),
+  rate_per_bottle: yup
+    .string()
+    .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
+    .nullable()
+    .transform(v => (v === '' ? null : v)),
 });
 
 const EditCustomerForm = ({
@@ -88,7 +108,12 @@ const EditCustomerForm = ({
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
-    defaultValues: customerData,
+    defaultValues: {
+      istaxable: false,
+      isdepositvoucherdone: false,
+      gender: 'Mr',
+      ...customerData
+    },
     mode: 'onChange',
     resolver: yupResolver(schema),
   });
@@ -96,32 +121,36 @@ const EditCustomerForm = ({
   const [openAddArea, setOpenAddArea] = useState(false);
   const [newArea, setNewArea] = useState('');
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   
   const onSubmit = async (data: FormValues) => {
     toast.success('Saving customer data...');
-    console.log('Form Data:', data);
-    // setLoading(true);
+    // Map client field `delieverydate` -> API expects `deliverydate`
+    const payload = {
+      ...data,
+      deliverydate: data.delieverydate || null
+    } as any
+    delete payload.delieverydate
+
     try {
       const response = await fetch('/api/post_customer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       
       if (response.ok) {
         toast.success('Customer added!');
-        window.location.reload(); 
+        router.push('/app/customers');
       } else {
         const errorData = await response.json();
-        toast.error(errorData.error || 'Failed to add delivery area');
+        toast.error(errorData.error || 'Failed to add customer');
       }
     } catch (error) {
       toast.error('Something went wrong');
     } finally {
       setLoading(false);
     }
-    console.log('Submitted Data:', data);
-
   };
 
   const handleAddArea = async () => {
@@ -183,6 +212,10 @@ const EditCustomerForm = ({
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={5}>
+            <Grid item xs={12}>
+              <Typography variant='h6'>Basic Information</Typography>
+              <Divider sx={{ mt: 1, mb: 2 }} />
+            </Grid>
             {[
               { name: 'firstname', label: 'First Name', placeholder: 'John', colXSSize: 12, colSMSize: 6 },
               { name: 'lastname', label: 'Last Name', placeholder: 'Doe', colSMSize: 6 },
@@ -214,13 +247,17 @@ const EditCustomerForm = ({
                     helperText={errors[field.name as keyof FormValues]?.message}
                     InputLabelProps={field.type === 'date' ? { shrink: true } : undefined}
                     type={field.type || 'text'}
-                    
+                    inputProps={field.type === 'number' ? { min: 0 } : undefined}
                     />
                   )}
                 />
               </Grid>
             ))}
 
+            <Grid item xs={12}>
+              <Typography variant='h6'>Customer Preferences</Typography>
+              <Divider sx={{ mt: 1, mb: 2 }} />
+            </Grid>
             {/* Customer Type Dropdown */}
             <Grid item xs={12}>
               <Controller
@@ -275,6 +312,8 @@ const EditCustomerForm = ({
                     {...field}
                     error={Boolean(errors.reqbottles)}
                     helperText={errors.reqbottles?.message}
+                    type='number'
+                    inputProps={{ min: 0 }}
                   />
                 )}
               />
@@ -296,6 +335,26 @@ const EditCustomerForm = ({
                       ))}
                     </Select>
                     <FormHelperText>{errors.paymentmode?.message}</FormHelperText>
+                  </FormControl>
+                )}
+              />
+            </Grid>
+
+            {/* Delivery Person Dropdown */}
+            <Grid item xs={12}>
+              <Controller
+                name="delivery_person"
+                control={control}
+                render={({ field }) => (
+                  <FormControl fullWidth>
+                    <InputLabel>Delivery Person</InputLabel>
+                    <Select {...field} label="Delivery Person" value={field.value || ''}>
+                      {deliveryPersons.map((p) => (
+                        <MenuItem key={p.id} value={String(p.id)}>
+                          {p.firstname} {p.lastname ? p.lastname : ''} ({p.employeecode})
+                        </MenuItem>
+                      ))}
+                    </Select>
                   </FormControl>
                 )}
               />
@@ -327,6 +386,46 @@ const EditCustomerForm = ({
                   <Button variant="outlined" onClick={() => setOpenAddArea(true)}>
                     Add Area
                   </Button>
+                </Grid>
+              </Grid>
+            </Grid>
+
+            {/* Flags and Gender */}
+            <Grid item xs={12}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <Controller
+                    name='istaxable'
+                    control={control}
+                    render={({ field }) => (
+                      <FormControlLabel control={<Switch checked={!!field.value} onChange={(_, v) => field.onChange(v)} />} label='Taxable' />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Controller
+                    name='isdepositvoucherdone'
+                    control={control}
+                    render={({ field }) => (
+                      <FormControlLabel control={<Switch checked={!!field.value} onChange={(_, v) => field.onChange(v)} />} label='Deposit Voucher Done' />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Controller
+                    name='gender'
+                    control={control}
+                    render={({ field }) => (
+                      <FormControl component='fieldset'>
+                        <Typography variant='body2' sx={{ mb: 1 }}>Gender</Typography>
+                        <RadioGroup row {...field}>
+                          <FormControlLabel value='Mr' control={<Radio />} label='Mr' />
+                          <FormControlLabel value='Ms' control={<Radio />} label='Ms' />
+                          <FormControlLabel value='Mrs' control={<Radio />} label='Mrs' />
+                        </RadioGroup>
+                      </FormControl>
+                    )}
+                  />
                 </Grid>
               </Grid>
             </Grid>
@@ -379,8 +478,13 @@ const EditCustomerForm = ({
 
           <Grid container justifyContent="flex-end" spacing={3} sx={{ mt: 3 }}>
             <Grid item>
-              <Button type="submit" variant="contained" disabled={loading}>
-                Submit
+              <Button onClick={() => router.push('/app/customers')} variant='outlined' color='secondary' disabled={loading}>
+                Cancel
+              </Button>
+            </Grid>
+            <Grid item>
+              <Button type="submit" variant="contained" disabled={loading} startIcon={loading ? <CircularProgress size={18} /> : undefined}>
+                {loading ? 'Saving...' : 'Submit'}
               </Button>
             </Grid>
           </Grid>
