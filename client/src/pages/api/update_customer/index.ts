@@ -23,7 +23,7 @@ export default async function handler(
       where: { id: Number(customerid) },
       data: {
         ...restData,
-        notes: notes ?? '', // Ensure notes is never null
+        notes: notes === null ? '' : notes, // Explicitly convert null to empty string
         delivery_person: delivery_person ? Number(delivery_person) : null,
         reqbottles: reqbottles ? Number(reqbottles) : null,
         depositamount: depositamount ? Number(depositamount) : null,
