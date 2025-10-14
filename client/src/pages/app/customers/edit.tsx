@@ -16,7 +16,7 @@ export type FormValues = {
   telephoneoffice: string;
   addressres: string;
   email: string;
-  delieverydate: string;
+  deliverydate: string;
   deliveryarea: string;
   paymentmode: string;
   notes: string;
@@ -133,6 +133,15 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
       requirement: 'Default Requirement' // Replace this with actual requirement if available
     }));
 
+    const formatDate = (date: Date | string | null) => {
+      if (!date) return '';
+      try {
+        return new Date(date).toISOString().split('T')[0];
+      } catch (e) {
+        return '';
+      }
+    };
+
     const serializedCustomer = {
       ...customer,
       id: customer.id.toString(),
@@ -142,6 +151,9 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
       tax: customer.tax?.toString() || '',
       rate_per_bottle: customer.rate_per_bottle?.toString() || '',
       delivery_person: customer.delivery_person,
+      dateofbirth: formatDate(customer.dateofbirth),
+      datefirstcontacted: formatDate(customer.datefirstcontacted),
+      deliverydate: formatDate(customer.deliverydate),
     };
 
     return {

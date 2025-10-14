@@ -35,7 +35,7 @@ const schema = yup.object().shape({
   telephoneoffice: yup.string(),
   addressres: yup.string(),
   email: yup.string().email('Enter a valid email address').default(''),
-  delieverydate: yup.string(),
+  deliverydate: yup.string(),
   deliveryarea: yup.string(),
   paymentmode: yup.string().required(),
   notes: yup.string().transform(value => value === null ? '' : value).default(''),
@@ -80,11 +80,11 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
     setLoading(true);
     toast.success('Updating customer data...');
 
-    const { delieverydate, ...restOfData } = data;
+    const { deliverydate, ...restOfData } = data;
     const payload = {
       ...restOfData,
       customerid: data.id,
-      deliverydate: delieverydate || null,
+      deliverydate: deliverydate || null,
     };
 
     try {
@@ -356,7 +356,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
             </Grid>
             <Grid item xs={12}>
               <Controller
-                name='delieverydate'
+                name='deliverydate'
                 control={control}
                 render={({ field }) => (
                   <CustomTextField
@@ -364,8 +364,8 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                     type='date'
                     label='Delivery Date'
                     InputLabelProps={{ shrink: true }}
-                    error={Boolean(errors.delieverydate)}
-                    helperText={errors.delieverydate?.message}
+                    error={Boolean(errors.deliverydate)}
+                    helperText={errors.deliverydate?.message}
                     {...field}
                   />
                 )}
