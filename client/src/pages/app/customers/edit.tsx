@@ -3,10 +3,12 @@ import EditCustomerForm from 'src/pages/app/customers/EditCustomerForm';
 import prisma from 'src/lib/prisma';
 import { serializeDate } from 'src/@core/utils/date';
 
-type FormValues = {
+// Shape for the form's internal state
+export type FormValues = {
+  id: string;
   firstname: string;
   lastname: string;
-  datefirstcontacted: string; // Date as string
+  datefirstcontacted: string;
   customertype: string;
   dateofbirth: string;
   accountno: string;
@@ -21,9 +23,16 @@ type FormValues = {
   addressoffice: string;
   depositamount: string;
   requirement: string;
-  delivery_person: { empid: string, firstname: string, lastname: string };
+  delivery_person: string; // This will be the empid string
   reqbottles: string;
-  tax:string;
+  tax: string;
+  customerid: string;
+  rate_per_bottle: string;
+};
+
+// Shape for data coming from the server
+export type CustomerDataFromServer = Omit<FormValues, 'delivery_person'> & {
+  delivery_person: { empid: string | null; firstname: string | null; lastname: string | null } | null;
 };
 
 // Updated Employee type to match EditCustomerForm expectations
@@ -46,7 +55,7 @@ type PaymentMode = {
 };
 
 type EditCustomerPageProps = {
-  customerData: FormValues;
+  customerData: CustomerDataFromServer;
   customerTypes: { id: number; customertype: string }[];
   pickrequirement: { id: number; requirement: string }[];
   paymentmode: PaymentMode[];
@@ -80,11 +89,11 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
   }
 
   try {
-    const customerData = await prisma.$queryRaw`
+    const customerData = await prisma.$queryRaw<CustomerDataFromServer[]>`
       SELECT
         c.*,
         json_build_object(
-          'empid', ep.empid,
+          'empid', ep.empid::TEXT,
           'firstname', ep.firstname,
           'lastname', ep.lastname
         ) AS delivery_person
@@ -98,11 +107,13 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
         c.customerid = ${Number(id)}
     `;
     
-    if (!customerData) {
+    if (!customerData || customerData.length === 0) {
       return {
         notFound: true,
       };
     }
+
+    const customer = customerData[0];
 
     const customerTypes = await prisma.pick_customertype.findMany();
     const pickrequirement = await prisma.pick_requirement.findMany();
@@ -122,10 +133,20 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
       requirement: 'Default Requirement' // Replace this with actual requirement if available
     }));
 
-    return {
+    const serializedCustomer = {
+      ...customer,
+      id: customer.id.toString(),
+      customerid: customer.customerid?.toString() || '',
+      reqbottles: customer.reqbottles?.toString() || '',
+      depositamount: customer.depositamount?.toString() || '',
+      tax: customer.tax?.toString() || '',
+      rate_per_bottle: customer.rate_per_bottle?.toString() || '',
+      delivery_person: customer.delivery_person,
+    };
 
+    return {
       props: {
-        customerData: JSON.parse(JSON.stringify(customerData)), // Ensure correct serialization
+        customerData: JSON.parse(JSON.stringify(serializedCustomer)) as CustomerDataFromServer,
         customerTypes,
         pickrequirement,
         paymentmode: serializedPaymentMode,

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
@@ -9,33 +9,12 @@ import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { FormControl, InputLabel, Select, MenuItem, FormHelperText } from '@mui/material';
-
-type FormValues = {
-  firstname: string;
-  lastname: string;
-  datefirstcontacted: string; // Date as string
-  customertype: string;
-  dateofbirth: string;
-  accountno: string;
-  telephoneres: string;
-  telephoneoffice: string;
-  addressres: string;
-  email: string;
-  delieverydate: string;
-  deliveryarea: string;
-  paymentmode: string;
-  notes: string;
-  addressoffice: string;
-  depositamount: string;
-  requirement: string;
-  delivery_person: { empid: string; firstname: string; lastname: string };
-  reqbottles: string;
-  tax: string; 
-};
+import { FormControl, InputLabel, Select, MenuItem, FormHelperText, CircularProgress } from '@mui/material';
+import { useRouter } from 'next/router';
+import { FormValues, CustomerDataFromServer } from './edit';
 
 type EditCustomerFormProps = {
-  customerData: FormValues;
+  customerData: CustomerDataFromServer;
   customerTypes: { id: number; customertype: string }[];
   pickrequirement: { id: number; requirement: string }[];
   paymentmode: {
@@ -49,61 +28,91 @@ type EditCustomerFormProps = {
 const schema = yup.object().shape({
   firstname: yup.string().required(),
   lastname: yup.string().required(),
-  datefirstcontacted: yup.string().required(), // Validation for date
+  datefirstcontacted: yup.string(),
   customertype: yup.string().required(),
-  dateofbirth: yup.string().required(),
-  accountno: yup.string().required(),
-  telephoneres: yup.string().required(),
-  telephoneoffice: yup.string().required(),
-  addressres: yup.string().required(),
-  email: yup.string().required(),
-  delieverydate: yup.string().required(),
-  deliveryarea: yup.string().required(),
+  dateofbirth: yup.string(),
+  telephoneres: yup.string(),
+  telephoneoffice: yup.string(),
+  addressres: yup.string(),
+  email: yup.string().email('Enter a valid email address').default(''),
+  delieverydate: yup.string(),
+  deliveryarea: yup.string(),
   paymentmode: yup.string().required(),
-  notes: yup.string().required(),
-  addressoffice: yup.string().required(),
-  depositamount: yup.string().required(),
+  notes: yup.string().transform(value => value === null ? '' : value).default(''),
+  addressoffice: yup.string(),
+  depositamount: yup
+    .string()
+    .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
+    .default(''),
   requirement: yup.string().required(),
-  delivery_person: yup.string().required(),
-  reqbottles: yup.string().required(),
-  tax: yup.string().required() // Validation for tax
+  reqbottles: yup
+    .string()
+    .required('Bottles per visit is required')
+    .matches(/^\d+$/, 'Must be a whole number'),
+  tax: yup
+    .string()
+    .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
+    .default(''),
+  delivery_person: yup.string(),
+  customerid: yup.string(),
+  rate_per_bottle: yup
+    .string()
+    .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
+    .default(''),
 });
 
 const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymentmode, deliveryPersons }: EditCustomerFormProps) => {
+  const { delivery_person, ...restOfCustomerData } = customerData;
 
-  
-  console.log(customerData)
-  
-  // @ts-ignore
-    // customerData = JSON.parse(customerData)[0]
-    
-    customerData = customerData[0]
-  const { control, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
-    defaultValues: customerData,
+  const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
+    defaultValues: {
+      ...restOfCustomerData,
+      delivery_person: delivery_person?.empid || '',
+    },
     mode: 'onChange',
     resolver: yupResolver(schema)
   });
 
-  console.log(customerData, "alldata");
-  console.log(customerTypes, "customerTypes");
-  console.log(pickrequirement, "pickrequirement");
-  console.log(paymentmode, "paymentmode");
-  console.log(deliveryPersons, "deliveryPersons");
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-  const onSubmit = (data: FormValues) => {
-    toast.success('Form Submitted');
-    console.log(data);
+  const onSubmit = async (data: FormValues) => {
+    setLoading(true);
+    toast.success('Updating customer data...');
+
+    const { delieverydate, ...restOfData } = data;
+    const payload = {
+      ...restOfData,
+      customerid: data.id,
+      deliverydate: delieverydate || null,
+    };
+
+    try {
+      const response = await fetch('/api/update_customer', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        toast.success('Customer updated successfully!');
+        router.push('/app/customers');
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || 'Failed to update customer');
+      }
+    } catch (error) {
+      toast.error('Something went wrong');
+    } finally {
+      setLoading(false);
+    }
   };
-
-  useEffect(() => {
-    setValue("delivery_person", customerData.delivery_person)
-  }, [customerData.delivery_person, setValue])
 
   return (
     <Card>
       <CardHeader title='Edit Customer Form' />
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, (errors)=> console.log(errors, "error"))}>
           <Grid container spacing={5}>
             <Grid item xs={12}>
               <Controller
@@ -447,8 +456,8 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
               />
             </Grid>
             <Grid item xs={12}>
-              <Button type='submit' variant='contained'>
-                Submit
+              <Button type='submit' variant='contained' disabled={loading}>
+                {loading ? <CircularProgress size={24} /> : 'Submit'}
               </Button>
             </Grid>
           </Grid>
