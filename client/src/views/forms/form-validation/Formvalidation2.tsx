@@ -3,13 +3,16 @@ import {
   Card, Grid, Button, CardHeader, CardContent,
   FormControl, InputLabel, Select, MenuItem, CircularProgress
 } from '@mui/material'
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import CustomTextField from 'src/@core/components/mui/text-field'
 import { useForm, Controller } from 'react-hook-form'
 import toast from 'react-hot-toast'
+import axios from 'axios';
 
 const defaultValues = {
   customerid: '',
-  productId: '',
+  productId: 1, // Set default value here
   paymentMode: '',
   orderDate: '',
   orderStatus: '',
@@ -39,10 +42,17 @@ const FormValidationSchema = ({ customers }) => {
     mode: 'onChange'
   })
 
-  const onSubmit = (data: any) => {
-    console.log('Submitted data:', data)
-    toast.success('Order Submitted!')
-    reset()
+  const onSubmit = async (data: any) => {
+    try {
+      const response = await axios.post('/api/create_order', data);
+      if (response.status === 201) {
+        toast.success('Order created successfully!');
+        reset(); // Reset form fields
+      }
+    } catch (error: any) {
+      console.error('Failed to create order:', error);
+      toast.error(error.response?.data?.message || 'Failed to create order.');
+    }
   }
 
   const handleCustomerChange = async (customerid: number) => {
@@ -62,10 +72,10 @@ const FormValidationSchema = ({ customers }) => {
     <Card>
       <CardHeader title='Create Order' />
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, (errors)=> console.log(errors, "error"))}>
           <Grid container spacing={5}>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name='customerid'
                 control={control}
@@ -98,7 +108,7 @@ const FormValidationSchema = ({ customers }) => {
             </Grid>
 
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name='productId'
                 control={control}
@@ -110,20 +120,19 @@ const FormValidationSchema = ({ customers }) => {
                       {...field}
                       labelId='product-label'
                       label='Product ID'
-                      // value={field.value || ''}
-                      value='Bottle'
+                      value={field.value || ''}
                       onChange={field.onChange}
-                      disabled={true} // Assuming you want to disable this field
-
+                      readOnly={true}
+                      renderValue={(value) => (value ? 'Bottle' : '')}
                     >
-                      <MenuItem selected value='Bottle'>Bottle</MenuItem>
+                      <MenuItem selected value={1}>Bottle</MenuItem>
                     </Select>
                   </FormControl>
                 )}
               />
             </Grid>
             {/* Payment Mode */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name='paymentMode'
                 control={control}
@@ -138,26 +147,23 @@ const FormValidationSchema = ({ customers }) => {
                 )} />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name='orderDate'
                 control={control}
                 rules={{ required: true }}
                 render={({ field }) => (
-                  <CustomTextField
-                    fullWidth
-                    {...field}
-                    type='date'
-                    label='Order Date'
-                    InputLabelProps={{ shrink: true }}
-                    error={Boolean(errors.orderDate)}
-                    helperText={errors.orderDate?.message}
+                  <DatePicker
+                    selected={field.value ? new Date(field.value) : null}
+                    onChange={(date) => field.onChange(date)}
+                    placeholderText='Select Order Date'
+                    customInput={<CustomTextField fullWidth label='Order Date' error={Boolean(errors.orderDate)} helperText={errors.orderDate?.message} />}
                   />
                 )}
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="orderStatus"
                 control={control}
@@ -181,17 +187,17 @@ const FormValidationSchema = ({ customers }) => {
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller name='quantity' control={control} render={({ field }) => (
                 <CustomTextField fullWidth {...field} label='Quantity' placeholder='Quantity' />
               )} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller name='returnedQty' control={control} render={({ field }) => (
                 <CustomTextField fullWidth {...field} label='Returned Quantity' placeholder='Returned Quantity' />
               )} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller name='unitPrice' 
               control={control} 
               render={({ field }) => (
@@ -205,57 +211,84 @@ const FormValidationSchema = ({ customers }) => {
             )} />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller name='totalAmount' control={control} render={({ field }) => (
                 <CustomTextField fullWidth {...field} label='Total Amount' placeholder='Total Amount' />
               )} />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller name='remarks' control={control} render={({ field }) => (
                 <CustomTextField fullWidth {...field} label='Delivery/Remarks Notes' placeholder='Remarks' />
               )} />
             </Grid>
 
-            <Grid item xs={12}>
-              <Controller name='bottleReturnedDate' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Bottle Returned Date' placeholder='Returned Date' />
-              )} />
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name='bottleReturnedDate'
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    selected={field.value ? new Date(field.value) : null}
+                    onChange={(date) => field.onChange(date)}
+                    placeholderText='Select Bottle Returned Date'
+                    customInput={<CustomTextField fullWidth label='Bottle Returned Date' />}
+                  />
+                )}
+              />
             </Grid>
 
 
 
-            <Grid item xs={12}>
-              <Controller name='deliveryDate' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Delivery Date' placeholder='Delivery Date' />
-              )} />
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name='deliveryDate'
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    selected={field.value ? new Date(field.value) : null}
+                    onChange={(date) => field.onChange(date)}
+                    placeholderText='Select Delivery Date'
+                    customInput={<CustomTextField fullWidth label='Delivery Date' />}
+                  />
+                )}
+              />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller name='deliveryAddress' control={control} render={({ field }) => (
                 <CustomTextField fullWidth {...field} label='Delivery Address' placeholder='Delivery Address' />
               )} />
             </Grid>
 
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller name='invoiceNo' control={control} render={({ field }) => (
                 <CustomTextField fullWidth {...field} label='Invoice No' placeholder='Invoice No' />
               )} />
             </Grid>
 
-            <Grid item xs={12}>
-              <Controller name='invoiceDate' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Invoice Date' placeholder='Invoice Date' />
-              )} />
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name='invoiceDate'
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    selected={field.value ? new Date(field.value) : null}
+                    onChange={(date) => field.onChange(date)}
+                    placeholderText='Select Invoice Date'
+                    customInput={<CustomTextField fullWidth label='Invoice Date' />}
+                  />
+                )}
+              />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller name='telephone' control={control} render={({ field }) => (
                 <CustomTextField fullWidth {...field} label='Telephone' placeholder='Telephone' />
               )} />
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller name='deliveryNotes' control={control} render={({ field }) => (
                 <CustomTextField fullWidth {...field} label='Delivery Remarks/Notes' placeholder='Delivery Notes' />
               )} />

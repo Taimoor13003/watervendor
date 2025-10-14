@@ -44,6 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           o.orderid, 
           o.orderno, 
           o.orderdate, 
+          o.orderstatus,
           c.firstname, 
           c.lastname, 
           c.customerid,

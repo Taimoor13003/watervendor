@@ -14,7 +14,10 @@ import {
   Grid,
   Button,
   Fab,
-  Card
+  Card,
+  CardHeader,
+  Chip,
+  IconButton
 } from '@mui/material';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -26,6 +29,14 @@ import DialougeComponent from './DialougeComponent';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 
 type SortType = 'asc' | 'desc' | undefined | null;
+
+const statusColors: { [key: string]: 'success' | 'error' | 'warning' | 'info' | 'primary' } = {
+  Completed: 'success',
+  Canceled: 'error',
+  Pending: 'warning',
+  New: 'info',
+  default: 'primary'
+};
 
 const OrderTableServerSide = () => {
   const router = useRouter();
@@ -101,36 +112,53 @@ const OrderTableServerSide = () => {
 
   const columns: GridColDef[] = [
     {
-      flex: 0.25,
-      minWidth: 290,
+      flex: 0.2,
+      minWidth: 200,
       field: 'orderno',
       headerName: 'Order Number',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>
+        <Typography variant="body1" sx={{ color: 'text.primary', fontWeight: 600 }}>
           {params.row.orderno}
         </Typography>
       )
     },
     {
-      flex: 0.2,
-      minWidth: 200,
+      flex: 0.25,
+      minWidth: 230,
       field: 'firstname',
       headerName: 'Customer Name',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="body2" sx={{ color: 'text.primary' }}>
+        <Typography variant="body1" sx={{ color: 'text.primary' }}>
           {params.row.firstname} {params.row.lastname}
         </Typography>
       )
     },
     {
-      flex: 0.175,
-      minWidth: 120,
+      flex: 0.15,
+      minWidth: 150,
       headerName: 'Order Date',
       field: 'orderdate',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+        <Typography variant='body1' sx={{ color: 'text.primary' }}>
           {moment(params.row.orderdate).format('DD-MM-YYYY')}
         </Typography>
+      )
+    },
+    {
+      flex: 0.15,
+      minWidth: 150,
+      field: 'orderstatus',
+      headerName: 'Status',
+      renderCell: (params: GridRenderCellParams) => (
+        <Chip
+          label={params.row.orderstatus || 'Unknown'}
+          color={statusColors[params.row.orderstatus] || statusColors.default}
+          sx={{
+            height: 24,
+            textTransform: 'capitalize',
+            '& .MuiChip-label': { fontWeight: 500 }
+          }}
+        />
       )
     },
     {
@@ -160,46 +188,48 @@ const OrderTableServerSide = () => {
 
   return (
     <Card>
-      <Grid container paddingX={5} display="flex" justifyContent="space-between">
-        <Box>
-          <DatePicker
-            isClearable
-            selectsRange
-            monthsShown={2}
-            endDate={tempEndDate}
-            selected={tempStartDate}
-            startDate={tempStartDate}
-            shouldCloseOnSelect={false}
-            id="date-range-picker-months"
-            onChange={(dates: [Date | null, Date | null]) => {
-              const [start, end] = dates;
-              setTempStartDate(start);
-              setTempEndDate(end);
-            }}
-            customInput={
-              <CustomInput
-                //@ts-ignore
-                dates={[tempStartDate, tempEndDate]}
-                setDates={(dates: React.SetStateAction<Date | null>[]) => {
-                  setTempStartDate(dates[0]);
-                  setTempEndDate(dates[1]);
-                }}
-                label="Invoice Date"
-                end={tempEndDate as Date}
-                start={tempStartDate as Date}
-              />
-            }
-          />
-          <Button variant="contained" onClick={handleGoClick}>
-            Go
-          </Button>
-        </Box>
-
-        <Box>
-          <Fab color="primary" variant="extended" onClick={() => router.push('/app/orders/create')}>
+      <CardHeader title='Manage Orders' subheader='A list of all customer orders.' />
+      <Grid container spacing={6} sx={{ px: 5, py: 3, alignItems: 'center', justifyContent: 'space-between' }}>
+        <Grid item>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <DatePicker
+              isClearable
+              selectsRange
+              monthsShown={2}
+              endDate={tempEndDate}
+              selected={tempStartDate}
+              startDate={tempStartDate}
+              shouldCloseOnSelect={false}
+              id='date-range-picker-months'
+              onChange={(dates: [Date | null, Date | null]) => {
+                const [start, end] = dates;
+                setTempStartDate(start);
+                setTempEndDate(end);
+              }}
+              customInput={
+                <CustomInput
+                  //@ts-ignore
+                  dates={[tempStartDate, tempEndDate]}
+                  setDates={(dates: React.SetStateAction<Date | null>[]) => {
+                    setTempStartDate(dates[0]);
+                    setTempEndDate(dates[1]);
+                  }}
+                  label='Invoice Date'
+                  end={tempEndDate as Date}
+                  start={tempStartDate as Date}
+                />
+              }
+            />
+            <Button variant='contained' onClick={handleGoClick}>
+              Go
+            </Button>
+          </Box>
+        </Grid>
+        <Grid item>
+          <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
             Create New Order
           </Fab>
-        </Box>
+        </Grid>
       </Grid>
 
       <DataGrid
