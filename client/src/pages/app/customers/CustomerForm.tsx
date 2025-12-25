@@ -10,8 +10,15 @@ import toast from 'react-hot-toast';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 
-import { FormControl, InputLabel, Select, MenuItem, FormHelperText, Dialog, DialogTitle, DialogContent, DialogActions, Divider, Typography, FormControlLabel, Switch, RadioGroup, Radio, CircularProgress } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, FormHelperText, Dialog, DialogTitle, DialogContent, DialogActions, Divider, Typography, FormControlLabel, Switch, RadioGroup, Radio, CircularProgress, Box } from '@mui/material';
 import { useRouter } from 'next/router';
+
+const RequiredLabel = ({ label }: { label: string }) => (
+  <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+    <span>{label}</span>
+    <Box component='span' sx={{ color: 'error.main', fontWeight: 700 }}>*</Box>
+  </Box>
+)
 
 type FormValues = {
   firstname: string;
@@ -217,8 +224,8 @@ const EditCustomerForm = ({
               <Divider sx={{ mt: 1, mb: 2 }} />
             </Grid>
             {[
-              { name: 'firstname', label: 'First Name', placeholder: 'John', colXSSize: 12, colSMSize: 6 },
-              { name: 'lastname', label: 'Last Name', placeholder: 'Doe', colSMSize: 6 },
+              { name: 'firstname', label: <RequiredLabel label='First Name' />, placeholder: 'John', colXSSize: 12, colSMSize: 6 },
+              { name: 'lastname', label: <RequiredLabel label='Last Name' />, placeholder: 'Doe', colSMSize: 6 },
               { name: 'rate_per_bottle', label: 'Rate/Bottle', placeholder: '123456', type: 'number', colSMSize: 6 },
               { name: 'telephoneres', label: 'Delivery Telephone#', placeholder: '123456', type: 'number', colSMSize: 6 },
               { name: 'telephoneoffice', label: 'WhatsAPP Number#', placeholder: '123456', type: 'number', colSMSize: 6 },
@@ -265,7 +272,7 @@ const EditCustomerForm = ({
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.customertype)}>
-                    <InputLabel>Customer Type</InputLabel>
+                    <InputLabel required>Customer Type</InputLabel>
                     <Select {...field} label="Customer Type">
                       {customerTypes.map((type) => (
                         <MenuItem key={type.id} value={type.customertype}>
@@ -286,7 +293,7 @@ const EditCustomerForm = ({
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.requirement)}>
-                    <InputLabel>Requirements</InputLabel>
+                    <InputLabel required>Requirements</InputLabel>
                     <Select {...field} label="Requirements">
                       {pickrequirement.map((req) => (
                         <MenuItem key={req.id} value={req.requirement}>
@@ -307,7 +314,7 @@ const EditCustomerForm = ({
                 render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    label="Bottles Per Visit"
+                    label={<RequiredLabel label='Bottles Per Visit' />}
                     placeholder="123456"
                     {...field}
                     error={Boolean(errors.reqbottles)}
@@ -326,7 +333,7 @@ const EditCustomerForm = ({
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.paymentmode)}>
-                    <InputLabel>Payment Mode</InputLabel>
+                    <InputLabel required>Payment Mode</InputLabel>
                     <Select {...field} label="Payment Mode">
                       {paymentmode.map((mode) => (
                         <MenuItem key={mode.id} value={mode.paymentmode}>
