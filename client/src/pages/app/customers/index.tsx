@@ -44,7 +44,11 @@ function Index() {
         </Box>
       ) : null}
 
-      <CustomerTable data={customers} loading={loading} />
+      <CustomerTable
+        data={customers}
+        loading={loading}
+        onDeleteSuccess={id => setCustomers(prev => prev.filter(c => c.id !== id))}
+      />
     </Box>
   );
 }

@@ -11,8 +11,15 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import DialougeComponent from './DialougeComponent';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 import { DataGridRowType } from 'src/@fake-db/types';
+import toast from 'react-hot-toast';
 
-const OrderTableServerSide = ({ data, loading = false }: { data: any[]; loading?: boolean }) => {
+type CustomerTableProps = {
+  data: any[];
+  loading?: boolean;
+  onDeleteSuccess?: (id: number) => void;
+};
+
+const OrderTableServerSide = ({ data, loading = false, onDeleteSuccess }: CustomerTableProps) => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState<string>('');
   const [filteredData, setFilteredData] = useState<DataGridRowType[]>([]);
@@ -68,23 +75,28 @@ const OrderTableServerSide = ({ data, loading = false }: { data: any[]; loading?
   };
 
   const handleConfirmDelete = async () => {
-    alert('Delete Function');
-    
-    if(selectedId) {
-      // Call your delete API here with selectedId
+    if (!selectedId) return;
 
-      await fetch(`/api/delete_customer?id=${selectedId}`, {
+    try {
+      const res = await fetch(`/api/delete_customer?id=${selectedId}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
       });
-      
 
-      console.log(`Deleting customer with ID: ${selectedId}`);
-      // After deletion, you might want to refresh the data or remove the deleted item from the state
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || 'Failed to delete customer');
+      } else {
+        toast.success('Customer deleted');
+        if (onDeleteSuccess) onDeleteSuccess(selectedId);
+      }
+    } catch (error) {
+      toast.error('Something went wrong');
+      console.error('Delete customer failed', error);
+    } finally {
       setOpen(false);
       setSelectedId(null);
     }
-
   };
 
    const handleDeleteClick = (id: number) => {
