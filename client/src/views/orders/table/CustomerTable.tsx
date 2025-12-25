@@ -13,7 +13,7 @@ import DialougeComponent from './DialougeComponent';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 import { DataGridRowType } from 'src/@fake-db/types';
 
-const OrderTableServerSide = ({ data }: { data: any[] }) => {
+const OrderTableServerSide = ({ data, loading = false }: { data: any[]; loading?: boolean }) => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState<string>('');
   const [filteredData, setFilteredData] = useState<DataGridRowType[]>([]);
@@ -191,6 +191,7 @@ const OrderTableServerSide = ({ data }: { data: any[] }) => {
           pageSizeOptions={[7, 10, 25, 50]}
           paginationModel={paginationModel}
           slots={{ toolbar: QuickSearchToolbar }}
+          loading={loading}
           onPaginationModelChange={setPaginationModel}
           rows={searchText.trim().length ? filteredData : data}
           sx={{

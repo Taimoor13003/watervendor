@@ -1,56 +1,52 @@
 
-  import React from 'react';
-  import { useRouter } from 'next/router';
-  import { Customer } from 'src/types/customer';
-  import { customer as PrismaCustomer } from '@prisma/client';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { Customer } from 'src/types/customer';
+import CustomerTable from 'src/views/orders/table/CustomerTable';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 
-  import CustomerTable from 'src/views/orders/table/CustomerTable';
+function Index() {
+  const router = useRouter();
+  const { q } = router.query;
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-    // @ts-ignore
-
-  import prisma from 'src/lib/prisma';
-
-    // @ts-ignore
-
-  function Index({ customers }: { customers: Customer[] }) {
-    const router = useRouter();
-    const { q } = router.query;
-    console.log(customers,q);
-
-    return (
-      <div>
-        <CustomerTable data={customers} />
-      </div>
-    );
-  }
-
-  export default Index;
-
-  export const getServerSideProps = async () => {
-    let customers: PrismaCustomer[] = []
-
-    try {
-      customers = await prisma.customer.findMany({
-        where: { isdeleted: { not: true } },
-        orderBy: { id: 'desc' }
-      });
-    } catch (error) {
-      customers = [];
-    }
-
-    // @ts-ignore
-    const serializedCustomers = customers.map(customer => ({
-      ...customer,
-      accountclosedate: customer.accountclosedate ? customer.accountclosedate.toISOString() : null,
-      dateofbirth: customer.dateofbirth ? customer.dateofbirth.toISOString() : null,
-      datefirstcontacted: customer.datefirstcontacted ? customer.datefirstcontacted.toISOString() : null,
-      deliverydate: customer.deliverydate ? customer.deliverydate.toISOString() : null,
-      modifydate: customer.modifydate ? customer.modifydate.toISOString() : null,
-    }));
-
-    return {
-      props: {
-        customers: serializedCustomers,
-      },
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/allcustomers');
+        if (!res.ok) {
+          throw new Error('Failed to load customers');
+        }
+        const { customers } = await res.json();
+        setCustomers(customers || []);
+      } catch (err: any) {
+        setError(err?.message || 'Failed to load customers');
+      } finally {
+        setLoading(false);
+      }
     };
-  }
+
+    fetchCustomers();
+  }, []);
+
+  return (
+    <Box>
+      {error ? (
+        <Box mb={3} display="flex" flexDirection="column" gap={1}>
+          <Typography color="error">{error}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Please refresh the page to try again.
+          </Typography>
+        </Box>
+      ) : null}
+
+      <CustomerTable data={customers} loading={loading} />
+    </Box>
+  );
+}
+
+export default Index;
