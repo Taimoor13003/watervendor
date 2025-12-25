@@ -28,6 +28,9 @@ export type FormValues = {
   tax: string;
   customerid: string;
   rate_per_bottle: string;
+  istaxable: boolean;
+  isdepositvoucherdone: boolean;
+  gender: string;
 };
 
 // Shape for data coming from the server
@@ -60,9 +63,10 @@ type EditCustomerPageProps = {
   pickrequirement: { id: number; requirement: string }[];
   paymentmode: PaymentMode[];
   employee: Employee[];
+  deliveryAreas: { id: number; deliveryarea: string }[];
 };
 
-const EditCustomerPage = ({ customerData, customerTypes, pickrequirement, paymentmode, employee }: EditCustomerPageProps) => {
+const EditCustomerPage = ({ customerData, customerTypes, pickrequirement, paymentmode, employee, deliveryAreas }: EditCustomerPageProps) => {
   return (
     <EditCustomerForm
       customerData={customerData}
@@ -70,6 +74,7 @@ const EditCustomerPage = ({ customerData, customerTypes, pickrequirement, paymen
       pickrequirement={pickrequirement}
       paymentmode={paymentmode}
       deliveryPersons={employee} // Ensure this matches the expected type
+      deliveryAreas={deliveryAreas}
     />
   );
 };
@@ -119,6 +124,7 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
     const pickrequirement = await prisma.pick_requirement.findMany();
     const paymentmode = await prisma.pick_paymentmode.findMany();
     const employee = await prisma.employee_personal.findMany();
+    const deliveryAreas = await prisma.pick_deliveryarea.findMany();
 
     const serializedEmployee = employee.map(emp => ({
       ...emp,
@@ -154,6 +160,9 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
       dateofbirth: formatDate(customer.dateofbirth),
       datefirstcontacted: formatDate(customer.datefirstcontacted),
       deliverydate: formatDate(customer.deliverydate),
+      istaxable: customer.istaxable ?? false,
+      isdepositvoucherdone: customer.isdepositvoucherdone ?? false,
+      gender: customer.gender || 'Mr',
     };
 
     return {
@@ -163,6 +172,7 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
         pickrequirement,
         paymentmode: serializedPaymentMode,
         employee: serializedEmployee,
+        deliveryAreas,
       },
     };
   } catch (error) {

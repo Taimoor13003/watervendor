@@ -9,9 +9,16 @@ import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { FormControl, InputLabel, Select, MenuItem, FormHelperText, CircularProgress } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, FormHelperText, CircularProgress, Box, Divider, Typography, FormControlLabel, Switch, RadioGroup, Radio } from '@mui/material';
 import { useRouter } from 'next/router';
 import { FormValues, CustomerDataFromServer } from './edit';
+
+const RequiredLabel = ({ label }: { label: string }) => (
+  <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+    <span>{label}</span>
+    <Box component='span' sx={{ color: 'error.main', fontWeight: 700 }}>*</Box>
+  </Box>
+)
 
 type EditCustomerFormProps = {
   customerData: CustomerDataFromServer;
@@ -23,6 +30,7 @@ type EditCustomerFormProps = {
   deliveryPersons: {
     lastname: string; id: number; empid: string; employeecode: string; firstname: string; middlename: string
   }[];
+  deliveryAreas: { id: number; deliveryarea: string }[];
 };
 
 const schema = yup.object().shape({
@@ -34,16 +42,17 @@ const schema = yup.object().shape({
   telephoneres: yup.string(),
   telephoneoffice: yup.string(),
   addressres: yup.string(),
-  email: yup.string().email('Enter a valid email address').default(''),
+  email: yup.string().email('Enter a valid email address').nullable().transform(v => (v === '' ? null : v)),
   deliverydate: yup.string(),
   deliveryarea: yup.string(),
   paymentmode: yup.string().required(),
-  notes: yup.string().transform(value => value === null ? '' : value).default(''),
+  notes: yup.string(),
   addressoffice: yup.string(),
   depositamount: yup
     .string()
     .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
-    .default(''),
+    .nullable()
+    .transform(v => (v === '' ? null : v)),
   requirement: yup.string().required(),
   reqbottles: yup
     .string()
@@ -52,21 +61,56 @@ const schema = yup.object().shape({
   tax: yup
     .string()
     .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
-    .default(''),
+    .nullable()
+    .transform(v => (v === '' ? null : v)),
   delivery_person: yup.string(),
   customerid: yup.string(),
   rate_per_bottle: yup
     .string()
     .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
-    .default(''),
+    .nullable()
+    .transform(v => (v === '' ? null : v)),
 });
 
-const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymentmode, deliveryPersons }: EditCustomerFormProps) => {
+const EditCustomerForm = ({
+  customerData,
+  customerTypes,
+  pickrequirement,
+  paymentmode,
+  deliveryPersons,
+  deliveryAreas = []
+}: EditCustomerFormProps) => {
   const { delivery_person, ...restOfCustomerData } = customerData;
+
+  const coerce = (val: any) => (val === null || val === undefined ? '' : String(val));
 
   const { control, handleSubmit, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       ...restOfCustomerData,
+      firstname: coerce(restOfCustomerData.firstname),
+      lastname: coerce(restOfCustomerData.lastname),
+      datefirstcontacted: coerce(restOfCustomerData.datefirstcontacted),
+      customertype: coerce(restOfCustomerData.customertype),
+      dateofbirth: coerce(restOfCustomerData.dateofbirth),
+      accountno: coerce(restOfCustomerData.accountno),
+      telephoneres: coerce(restOfCustomerData.telephoneres),
+      telephoneoffice: coerce(restOfCustomerData.telephoneoffice),
+      addressres: coerce(restOfCustomerData.addressres),
+      email: coerce(restOfCustomerData.email),
+      deliverydate: coerce(restOfCustomerData.deliverydate),
+      deliveryarea: coerce(restOfCustomerData.deliveryarea),
+      paymentmode: coerce(restOfCustomerData.paymentmode),
+      notes: coerce(restOfCustomerData.notes),
+      addressoffice: coerce(restOfCustomerData.addressoffice),
+      depositamount: coerce(restOfCustomerData.depositamount),
+      requirement: coerce(restOfCustomerData.requirement),
+      reqbottles: coerce(restOfCustomerData.reqbottles),
+      tax: coerce(restOfCustomerData.tax),
+      customerid: coerce(restOfCustomerData.customerid),
+      rate_per_bottle: coerce(restOfCustomerData.rate_per_bottle),
+      istaxable: restOfCustomerData.istaxable ?? false,
+      isdepositvoucherdone: restOfCustomerData.isdepositvoucherdone ?? false,
+      gender: restOfCustomerData.gender ?? 'Mr',
       delivery_person: delivery_person?.empid || '',
     },
     mode: 'onChange',
@@ -114,30 +158,33 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit, (errors)=> console.log(errors, "error"))}>
           <Grid container spacing={5}>
+            <Grid item xs={12}>
+              <Typography variant='h6'>Basic Information</Typography>
+              <Divider sx={{ mt: 1, mb: 2 }} />
+            </Grid>
             {[
-              { name: 'firstname', label: 'First Name', placeholder: 'John', sm: 6 },
-              { name: 'lastname', label: 'Last Name', placeholder: 'Doe', sm: 6 },
-              { name: 'accountno', label: 'Customer Account#', placeholder: '123456', sm: 6 },
-              { name: 'telephoneres', label: 'Delivery Telephone#', placeholder: '123456', sm: 6 },
-              { name: 'telephoneoffice', label: 'Office Telephone#', placeholder: '123456', sm: 6 },
-              { name: 'email', label: 'Email Address', placeholder: 'johndoe@example.com', sm: 6 },
+              { name: 'firstname', label: <RequiredLabel label='First Name' />, placeholder: 'John', sm: 6 },
+              { name: 'lastname', label: <RequiredLabel label='Last Name' />, placeholder: 'Doe', sm: 6 },
+              { name: 'rate_per_bottle', label: 'Rate/Bottle', placeholder: '123456', type: 'number', sm: 6 },
+              { name: 'telephoneres', label: 'Delivery Telephone#', placeholder: '123456', type: 'number', sm: 6 },
+              { name: 'telephoneoffice', label: 'WhatsAPP Number#', placeholder: '123456', type: 'number', sm: 6 },
               { name: 'datefirstcontacted', label: 'Date First Contacted', type: 'date', sm: 6 },
-              { name: 'dateofbirth', label: 'Date of Birth', type: 'date', sm: 6 },
+              { name: 'dateofbirth', label: 'Date Of Birth', type: 'date', sm: 6 },
               { name: 'deliverydate', label: 'Delivery Date', type: 'date', sm: 6 },
-              { name: 'deliveryarea', label: 'Delivery Area', placeholder: 'Area Name', sm: 6 },
-              { name: 'depositamount', label: 'Deposit Amount', placeholder: '1000', sm: 6 },
-              { name: 'reqbottles', label: 'Required Bottles', placeholder: '10', sm: 6 },
+              { name: 'depositamount', label: 'Deposit Amount', placeholder: '123456', sm: 6, type: 'number' },
+              { name: 'email', label: 'Email Address', sm: 6 },
               { name: 'addressres', label: 'Delivery Address', placeholder: '123456', sm: 6, multiline: true, rows: 2 },
-              { name: 'addressoffice', label: 'Office Address', placeholder: 'Office Address', sm: 6, multiline: true, rows: 2 },
+              { name: 'addressoffice', label: 'Office Address', placeholder: '123456', sm: 6, multiline: true, rows: 2 },
+              { name: 'notes', label: 'Notes', placeholder: 'Any specific information', sm: 12, multiline: true, rows: 4 },
             ].map((fieldInfo) => (
-              <Grid item xs={12} sm={fieldInfo.sm} key={fieldInfo.name}>
+              <Grid item xs={12} sm={fieldInfo.sm || 12} key={fieldInfo.name}>
                 <Controller
                   name={fieldInfo.name as keyof FormValues}
                   control={control}
                   render={({ field }) => (
                     <CustomTextField
                       fullWidth
-                      label={fieldInfo.label}
+                      label={fieldInfo.label as any}
                       placeholder={fieldInfo.placeholder}
                       type={fieldInfo.type || 'text'}
                       multiline={fieldInfo.multiline || false}
@@ -145,6 +192,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                       error={Boolean(errors[fieldInfo.name as keyof FormValues])}
                       helperText={errors[fieldInfo.name as keyof FormValues]?.message}
                       InputLabelProps={fieldInfo.type === 'date' ? { shrink: true } : {}}
+                      inputProps={fieldInfo.type === 'number' ? { min: 0 } : undefined}
                       {...field}
                     />
                   )}
@@ -152,13 +200,18 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
               </Grid>
             ))}
 
+            <Grid item xs={12}>
+              <Typography variant='h6'>Customer Preferences</Typography>
+              <Divider sx={{ mt: 1, mb: 2 }} />
+            </Grid>
+
             <Grid item xs={12} sm={6}>
               <Controller
                 name='customertype'
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.customertype)}>
-                    <InputLabel>Customer Type</InputLabel>
+                    <InputLabel required>Customer Type</InputLabel>
                     <Select {...field} label='Customer Type' fullWidth>
                       {customerTypes.map((type) => (
                         <MenuItem key={type.id} value={type.customertype}>
@@ -179,12 +232,19 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    label='Tax'
+                    label='Tax (Percentage)'
                     placeholder='Enter tax amount'
                     type='number'
+                    inputProps={{ max: 100, min: 0 }}
+                    onChange={(e) => {
+                      const inputValue = parseFloat(e.target.value);
+                      if (inputValue <= 100 || e.target.value === '') {
+                        field.onChange(e);
+                      }
+                    }}
                     error={Boolean(errors.tax)}
                     helperText={errors.tax?.message}
-                    {...field}
+                    value={field.value}
                   />
                 )}
               />
@@ -196,7 +256,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.requirement)}>
-                    <InputLabel>Requirements</InputLabel>
+                    <InputLabel required>Requirements</InputLabel>
                     <Select {...field} label='Requirements' fullWidth>
                       {pickrequirement.map((req) => (
                         <MenuItem key={req.id} value={req.requirement}>
@@ -216,7 +276,7 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.paymentmode)}>
-                    <InputLabel>Payment Mode</InputLabel>
+                    <InputLabel required>Payment Mode</InputLabel>
                     <Select {...field} label='Payment Mode' fullWidth>
                       {paymentmode.map((mode) => (
                         <MenuItem key={mode.id} value={mode.paymentmode as string}>
@@ -232,41 +292,80 @@ const EditCustomerForm = ({ customerData, customerTypes, pickrequirement, paymen
 
             <Grid item xs={12} sm={6}>
               <Controller
-                name='delivery_person'
+                name='deliveryarea'
                 control={control}
                 render={({ field }) => (
-                  <FormControl fullWidth error={Boolean(errors.delivery_person)}>
-                    <InputLabel>Delivery Person</InputLabel>
-                    <Select {...field} label='Delivery Person' fullWidth>
-                      {deliveryPersons.map((person) => (
-                        <MenuItem key={person.id} value={person.empid}>
-                          {person.firstname} {person.lastname}
+                  <FormControl fullWidth error={Boolean(errors.deliveryarea)}>
+                    <InputLabel>Delivery Area</InputLabel>
+                    <Select {...field} label='Delivery Area' fullWidth value={field.value || ''}>
+                      {deliveryAreas.map(area => (
+                        <MenuItem key={area.id} value={area.deliveryarea}>
+                          {area.deliveryarea}
                         </MenuItem>
                       ))}
                     </Select>
-                    {errors.delivery_person && <FormHelperText>{errors.delivery_person.message}</FormHelperText>}
+                    {errors.deliveryarea && <FormHelperText>{errors.deliveryarea.message}</FormHelperText>}
                   </FormControl>
                 )}
               />
             </Grid>
 
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
-                name='notes'
+                name='reqbottles'
                 control={control}
                 render={({ field }) => (
                   <CustomTextField
                     fullWidth
-                    label='Notes'
-                    placeholder='Any specific information'
-                    multiline
-                    rows={4}
-                    error={Boolean(errors.notes)}
-                    helperText={errors.notes?.message}
+                    label={<RequiredLabel label='Bottles Per Visit' />}
+                    placeholder='123456'
+                    type='number'
+                    inputProps={{ min: 0 }}
+                    error={Boolean(errors.reqbottles)}
+                    helperText={errors.reqbottles?.message}
                     {...field}
                   />
                 )}
               />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <Controller
+                    name='istaxable'
+                    control={control}
+                    render={({ field }) => (
+                      <FormControlLabel control={<Switch checked={!!field.value} onChange={(_, v) => field.onChange(v)} />} label='Taxable' />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Controller
+                    name='isdepositvoucherdone'
+                    control={control}
+                    render={({ field }) => (
+                      <FormControlLabel control={<Switch checked={!!field.value} onChange={(_, v) => field.onChange(v)} />} label='Deposit Voucher Done' />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Controller
+                    name='gender'
+                    control={control}
+                    render={({ field }) => (
+                      <FormControl component='fieldset'>
+                        <Typography variant='body2' sx={{ mb: 1 }}>Gender</Typography>
+                        <RadioGroup row {...field}>
+                          <FormControlLabel value='Mr' control={<Radio />} label='Mr' />
+                          <FormControlLabel value='Ms' control={<Radio />} label='Ms' />
+                          <FormControlLabel value='Mrs' control={<Radio />} label='Mrs' />
+                        </RadioGroup>
+                      </FormControl>
+                    )}
+                  />
+                </Grid>
+              </Grid>
             </Grid>
 
             <Grid item xs={12}>
