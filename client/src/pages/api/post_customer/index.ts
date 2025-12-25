@@ -14,6 +14,27 @@ export default async function handler(
   try {
     const body = req.body
 
+    // Normalize numeric fallbacks to avoid NOT NULL violations in legacy schema
+    const taxValue =
+      body.tax === undefined || body.tax === null || body.tax === ''
+        ? 0
+        : parseInt(body.tax, 10)
+
+    const reqBottlesValue =
+      body.reqbottles === undefined || body.reqbottles === null || body.reqbottles === ''
+        ? 0
+        : parseInt(body.reqbottles, 10)
+
+    const depositValue =
+      body.depositamount === undefined || body.depositamount === null || body.depositamount === ''
+        ? 0
+        : parseInt(body.depositamount, 10)
+
+    const ratePerBottleValue =
+      body.rate_per_bottle === undefined || body.rate_per_bottle === null || body.rate_per_bottle === ''
+        ? 0
+        : parseInt(body.rate_per_bottle, 10)
+
     const newCustomer = await prisma.$transaction(async (tx) => {
       // 1) aggregate both customerid and accountno suffix
       const { _max } = await tx.customer.aggregate({
@@ -56,16 +77,15 @@ export default async function handler(
           paymentmode:   body.paymentmode   || null,
           deliverydate:  body.deliverydate  ? new Date(body.deliverydate) : null,
           deliveryarea:  body.deliveryarea  || null,
-          reqbottles:    body.reqbottles    ? parseInt(body.reqbottles, 10) : null,
+          reqbottles:    reqBottlesValue,
           requirement:   body.requirement   || null,
           notes:         body.notes         || null,
-          depositamount: body.depositamount ? parseInt(body.depositamount, 10) : null,
+          depositamount: depositValue,
           isdepositvoucherdone:
             typeof body.isdepositvoucherdone === 'boolean'
               ? body.isdepositvoucherdone
               : false,
-          rate_per_bottle:
-            body.rate_per_bottle ? parseInt(body.rate_per_bottle, 10) : null,
+          rate_per_bottle: ratePerBottleValue,
           delivery_person:
             body.delivery_person ? parseInt(body.delivery_person, 10) : null,
           istaxable:
@@ -73,7 +93,7 @@ export default async function handler(
               ? body.istaxable
               : false,
           gender:       body?.gender       || 'Mr',
-          tax:          body.tax          ? parseInt(body.tax, 10) : null,
+          tax:          taxValue,
           isdeleted: false,
           modifydate: new Date(),
         }
