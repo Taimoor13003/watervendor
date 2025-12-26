@@ -15,10 +15,10 @@ import {
   Button,
   Fab,
   Card,
-  CardHeader,
   Chip,
   IconButton
 } from '@mui/material';
+import Icon from 'src/@core/components/icon';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
@@ -186,9 +186,56 @@ const OrderTableServerSide = () => {
     fetchTableData();
   }, [fetchTableData]);
 
+  const handleResetFilters = () => {
+    setSearchText('');
+    setTempStartDate(null);
+    setTempEndDate(null);
+    setStartDateRange(null);
+    setEndDateRange(null);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
   return (
     <Card>
-      <CardHeader title='Manage Orders' subheader='A list of all customer orders.' />
+      <Box
+        sx={{
+          px: 5,
+          py: 4,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 2,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          background: theme =>
+            theme.palette.mode === 'light'
+              ? 'linear-gradient(90deg, rgba(240,248,255,0.65), rgba(225,245,254,0.9))'
+              : 'rgba(255,255,255,0.03)'
+        }}
+      >
+        <Box>
+          <Typography variant='h5' sx={{ fontWeight: 700 }}>
+            Orders
+          </Typography>
+          <Typography variant='body2' color='text.secondary'>
+            Search, filter, and manage your orders in one place.
+          </Typography>
+        </Box>
+        <Box display='flex' gap={2} flexWrap='wrap'>
+          <Button variant='outlined' onClick={handleResetFilters}>
+            Reset filters
+          </Button>
+          <Button
+            variant='contained'
+            startIcon={<Icon icon='mdi:plus' />}
+            onClick={() => router.push('/app/orders/create')}
+          >
+            Create order
+          </Button>
+        </Box>
+      </Box>
+
       <Grid container spacing={6} sx={{ px: 5, py: 3, alignItems: 'center', justifyContent: 'space-between' }}>
         <Grid item>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
@@ -224,11 +271,6 @@ const OrderTableServerSide = () => {
               Go
             </Button>
           </Box>
-        </Grid>
-        <Grid item>
-          <Fab color='primary' variant='extended' onClick={() => router.push('/app/orders/create')}>
-            Create New Order
-          </Fab>
         </Grid>
       </Grid>
 
