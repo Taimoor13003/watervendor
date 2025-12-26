@@ -9,11 +9,11 @@ type Order = {
   lastname: string;
   orderno: string;
   customerid: number;
-  orderdate: Date;
-  invoicedate: Date;
-  invoicelastprintdate: Date;
-  deliverydate: Date;
-  bottlereturndatedate: Date;
+  orderdate: string | null;
+  invoicedate: string | null;
+  invoicelastprintdate: string | null;
+  deliverydate: string | null;
+  bottlereturndate?: string | null;
   paymentmode: string;
   orderStatus: string;
   deliveryaddress: string;
@@ -35,7 +35,7 @@ type OrderDetail = {
   productid: number;
   unitprice: number;
   returnqty: number;
-  bottlereturndate: Date;
+  bottlereturndate: string | null;
 };
 
 type OrderPageProps = {
@@ -84,18 +84,31 @@ export const getServerSideProps: GetServerSideProps<OrderPageProps> = async (con
 
     const serializedOrders = orders.map(order => ({
       ...order,
-      orderdate: serializeDate(order.orderdate),
-      invoicedate: serializeDate(order.invoicedate),
-      invoicelastprintdate: serializeDate(order.invoicelastprintdate),
-      deliverydate: serializeDate(order.deliverydate),
-      bottlereturndatedate: serializeDate(order.bottlereturndatedate),
+      firstname:
+        (order as any).customerfirstname ||
+        (order as any).customerFirstName ||
+        order.firstname,
+      lastname:
+        (order as any).customerlastname ||
+        (order as any).customerLastName ||
+        order.lastname,
+      orderdate: serializeDate(order.orderdate as unknown as Date),
+      invoicedate: serializeDate(order.invoicedate as unknown as Date),
+      invoicelastprintdate: serializeDate(order.invoicelastprintdate as unknown as Date),
+      deliverydate: serializeDate(order.deliverydate as unknown as Date),
+      bottlereturndate: serializeDate((order as any).bottlereturndate),
+    }));
+
+    const serializedOrderDetails = orderdetails.map(detail => ({
+      ...detail,
+      bottlereturndate: serializeDate(detail.bottlereturndate as unknown as Date),
     }));
 
     return {
       props: {
         orders: serializedOrders.length ? serializedOrders[0] : {} as Order,
         paymentmode: paymentmode || [],
-        orderdetails: orderdetails || [],
+        orderdetails: serializedOrderDetails || [],
       },
     };
   } catch (error) {

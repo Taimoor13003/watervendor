@@ -1,18 +1,22 @@
 import React from 'react';
-import Card from '@mui/material/Card';
-import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
-import CardHeader from '@mui/material/CardHeader';
-import CardContent from '@mui/material/CardContent';
-import MenuItem from '@mui/material/MenuItem';
-import TextField from '@mui/material/TextField';
+import {
+  Card,
+  Grid,
+  Button,
+  CardHeader,
+  CardContent,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormHelperText,
+  Box
+} from '@mui/material';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { FormControl, InputLabel, Select, FormHelperText } from '@mui/material';
+import CustomTextField from 'src/@core/components/mui/text-field';
 
 type Order = {
   orderid: number;
@@ -20,29 +24,25 @@ type Order = {
   lastname: string;
   orderno: string;
   customerid: number;
-  orderdate: Date;
-  invoicedate: Date;
-  invoicelastprintdate: Date;
-  deliverydate: Date;
-  bottlereturndatedate: Date;
+  orderdate: string | null;
+  deliverydate: string | null;
   paymentmode: string;
   orderstatus: string;
   deliveryaddress: string;
   deliverynotes: string;
-  deliveredbyempid: number;
-  deliveredbyvehicleregid: string;
-  rate_per_bottle: number;
-  reqbottles: number;
-  employeefirstname: string;
-  employeelastname: string;
-  orderqty: string;
+  invoicedate?: string | null;
+  invoiceno?: number | null;
+  telephone?: string | null;
+  notes?: string | null;
+  orderamount?: number | null;
+  orderqty: number | string;
 };
 
 type OrderDetail = {
-  productid: number;
-  unitprice: number;
-  returnqty: number;
-  bottlereturndate: Date;
+  productid: number | null;
+  unitprice: number | null;
+  returnqty: number | null;
+  bottlereturndate: string | null;
 };
 
 type OrderEditFormProps = {
@@ -51,25 +51,12 @@ type OrderEditFormProps = {
   orderdetails: OrderDetail[];
 };
 
-const schema = yup.object().shape({
-  orderno: yup.string().required(),
-  accountno: yup.string().required(),
-  customerid: yup.number().required(),
-  paymentmode: yup.string().required(),
-  orderdate: yup.date().required(),
-  orderstatus: yup.string().required(),
-  orderamount: yup.number().required(),
-  orderqty: yup.number().required(),
-  deliverydate: yup.date(),
-  delivery_person: yup.number().required(),
-  deliveryaddress: yup.string().required(),
-  deliveryarea: yup.string().required(),
-  deliverynotes: yup.string(),
-  bottlereturndate: yup.date(),
-  productid: yup.number().required(),
-  returnqty: yup.number().required(),
-  unitprice: yup.number().required(),
-});
+const RequiredLabel = ({ label }: { label: string }) => (
+  <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+    <span>{label}</span>
+    <Box component='span' sx={{ color: 'error.main', fontWeight: 700 }}>*</Box>
+  </Box>
+);
 
 const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) => {
   const orderDetail = orderdetails[0] || {};
@@ -82,125 +69,124 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
     defaultValues: {
       ...data,
       ...orderDetail,
-      fullname: `${data.firstname} ${data.lastname}`,
-      // @ts-ignore
-      productid: orderDetail.productid || '',
-      // @ts-ignore
-      unitprice: orderDetail.unitprice || '',
-      // @ts-ignore
-      bottlereturndate: orderDetail.bottlereturndate || '',
-      // @ts-ignore
-      returnqty: orderDetail.returnqty || 0,
+      fullname: `${data.firstname ?? ''} ${data.lastname ?? ''}`.trim(),
+      productid: orderDetail.productid ?? 1,
+      unitprice: orderDetail.unitprice ?? '',
+      bottlereturndate: orderDetail.bottlereturndate ?? '',
+      returnqty: orderDetail.returnqty ?? '',
+      invoicedate: data?.invoicedate ?? '',
+      invoiceno: data?.invoiceno ?? '',
+      telephone: data?.telephone ?? '',
+      deliverynotes: data?.deliverynotes ?? '',
     },
     mode: 'onChange',
-    resolver: yupResolver(schema),
   });
 
   const onSubmit = (formData: any) => {
     console.log(formData);
-    toast.success('Form Submitted');
+    toast.success('Changes saved');
   };
 
   return (
     <Card>
-      <CardHeader title="Edit Order Form" />
+      <CardHeader title='Edit Order' subheader='Update order details, delivery, and billing.' />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={5}>
-            {/* Account Number */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="orderno"
                 control={control}
+                rules={{ required: 'Order number is required' }}
                 render={({ field }) => (
-                  <TextField
+                  <CustomTextField
                     fullWidth
-                    label="Order Number"
+                    label={<RequiredLabel label='Order Number' />}
                     placeholder="Order Number"
                     error={Boolean(errors.orderno)}
-                    helperText={errors.orderno?.message}
+                    helperText={(errors.orderno as any)?.message}
                     {...field}
                   />
                 )}
               />
             </Grid>
 
-            {/* Customer Name */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="fullname"
                 control={control}
                 render={({ field }) => (
-                  <TextField
+                  <CustomTextField
                     fullWidth
                     label="Customer Name"
                     placeholder="Name"
-                    error={Boolean(errors.fullname)}
-                    helperText={errors.fullname?.message}
+                    disabled
                     {...field}
                   />
                 )}
               />
             </Grid>
 
-            {/* Product ID */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="productid"
                 control={control}
+                rules={{ required: 'Product is required' }}
                 render={({ field }) => (
-                  <TextField
-                    fullWidth
-                    label="Product ID"
-                    placeholder="Product ID"
-                    error={Boolean(errors.productid)}
-                    // @ts-ignore
-                    helperText={errors.productid?.message}
-                    {...field}
-                  />
+                  <FormControl fullWidth error={Boolean(errors.productid)}>
+                    <InputLabel required id="product-label">Product</InputLabel>
+                    <Select
+                      {...field}
+                      labelId="product-label"
+                      label="Product"
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                    >
+                      <MenuItem value={1}>Bottle</MenuItem>
+                    </Select>
+                    <FormHelperText>{(errors.productid as any)?.message}</FormHelperText>
+                  </FormControl>
                 )}
               />
             </Grid>
 
-            {/* Payment Mode */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="paymentmode"
                 control={control}
+                rules={{ required: 'Payment mode is required' }}
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.paymentmode)}>
-                    <InputLabel>Payment Mode</InputLabel>
-                    <Select {...field} label="Payment Mode" fullWidth defaultValue="">
+                    <InputLabel required>Payment Mode</InputLabel>
+                    <Select {...field} label="Payment Mode" fullWidth>
                       {paymentmode.map((mode) => (
                         <MenuItem key={mode.id} value={mode.paymentmode}>
                           {mode.paymentmode}
                         </MenuItem>
                       ))}
                     </Select>
-                    {errors.paymentmode && <FormHelperText>{errors.paymentmode.message}</FormHelperText>}
+                    <FormHelperText>{(errors.paymentmode as any)?.message}</FormHelperText>
                   </FormControl>
                 )}
               />
             </Grid>
 
-            {/* Order Date */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="orderdate"
                 control={control}
+                rules={{ required: 'Order date is required' }}
                 render={({ field }) => (
                   <DatePicker
-                    selected={field.value ? new Date(field.value) : null}
+                    selected={field.value ? new Date(field.value as any) : null}
                     onChange={(date) => field.onChange(date)}
                     placeholderText="Select Order Date"
-                    dateFormat="MM/dd/yyyy"
                     customInput={
-                      <TextField
+                      <CustomTextField
                         fullWidth
-                        label="Order Date"
+                        label={<RequiredLabel label='Order Date' />}
                         error={Boolean(errors.orderdate)}
-                        // @ts-ignore
-                        helperText={errors.orderdate?.message}
+                        helperText={(errors.orderdate as any)?.message}
                       />
                     }
                   />
@@ -208,124 +194,123 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
               />
             </Grid>
 
-            {/* Order Status */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="orderstatus"
                 control={control}
+                rules={{ required: 'Order status is required' }}
                 render={({ field }) => (
-                  <TextField
-                    select
-                    fullWidth
-                    label="Order Status"
-                    error={Boolean(errors.orderstatus)}
-                    // @ts-ignore
-                    helperText={errors.orderstatus?.message}
-                    {...field}
-                  >
-                    <MenuItem value="New">New</MenuItem>
-                    <MenuItem value="Completed">Completed</MenuItem>
-                    <MenuItem value="Canceled">Canceled</MenuItem>
-                  </TextField>
+                  <FormControl fullWidth error={Boolean(errors.orderstatus)}>
+                    <InputLabel required id="order-status-label">Order Status</InputLabel>
+                    <Select
+                      {...field}
+                      labelId="order-status-label"
+                      label="Order Status"
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                    >
+                      <MenuItem value="New">New</MenuItem>
+                      <MenuItem value="Completed">Completed</MenuItem>
+                      <MenuItem value="Canceled">Canceled</MenuItem>
+                    </Select>
+                    <FormHelperText>{(errors.orderstatus as any)?.message}</FormHelperText>
+                  </FormControl>
                 )}
               />
             </Grid>
 
-            {/* Quantity */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="orderqty"
                 control={control}
+                rules={{ required: 'Quantity is required' }}
                 render={({ field }) => (
-                  <TextField
+                  <CustomTextField
                     fullWidth
-                    label="Quantity"
+                    label={<RequiredLabel label='Quantity' />}
                     placeholder="Order Quantity"
                     type="number"
+                    inputProps={{ min: 0, step: 1 }}
                     error={Boolean(errors.orderqty)}
-                    // @ts-ignore
-                    helperText={errors.orderqty?.message}
+                    helperText={(errors.orderqty as any)?.message}
                     {...field}
                   />
                 )}
               />
             </Grid>
 
-            {/* Delivery Notes */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
-                name="deliverynotes"
+                name="orderamount"
                 control={control}
+                rules={{ required: 'Total amount is required' }}
                 render={({ field }) => (
-                  <TextField
+                  <CustomTextField
                     fullWidth
-                    label="Delivery Remarks/Notes"
-                    placeholder="Delivery Notes"
-                    error={Boolean(errors.deliverynotes)}
-                    // @ts-ignore
-                    helperText={errors.deliverynotes?.message}
+                    label={<RequiredLabel label='Total Amount' />}
+                    placeholder="Total Amount"
+                    type="number"
+                    inputProps={{ min: 0, step: '0.01' }}
+                    error={Boolean(errors.orderamount)}
+                    helperText={(errors.orderamount as any)?.message}
                     {...field}
                   />
                 )}
               />
             </Grid>
 
-            {/* Unit Price */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="unitprice"
                 control={control}
                 render={({ field }) => (
-                  <TextField
+                  <CustomTextField
                     fullWidth
                     label="Unit Price"
                     placeholder="Unit Price"
                     type="number"
-                    error={Boolean(errors.unitprice)}
-                    // @ts-ignore
-                    helperText={errors.unitprice?.message}
+                    inputProps={{ min: 0, step: '0.01' }}
+                    disabled
                     {...field}
                   />
                 )}
               />
             </Grid>
 
-            {/* Return Quantity */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="returnqty"
                 control={control}
                 render={({ field }) => (
-                  <TextField
+                  <CustomTextField
                     fullWidth
                     label="Return Quantity"
                     placeholder="Return Quantity"
                     type="number"
+                    inputProps={{ min: 0, step: 1 }}
                     error={Boolean(errors.returnqty)}
-                    helperText={errors.returnqty?.message}
+                    helperText={(errors.returnqty as any)?.message}
                     {...field}
                   />
                 )}
               />
             </Grid>
 
-            {/* Bottles Return Date */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="bottlereturndate"
                 control={control}
                 render={({ field }) => (
                   <DatePicker
-                    selected={field.value ? new Date(field.value) : null}
+                    selected={field.value ? new Date(field.value as any) : null}
                     onChange={(date) => field.onChange(date)}
                     placeholderText="Select Bottles Return Date"
-                    dateFormat="MM/dd/yyyy"
                     customInput={
-                      <TextField
+                      <CustomTextField
                         fullWidth
                         label="Bottles Return Date"
                         error={Boolean(errors.bottlereturndate)}
-                        helperText={errors.bottlereturndate?.message}
+                        helperText={(errors.bottlereturndate as any)?.message}
                       />
                     }
                   />
@@ -333,23 +318,21 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
               />
             </Grid>
 
-            {/* Delivery Date */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="deliverydate"
                 control={control}
                 render={({ field }) => (
                   <DatePicker
-                    selected={field.value ? new Date(field.value) : null}
+                    selected={field.value ? new Date(field.value as any) : null}
                     onChange={(date) => field.onChange(date)}
                     placeholderText="Select Delivery Date"
-                    dateFormat="MM/dd/yyyy"
                     customInput={
-                      <TextField
+                      <CustomTextField
                         fullWidth
                         label="Delivery Date"
                         error={Boolean(errors.deliverydate)}
-                        helperText={errors.deliverydate?.message}
+                        helperText={(errors.deliverydate as any)?.message}
                       />
                     }
                   />
@@ -357,27 +340,97 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
               />
             </Grid>
 
-            {/* Delivery Address */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
               <Controller
                 name="deliveryaddress"
                 control={control}
+                rules={{ required: 'Delivery address is required' }}
                 render={({ field }) => (
-                  <TextField
+                  <CustomTextField
                     fullWidth
-                    label="Delivery Address"
+                    label={<RequiredLabel label='Delivery Address' />}
                     placeholder="Delivery Address"
                     error={Boolean(errors.deliveryaddress)}
-                    helperText={errors.deliveryaddress?.message}
+                    helperText={(errors.deliveryaddress as any)?.message}
                     {...field}
                   />
                 )}
               />
             </Grid>
 
-            {/* Submit Button */}
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="deliverynotes"
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    label="Delivery Remarks/Notes"
+                    placeholder="Delivery Notes"
+                    error={Boolean(errors.deliverynotes)}
+                    helperText={(errors.deliverynotes as any)?.message}
+                    {...field}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="invoiceno"
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    label="Invoice No"
+                    placeholder="Invoice No"
+                    type="number"
+                    inputProps={{ min: 0, step: 1 }}
+                    {...field}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="invoicedate"
+                control={control}
+                render={({ field }) => (
+                  <DatePicker
+                    selected={field.value ? new Date(field.value as any) : null}
+                    onChange={(date) => field.onChange(date)}
+                    placeholderText="Select Invoice Date"
+                    customInput={
+                      <CustomTextField
+                        fullWidth
+                        label="Invoice Date"
+                        error={Boolean(errors.invoicedate)}
+                        helperText={(errors.invoicedate as any)?.message}
+                      />
+                    }
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name="telephone"
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    label="Telephone"
+                    placeholder="Telephone"
+                    {...field}
+                  />
+                )}
+              />
+            </Grid>
+
             <Grid item xs={12}>
-              <Button type="submit" variant="contained" color="primary">
+              <Button type="submit" variant="contained">
                 Save Changes
               </Button>
             </Grid>

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import {
   Card, Grid, Button, CardHeader, CardContent,
-  FormControl, InputLabel, Select, MenuItem, CircularProgress
+  FormControl, InputLabel, Select, MenuItem, CircularProgress, Box, FormHelperText
 } from '@mui/material'
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -9,6 +9,13 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 import { useForm, Controller } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import axios from 'axios';
+
+const RequiredLabel = ({ label }: { label: string }) => (
+  <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+    <span>{label}</span>
+    <Box component='span' sx={{ color: 'error.main', fontWeight: 700 }}>*</Box>
+  </Box>
+)
 
 const defaultValues = {
   customerid: '',
@@ -70,7 +77,7 @@ const FormValidationSchema = ({ customers }) => {
 
   return (
     <Card>
-      <CardHeader title='Create Order' />
+      <CardHeader title='Create Order' subheader='Capture order details, delivery, and invoice info.' />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit, (errors)=> console.log(errors, "error"))}>
           <Grid container spacing={5}>
@@ -79,10 +86,10 @@ const FormValidationSchema = ({ customers }) => {
               <Controller
                 name='customerid'
                 control={control}
-                rules={{ required: true }}
+                rules={{ required: 'Customer is required' }}
                 render={({ field }) => (
-                  <FormControl fullWidth>
-                    <InputLabel id='customer-label'>Customer</InputLabel>
+                  <FormControl fullWidth error={Boolean(errors.customerid)}>
+                    <InputLabel required id='customer-label'>Customer</InputLabel>
                     <Select
                       {...field}
                       labelId='customer-label'
@@ -102,6 +109,7 @@ const FormValidationSchema = ({ customers }) => {
                         </MenuItem>
                       ))}
                     </Select>
+                    <FormHelperText>{errors.customerid?.message}</FormHelperText>
                   </FormControl>
                 )}
               />
@@ -112,14 +120,14 @@ const FormValidationSchema = ({ customers }) => {
               <Controller
                 name='productId'
                 control={control}
-                rules={{ required: true }}
+                rules={{ required: 'Product is required' }}
                 render={({ field }) => (
-                  <FormControl fullWidth>
-                    <InputLabel id='product-label'>Product ID</InputLabel>
+                  <FormControl fullWidth error={Boolean(errors.productId)}>
+                    <InputLabel required id='product-label'>Product</InputLabel>
                     <Select
                       {...field}
                       labelId='product-label'
-                      label='Product ID'
+                      label='Product'
                       value={field.value || ''}
                       onChange={field.onChange}
                       readOnly={true}
@@ -127,6 +135,7 @@ const FormValidationSchema = ({ customers }) => {
                     >
                       <MenuItem selected value={1}>Bottle</MenuItem>
                     </Select>
+                    <FormHelperText>{errors.productId?.message}</FormHelperText>
                   </FormControl>
                 )}
               />
@@ -151,7 +160,7 @@ const FormValidationSchema = ({ customers }) => {
               <Controller
                 name='orderDate'
                 control={control}
-                rules={{ required: true }}
+                rules={{ required: 'Order date is required' }}
                 render={({ field }) => (
                   <DatePicker
                     selected={field.value ? new Date(field.value) : null}
@@ -167,10 +176,10 @@ const FormValidationSchema = ({ customers }) => {
               <Controller
                 name="orderStatus"
                 control={control}
-                rules={{ required: true }}
+                rules={{ required: 'Order status is required' }}
                 render={({ field }) => (
-                  <FormControl fullWidth>
-                    <InputLabel id="order-status-label">Order Status</InputLabel>
+                  <FormControl fullWidth error={Boolean(errors.orderStatus)}>
+                    <InputLabel required id="order-status-label">Order Status</InputLabel>
                     <Select
                       {...field}
                       labelId="order-status-label"
@@ -182,19 +191,41 @@ const FormValidationSchema = ({ customers }) => {
                       <MenuItem value="Completed">Completed</MenuItem>
                       <MenuItem value="Cancel">Cancel</MenuItem>
                     </Select>
+                    <FormHelperText>{errors.orderStatus?.message}</FormHelperText>
                   </FormControl>
                 )}
               />
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Controller name='quantity' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Quantity' placeholder='Quantity' />
-              )} />
+              <Controller
+                name='quantity'
+                control={control}
+                rules={{ required: 'Quantity is required' }}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    {...field}
+                    label={<RequiredLabel label='Quantity' />}
+                    placeholder='Quantity'
+                    type='number'
+                    inputProps={{ min: 0, step: 1 }}
+                    error={Boolean(errors.quantity)}
+                    helperText={errors.quantity?.message}
+                  />
+                )}
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <Controller name='returnedQty' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Returned Quantity' placeholder='Returned Quantity' />
+                <CustomTextField
+                  fullWidth
+                  {...field}
+                  label='Returned Quantity'
+                  placeholder='Returned Quantity'
+                  type='number'
+                  inputProps={{ min: 0, step: 1 }}
+                />
               )} />
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -206,15 +237,31 @@ const FormValidationSchema = ({ customers }) => {
                 {...field} 
                 label='Unit Price' 
                 placeholder='Unit Price'
+                type='number'
+                inputProps={{ min: 0, step: '0.01' }}
                 disabled={true}
               />
             )} />
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Controller name='totalAmount' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Total Amount' placeholder='Total Amount' />
-              )} />
+              <Controller
+                name='totalAmount'
+                control={control}
+                rules={{ required: 'Total amount is required' }}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    {...field}
+                    label={<RequiredLabel label='Total Amount' />}
+                    placeholder='Total Amount'
+                    type='number'
+                    inputProps={{ min: 0, step: '0.01' }}
+                    error={Boolean(errors.totalAmount)}
+                    helperText={errors.totalAmount?.message}
+                  />
+                )}
+              />
             </Grid>
 
             <Grid item xs={12} sm={6}>
@@ -256,16 +303,32 @@ const FormValidationSchema = ({ customers }) => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Controller name='deliveryAddress' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Delivery Address' placeholder='Delivery Address' />
-              )} />
+              <Controller
+                name='deliveryAddress'
+                control={control}
+                rules={{ required: 'Delivery address is required' }}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    {...field}
+                    label={<RequiredLabel label='Delivery Address' />}
+                    placeholder='Delivery Address'
+                    error={Boolean(errors.deliveryAddress)}
+                    helperText={errors.deliveryAddress?.message}
+                  />
+                )}
+              />
             </Grid>
 
 
             <Grid item xs={12} sm={6}>
-              <Controller name='invoiceNo' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Invoice No' placeholder='Invoice No' />
-              )} />
+              <Controller
+                name='invoiceNo'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField fullWidth {...field} label='Invoice No' placeholder='Invoice No' type='number' inputProps={{ min: 0, step: 1 }} />
+                )}
+              />
             </Grid>
 
             <Grid item xs={12} sm={6}>
@@ -284,9 +347,13 @@ const FormValidationSchema = ({ customers }) => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Controller name='telephone' control={control} render={({ field }) => (
-                <CustomTextField fullWidth {...field} label='Telephone' placeholder='Telephone' />
-              )} />
+              <Controller
+                name='telephone'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField fullWidth {...field} label='Telephone' placeholder='Telephone' />
+                )}
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <Controller name='deliveryNotes' control={control} render={({ field }) => (
