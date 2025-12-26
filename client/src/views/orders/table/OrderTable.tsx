@@ -30,12 +30,14 @@ import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 
 type SortType = 'asc' | 'desc' | undefined | null;
 
-const statusColors: { [key: string]: 'success' | 'error' | 'warning' | 'info' | 'primary' } = {
-  Completed: 'success',
-  Canceled: 'error',
-  Pending: 'warning',
-  New: 'info',
-  default: 'primary'
+const statusStyles: {
+  [key: string]: { bg: string; color: string; label?: string }
+} = {
+  Completed: { bg: '#E8F5E9', color: '#2E7D32' },
+  Canceled: { bg: '#FFEBEE', color: '#C62828' },
+  Pending: { bg: '#FFF8E1', color: '#F9A825' },
+  New: { bg: '#E3F2FD', color: '#1565C0' },
+  default: { bg: '#ECEFF1', color: '#455A64' }
 };
 
 const OrderTableServerSide = () => {
@@ -149,17 +151,40 @@ const OrderTableServerSide = () => {
       minWidth: 150,
       field: 'orderstatus',
       headerName: 'Status',
-      renderCell: (params: GridRenderCellParams) => (
-        <Chip
-          label={params.row.orderstatus || 'Unknown'}
-          color={statusColors[params.row.orderstatus] || statusColors.default}
-          sx={{
-            height: 24,
-            textTransform: 'capitalize',
-            '& .MuiChip-label': { fontWeight: 500 }
-          }}
-        />
-      )
+      renderCell: (params: GridRenderCellParams) => {
+        const style = statusStyles[params.row.orderstatus] || statusStyles.default;
+        const label = (params.row.orderstatus || 'Unknown') as string;
+        return (
+          <Box
+            sx={{
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 999,
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              textTransform: 'capitalize',
+              bgcolor: style.bg,
+              color: style.color,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.75,
+              border: `1px solid ${style.color}20`
+            }}
+          >
+            <Box
+              component='span'
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: style.color,
+                display: 'inline-block'
+              }}
+            />
+            {label}
+          </Box>
+        );
+      }
     },
     {
       flex: 0.25,
