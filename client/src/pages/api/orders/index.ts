@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const search = (searchText as string)?.trim();
 
-      const whereConditions: string[] = [];
+      const whereConditions: string[] = ['o.isdeleted IS DISTINCT FROM TRUE'];
       const values: any[] = [];
 
       if (fromDate && toDate) {
@@ -41,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const query = `
         SELECT 
+          o.id,
           o.orderid, 
           o.orderno, 
           o.orderdate, 
@@ -67,8 +68,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('🔥 Error in /api/orders:', error);
       res.status(500).json({ message: 'Failed to fetch orders' });
     }
+  } else if (req.method === 'DELETE') {
+    try {
+      const { id } = req.query;
+      if (!id) {
+        return res.status(400).json({ message: 'Missing order id' });
+      }
+
+      await prisma.orders.update({
+        where: { id: Number(id) },
+        data: { isdeleted: true }
+      });
+
+      return res.status(200).json({ message: 'Order deleted' });
+    } catch (error: any) {
+      console.error('🔥 Error deleting order:', error);
+      return res.status(500).json({ message: 'Failed to delete order' });
+    }
   } else {
-    res.setHeader('Allow', ['GET']);
+    res.setHeader('Allow', ['GET', 'DELETE']);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }

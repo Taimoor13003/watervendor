@@ -23,6 +23,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
 import moment from 'moment';
+import toast from 'react-hot-toast';
 
 import CustomInput from './DatePicker/CustomInput';
 import DialougeComponent from './DialougeComponent';
@@ -52,6 +53,7 @@ const OrderTableServerSide = () => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState<string>('');
   const [open, setOpen] = useState<boolean>(false);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
 
   const [startDateRange, setStartDateRange] = useState<Date | null>(null);
   const [endDateRange, setEndDateRange] = useState<Date | null>(null);
@@ -78,7 +80,7 @@ const OrderTableServerSide = () => {
 
         const updatedRows = response.data.data.map((row: any) => ({
           ...row,
-          id: row.orderid
+          id: row.id || row.orderid
         }));
 
         setRows(updatedRows);
@@ -103,6 +105,11 @@ const OrderTableServerSide = () => {
 
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchText(event.target.value);
+    setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleClearSearch = () => {
+    setSearchText('');
     setPaginationModel(prev => ({ ...prev, page: 0 }));
   };
 
@@ -199,7 +206,13 @@ const OrderTableServerSide = () => {
           >
             Edit
           </Button>
-          <Button variant="contained" onClick={() => setOpen(true)}>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setSelectedOrderId(params.row.id || params.row.orderid);
+              setOpen(true);
+            }}
+          >
             Delete
           </Button>
         </Box>
@@ -218,6 +231,21 @@ const OrderTableServerSide = () => {
     setStartDateRange(null);
     setEndDateRange(null);
     setPaginationModel(prev => ({ ...prev, page: 0 }));
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedOrderId) return;
+    try {
+      await axios.delete('/api/orders', { params: { id: selectedOrderId } });
+      toast.success('Order deleted');
+      setRows(prev => prev.filter(row => row.orderid !== selectedOrderId));
+    } catch (error: any) {
+      console.error('Failed to delete order:', error);
+      toast.error(error?.response?.data?.message || 'Failed to delete order');
+    } finally {
+      setOpen(false);
+      setSelectedOrderId(null);
+    }
   };
 
   return (
@@ -304,7 +332,7 @@ const OrderTableServerSide = () => {
         loading={isLoading}
         columns={columns}
         rows={rows}
-        getRowId={row => row.orderid}
+        getRowId={row => row.id || row.orderid}
         rowCount={total}
         pageSizeOptions={[7, 10, 25, 50]}
         paginationMode="server"
@@ -320,18 +348,13 @@ const OrderTableServerSide = () => {
           },
           toolbar: {
             value: searchText,
-            clearSearch: () => handleSearch({ target: { value: '' } } as ChangeEvent<HTMLInputElement>),
+            clearSearch: handleClearSearch,
             onChange: handleSearch
-          }
-        }}
-        sx={{
-          '& .MuiSvgIcon-root': {
-            fontSize: '1.125rem'
           }
         }}
       />
 
-      <DialougeComponent open={open} setOpen={setOpen} onDelete={() => alert('Delete function here')} />
+      <DialougeComponent open={open} setOpen={setOpen} onDelete={handleConfirmDelete} />
     </Card>
   );
 };

@@ -32,13 +32,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           invoiceno: rest.invoiceNo ? parseInt(rest.invoiceNo) : null,
           invoicedate: rest.invoiceDate ? new Date(rest.invoiceDate) : null,
           telephone: rest.telephone,
-          orderno: `ORD-${Date.now()}`,
+          orderno: 'PENDING', // placeholder, updated below
         },
       });
 
       const updatedOrder = await tx.orders.update({
         where: { id: newOrder.id },
-        data: { orderid: newOrder.id },
+        data: {
+          orderid: newOrder.id,
+          orderno: `RO-${String(newOrder.id).padStart(6, '0')}`,
+        },
       });
 
       await tx.order_details.create({
