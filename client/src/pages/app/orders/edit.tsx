@@ -1,7 +1,7 @@
-import { GetServerSideProps } from 'next/types';
-import prisma from 'src/lib/prisma';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { CircularProgress, Box, Typography, Button } from '@mui/material';
 import EditOrderForm from './EditOrderForm';
-import { serializeDate } from 'src/@core/utils/date';
 
 type Order = {
   orderid: number;
@@ -15,15 +15,17 @@ type Order = {
   deliverydate: string | null;
   bottlereturndate?: string | null;
   paymentmode: string;
-  orderStatus: string;
+  orderstatus: string;
   deliveryaddress: string;
   deliverynotes: string;
-  deliveredbyempid: number;
-  deliveredbyvehicleregid: string;
-  rate_per_bottle: number;
-  reqbottles: number;
-  employeefirstname: string;
-  employeelastname: string;
+  deliveredbyempid?: number | null;
+  deliveredbyvehicleregid?: string | null;
+  rate_per_bottle?: number | null;
+  reqbottles?: number | null;
+  employeefirstname?: string | null;
+  employeelastname?: string | null;
+  orderqty: number | string;
+  orderamount: number | string;
 };
 
 type PaymentMode = {
@@ -32,90 +34,92 @@ type PaymentMode = {
 };
 
 type OrderDetail = {
-  productid: number;
-  unitprice: number;
-  returnqty: number;
+  productid: number | null;
+  unitprice: number | null;
+  returnqty: number | null;
   bottlereturndate: string | null;
 };
 
-type OrderPageProps = {
+type EditOrderPayload = {
   orders: Order;
   paymentmode: PaymentMode[];
   orderdetails: OrderDetail[];
 };
 
-const EditOrderPage = ({ orders, paymentmode, orderdetails }: OrderPageProps) => {
+const EditOrderPage = () => {
+  const router = useRouter();
+  const { orderid } = router.query;
 
-//@ts-ignore
+  const [data, setData] = useState<EditOrderPayload | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  return <EditOrderForm data={orders} paymentmode={paymentmode} orderdetails={orderdetails} />;
-};
-
-//@ts-ignore
-
-export const getServerSideProps: GetServerSideProps<OrderPageProps> = async (context) => {
-  const { query } = context;
-  const id = query.orderid as string | undefined;
-
-  if (!id) {
-    return { notFound: true };
-  }
-
-  try {
-    const orders = await prisma.$queryRaw<Order[]>`
-      SELECT 
-      ep.empid, ep.firstname as employeeFirstName, ep.lastname as employeeLastName,
-      c.customerid, c.firstname as customerFirstName, c.lastname as customerLastName,
-      od.returnqty, od.productid, od.bottlereturndate,
-      p.productname,
-      o.*
-      FROM orders o
-      LEFT JOIN customer c ON o.customerid = c.customerid
-      LEFT JOIN employee_personal ep ON ep.empid = o.deliveredbyempid 
-      LEFT JOIN order_details od ON o.orderid = od.orderid 
-      LEFT JOIN products p ON p.id = od.productid
-      WHERE o.orderid = ${Number(id)}
-    `;
-
-    const paymentmode = await prisma.pick_paymentmode.findMany();
-    const orderdetails = await prisma.order_details.findMany({
-      where: { orderid: Number(id) },
-    });
-
-    const serializedOrders = orders.map(order => ({
-      ...order,
-      firstname:
-        (order as any).customerfirstname ||
-        (order as any).customerFirstName ||
-        order.firstname,
-      lastname:
-        (order as any).customerlastname ||
-        (order as any).customerLastName ||
-        order.lastname,
-      orderdate: serializeDate(order.orderdate as unknown as Date),
-      invoicedate: serializeDate(order.invoicedate as unknown as Date),
-      invoicelastprintdate: serializeDate(order.invoicelastprintdate as unknown as Date),
-      deliverydate: serializeDate(order.deliverydate as unknown as Date),
-      bottlereturndate: serializeDate((order as any).bottlereturndate),
-    }));
-
-    const serializedOrderDetails = orderdetails.map(detail => ({
-      ...detail,
-      bottlereturndate: serializeDate(detail.bottlereturndate as unknown as Date),
-    }));
-
-    return {
-      props: {
-        orders: serializedOrders.length ? serializedOrders[0] : {} as Order,
-        paymentmode: paymentmode || [],
-        orderdetails: serializedOrderDetails || [],
-      },
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!orderid) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/order-edit?id=${orderid}`);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.message || 'Failed to load order');
+        }
+        const json = await res.json();
+        const normalized = {
+          ...json,
+          orders: {
+            ...json.orders,
+            orderamount:
+              json.orders?.orderamount === null || json.orders?.orderamount === undefined
+                ? null
+                : Number(json.orders.orderamount),
+            orderqty:
+              json.orders?.orderqty === null || json.orders?.orderqty === undefined
+                ? null
+                : Number(json.orders.orderqty),
+          },
+        };
+        setData(normalized);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load order');
+      } finally {
+        setLoading(false);
+      }
     };
-  } catch (error) {
-    console.error(error);
-    
-    return { notFound: true };
+
+    fetchData();
+  }, [orderid]);
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh" gap={2}>
+        <CircularProgress />
+        <Typography variant="body1">Loading order...</Typography>
+      </Box>
+    );
   }
+
+  if (error || !data) {
+    return (
+      <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="50vh" gap={2}>
+        <Typography variant="h6" color="error">
+          {error || 'Unable to load order'}
+        </Typography>
+        <Button variant="outlined" onClick={() => router.push('/app/orders')}>
+          Back to orders
+        </Button>
+      </Box>
+    );
+  }
+
+  return (
+    <EditOrderForm
+      data={data.orders}
+      paymentmode={data.paymentmode}
+      orderdetails={data.orderdetails}
+    />
+  );
 };
 
 export default EditOrderPage;
