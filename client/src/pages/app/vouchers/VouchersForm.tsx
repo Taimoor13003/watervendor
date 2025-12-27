@@ -19,7 +19,9 @@ import {
   TableCell,
   TableBody,
   TableContainer,
-  Paper
+  Paper,
+  Box,
+  FormHelperText
 } from '@mui/material'
 import { useForm, Controller, useWatch } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
@@ -47,6 +49,13 @@ const schema = yup.object({
 })
 
 type FormValues = yup.InferType<typeof schema>
+
+const RequiredLabel = ({ label }: { label: string }) => (
+  <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+    <span>{label}</span>
+    <Box component='span' sx={{ color: 'error.main', fontWeight: 700 }}>*</Box>
+  </Box>
+)
 
 const VouchersForm: React.FC = () => {
   // 1) form setup, now including getValues
@@ -148,12 +157,12 @@ const VouchersForm: React.FC = () => {
 
   return (
     <Card>
-      <CardHeader title='Create Voucher' />
+      <CardHeader title='Create Voucher' subheader='Record voucher details and transactions.' />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Grid container spacing={4}>
             {/* Voucher # */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6} md={4}>
               <Controller
                 name='voucherNo'
                 control={control}
@@ -164,13 +173,13 @@ const VouchersForm: React.FC = () => {
             </Grid>
 
             {/* Voucher Type */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6} md={4}>
               <Controller
                 name='vouchertype'
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={!!errors.vouchertype}>
-                    <InputLabel>Voucher Type</InputLabel>
+                    <InputLabel required>Voucher Type</InputLabel>
                     <Select {...field} label='Voucher Type'>
                       {vouchertypes.map(t => (
                         <MenuItem key={t.id} value={t.name}>
@@ -178,18 +187,14 @@ const VouchersForm: React.FC = () => {
                         </MenuItem>
                       ))}
                     </Select>
-                    {errors.vouchertype && (
-                      <p style={{ color: 'red', marginTop: 4, fontSize: 12 }}>
-                        {errors.vouchertype.message}
-                      </p>
-                    )}
+                    {errors.vouchertype && <FormHelperText>{errors.vouchertype.message}</FormHelperText>}
                   </FormControl>
                 )}
               />
             </Grid>
 
             {/* Description */}
-            <Grid item xs={12}>
+            <Grid item xs={12} md={8}>
               <Controller
                 name='description'
                 control={control}
@@ -197,16 +202,18 @@ const VouchersForm: React.FC = () => {
                   <TextField
                     {...field}
                     fullWidth
-                    label='Description'
+                    label={<RequiredLabel label='Description' />}
                     error={!!errors.description}
                     helperText={errors.description?.message}
+                    multiline
+                    minRows={2}
                   />
                 )}
               />
             </Grid>
 
             {/* Voucher Date */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6} md={4}>
               <Controller
                 name='voucherdate'
                 control={control}
@@ -214,7 +221,7 @@ const VouchersForm: React.FC = () => {
                   <TextField
                     {...field}
                     fullWidth
-                    label='Voucher Date'
+                    label={<RequiredLabel label='Voucher Date' />}
                     type='date'
                     InputLabelProps={{ shrink: true }}
                     error={!!errors.voucherdate}
@@ -224,22 +231,17 @@ const VouchersForm: React.FC = () => {
               />
             </Grid>
 
-            {/* Transaction heading */}
-            <Grid item xs={12}>
-              <h3>Voucher Transaction</h3>
-            </Grid>
-
             {/* Account Code */}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6} md={4}>
               <Controller
                 name='accountCode'
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={!!errors.accountCode}>
-                    <InputLabel>Account Code</InputLabel>
-                    <Select {...field} label='Account Code'>
+                    <InputLabel required>Account Code</InputLabel>
+                    <Select {...field} label='Account Code' disabled={loadingCodes}>
                       {loadingCodes ? (
-                        <MenuItem disabled>
+                        <MenuItem value=''>
                           <CircularProgress size={20} />
                         </MenuItem>
                       ) : (
@@ -250,34 +252,14 @@ const VouchersForm: React.FC = () => {
                         ))
                       )}
                     </Select>
-                    {errors.accountCode && (
-                      <p style={{ color: 'red', marginTop: 4, fontSize: 12 }}>
-                        {errors.accountCode.message}
-                      </p>
-                    )}
+                    {errors.accountCode && <FormHelperText>{errors.accountCode.message}</FormHelperText>}
                   </FormControl>
                 )}
               />
             </Grid>
 
-            {/* Credit & Debit */}
-            <Grid item xs={6}>
-              <Controller
-                name='creditAmount'
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    fullWidth
-                    label='Credit Amount'
-                    type='number'
-                    error={!!errors.creditAmount}
-                    helperText={errors.creditAmount?.message}
-                  />
-                )}
-              />
-            </Grid>
-            <Grid item xs={6}>
+            {/* Debit Amount */}
+            <Grid item xs={12} sm={6} md={4}>
               <Controller
                 name='debitAmount'
                 control={control}
@@ -285,10 +267,30 @@ const VouchersForm: React.FC = () => {
                   <TextField
                     {...field}
                     fullWidth
-                    label='Debit Amount'
+                    label={<RequiredLabel label='Debit Amount' />}
                     type='number'
+                    inputProps={{ min: 0, step: '0.01' }}
                     error={!!errors.debitAmount}
                     helperText={errors.debitAmount?.message}
+                  />
+                )}
+              />
+            </Grid>
+
+            {/* Credit Amount */}
+            <Grid item xs={12} sm={6} md={4}>
+              <Controller
+                name='creditAmount'
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    fullWidth
+                    label={<RequiredLabel label='Credit Amount' />}
+                    type='number'
+                    inputProps={{ min: 0, step: '0.01' }}
+                    error={!!errors.creditAmount}
+                    helperText={errors.creditAmount?.message}
                   />
                 )}
               />

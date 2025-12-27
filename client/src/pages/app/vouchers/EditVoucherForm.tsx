@@ -13,23 +13,21 @@ import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 
 type Voucher = {
-  voucheramount: number;
-  description: string;
-  vouchertype: number;
-  voucherno: number;
+  voucheramount: number | null;
+  description: string | null;
+  vouchertype: number | null;
+  voucherno: number | null;
   id: number;
-  voucherCode: string;
-  amount: number;
-  voucherdate: Date | null; // Changed to Date
+  voucherdate: string | Date | null;
 };
 
 type VoucherTrans = {
   id: number;
-  voucherId: number;
-  accountcode: string;
-  chqno: string;
-  debitamount: number;
-  creditamount: number;
+  voucherno: number | null;
+  accountcode: string | null;
+  chqno: string | null;
+  debitamount: number | null;
+  creditamount: number | null;
 };
 
 type VoucherProps = {
@@ -38,16 +36,15 @@ type VoucherProps = {
 };
 
 const schema = yup.object().shape({
-  description: yup.string().required(),
-  vouchertype: yup.number().required(),
-  voucherno: yup.number().required(),
-  voucherCode: yup.string().required(),
-  amount: yup.number().required(),
-  voucherDate: yup.date().nullable().required(), // Validation for Date
-  accountcode: yup.string().required(),
-  chqno: yup.string().required(),
-  debitamount: yup.number().required(),
-  creditamount: yup.number().required(),
+  description: yup.string().required('Description is required'),
+  vouchertype: yup.number().typeError('Voucher type is required').required('Voucher type is required'),
+  voucherno: yup.number().typeError('Voucher number is required').required('Voucher number is required'),
+  voucheramount: yup.number().typeError('Amount must be a number').required('Amount is required'),
+  voucherDate: yup.date().nullable().required('Voucher date is required'),
+  accountcode: yup.string().required('Account code is required'),
+  chqno: yup.string().required('Cheque no is required'),
+  debitamount: yup.number().typeError('Debit must be a number').required('Debit amount is required'),
+  creditamount: yup.number().typeError('Credit must be a number').required('Credit amount is required'),
 });
 
 const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
@@ -57,8 +54,6 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
     vouchertype: 0,
     voucherno: 0,
     id: 0,
-    voucherCode: '',
-    amount: 0,
     voucherdate: null,
   };
 
@@ -75,16 +70,15 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      description: voucher.description,
-      vouchertype: voucher.vouchertype,
-      voucherno: voucher.voucherno,
-      voucherCode: voucher.voucherCode,
-      voucheramount: voucher.voucheramount,
+      description: voucher.description ?? '',
+      vouchertype: voucher.vouchertype ?? 0,
+      voucherno: voucher.voucherno ?? 0,
+      voucheramount: voucher.voucheramount ?? 0,
       voucherDate: voucher.voucherdate ? new Date(voucher.voucherdate) : null,
-      accountcode: voucherTransaction.accountcode,
-      chqno: voucherTransaction.chqno,
-      debitamount: voucherTransaction.debitamount,
-      creditamount: voucherTransaction.creditamount,
+      accountcode: voucherTransaction.accountcode ?? '',
+      chqno: voucherTransaction.chqno ?? '',
+      debitamount: voucherTransaction.debitamount ?? 0,
+      creditamount: voucherTransaction.creditamount ?? 0,
     },
     mode: 'onChange',
     resolver: yupResolver(schema),
