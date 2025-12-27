@@ -1,11 +1,11 @@
 import React, { useEffect, useState, ChangeEvent, useRef, useCallback } from 'react';
 import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import Fab from '@mui/material/Fab';
+import Icon from 'src/@core/components/icon';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { useRouter } from 'next/router';
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
@@ -126,15 +126,44 @@ const VoucherTable = () => {
   return (
     <Card>
       <DatePickerWrapper>
-        <CardHeader title='Voucher Table' />
-        <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
-          <Box></Box>
+        <Box
+          sx={{
+            px: 5,
+            py: 4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            background: theme =>
+              theme.palette.mode === 'light'
+                ? 'linear-gradient(90deg, rgba(240,248,255,0.65), rgba(225,245,254,0.9))'
+                : 'rgba(255,255,255,0.03)'
+          }}
+        >
           <Box>
-            <Fab color='primary' variant='extended' onClick={() => router.push('/app/vouchers/create')}>
-              Create New Voucher
-            </Fab>
+            <Typography variant='h5' sx={{ fontWeight: 700 }}>
+              Vouchers
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Search, filter, and manage vouchers.
+            </Typography>
           </Box>
-        </Grid>
+          <Box display='flex' gap={2} flexWrap='wrap'>
+            <Button variant='outlined' startIcon={<Icon icon='mdi:filter-variant' />} onClick={() => setSearchText('')}>
+              Reset filters
+            </Button>
+            <Button
+              variant='contained'
+              startIcon={<Icon icon='mdi:plus' />}
+              onClick={() => router.push('/app/vouchers/create')}
+            >
+              Create voucher
+            </Button>
+          </Box>
+        </Box>
 
         <DataGrid
           autoHeight
