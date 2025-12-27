@@ -25,7 +25,7 @@ type Order = {
   employeefirstname?: string | null;
   employeelastname?: string | null;
   orderqty: number | string;
-  orderamount: number | string;
+  orderamount?: number | null;
 };
 
 type PaymentMode = {
