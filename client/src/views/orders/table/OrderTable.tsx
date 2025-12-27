@@ -238,7 +238,10 @@ const OrderTableServerSide = () => {
     try {
       await axios.delete('/api/orders', { params: { id: selectedOrderId } });
       toast.success('Order deleted');
-      setRows(prev => prev.filter(row => row.orderid !== selectedOrderId));
+      setRows(prev => prev.filter(row => (row.id || row.orderid) !== selectedOrderId));
+      setTotal(prev => Math.max(0, prev - 1));
+      // refresh from server to keep pagination in sync
+      fetchTableData();
     } catch (error: any) {
       console.error('Failed to delete order:', error);
       toast.error(error?.response?.data?.message || 'Failed to delete order');
