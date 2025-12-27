@@ -1,9 +1,8 @@
-import { GetServerSideProps } from 'next/types';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
+import { CircularProgress, Box, Typography, Button } from '@mui/material';
 import EditCustomerForm from 'src/pages/app/customers/EditCustomerForm';
-import prisma from 'src/lib/prisma';
-import { serializeDate } from 'src/@core/utils/date';
 
-// Shape for the form's internal state
 export type FormValues = {
   id: string;
   firstname: string;
@@ -23,7 +22,7 @@ export type FormValues = {
   addressoffice: string;
   depositamount: string;
   requirement: string;
-  delivery_person: string; // This will be the empid string
+  delivery_person: string;
   reqbottles: string;
   tax: string;
   customerid: string;
@@ -33,187 +32,85 @@ export type FormValues = {
   gender: string;
 };
 
-// Shape for data coming from the server
 export type CustomerDataFromServer = Omit<FormValues, 'delivery_person'> & {
   delivery_person: { empid: string | null; firstname: string | null; lastname: string | null } | null;
 };
 
-// Updated Employee type to match EditCustomerForm expectations
-type Employee = {
-  id: number;
-  empid: string; // Changed to string
-  employeecode: string;
-  firstname: string;
-  middlename: string;
-  lastname: string;
-  doj: Date | null;
-  salarypaydate: Date | null;
-  dob: Date | null;
-};
-
-type PaymentMode = {
-  id: number;
-  paymentmode: string;
-  requirement: string; // Ensure this is included
-};
-
-type EditCustomerPageProps = {
+type EditPayload = {
   customerData: CustomerDataFromServer;
   customerTypes: { id: number; customertype: string }[];
   pickrequirement: { id: number; requirement: string }[];
-  paymentmode: PaymentMode[];
-  employee: Employee[];
+  paymentmode: { id: number; paymentmode: string; requirement: string }[];
+  employee: {
+    lastname: string; id: number; empid: string; employeecode: string; firstname: string; middlename: string;
+    doj: string | null; salarypaydate: string | null; dob: string | null;
+  }[];
   deliveryAreas: { id: number; deliveryarea: string }[];
 };
 
-const EditCustomerPage = ({ customerData, customerTypes, pickrequirement, paymentmode, employee, deliveryAreas }: EditCustomerPageProps) => {
-  return (
-    <EditCustomerForm
-      customerData={customerData}
-      customerTypes={customerTypes}
-      pickrequirement={pickrequirement}
-      paymentmode={paymentmode}
-      deliveryPersons={employee} // Ensure this matches the expected type
-      deliveryAreas={deliveryAreas}
-    />
-  );
-};
+const EditCustomerPage = () => {
+  const router = useRouter();
+  const { customerid } = router.query;
 
-//@ts-ignore
+  const [data, setData] = useState<EditPayload | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = async (context: any) => {
-  const { query } = context;
-  const id = query.customerid as string | undefined;
-
-  if (!id) {
-
-    return {
-
-      notFound: true,
-    };
-  }
-
-  try {
-    const [
-      customerData,
-      customerTypes,
-      pickrequirement,
-      paymentmode,
-      employee,
-      deliveryAreas
-    ] = await Promise.all([
-      prisma.$queryRaw<CustomerDataFromServer[]>`
-        SELECT
-          c.id,
-          c.customerid,
-          c.firstname,
-          c.lastname,
-          c.datefirstcontacted,
-          c.customertype,
-          c.dateofbirth,
-          c.accountno,
-          c.telephoneres,
-          c.telephoneoffice,
-          c.addressres,
-          c.email,
-          c.deliverydate,
-          c.deliveryarea,
-          c.paymentmode,
-          c.notes,
-          c.addressoffice,
-          c.depositamount,
-          c.requirement,
-          c.delivery_person,
-          c.reqbottles,
-          c.tax,
-          c.rate_per_bottle,
-          c.istaxable,
-          c.isdepositvoucherdone,
-          c.gender,
-          json_build_object(
-            'empid', ep.empid::TEXT,
-            'firstname', ep.firstname,
-            'lastname', ep.lastname
-          ) AS delivery_person
-        FROM customer c
-        LEFT JOIN employee_personal ep ON c.delivery_person = ep.empid
-        WHERE c.customerid = ${Number(id)}
-        LIMIT 1
-      `,
-      prisma.pick_customertype.findMany({ select: { id: true, customertype: true } }),
-      prisma.pick_requirement.findMany({ select: { id: true, requirement: true } }),
-      prisma.pick_paymentmode.findMany({ select: { id: true, paymentmode: true } }),
-      prisma.employee_personal.findMany({
-        select: { id: true, empid: true, employeecode: true, firstname: true, middlename: true, lastname: true, doj: true, salarypaydate: true, dob: true }
-      }),
-      prisma.pick_deliveryarea.findMany({ select: { id: true, deliveryarea: true } })
-    ]);
-    
-    if (!customerData || customerData.length === 0) {
-      return {
-        notFound: true,
-      };
-    }
-
-    const customer = customerData[0];
-
-    const serializedEmployee = employee.map(emp => ({
-      ...emp,
-      empid: emp.empid ? emp.empid.toString() : '', // Convert empid to string or default to empty string if null
-      doj: serializeDate(emp.doj),
-      salarypaydate: serializeDate(emp.salarypaydate),
-      dob: serializeDate(emp.dob),
-    }));
-
-    const serializedPaymentMode = paymentmode.map(pm => ({
-      ...pm,
-      requirement: 'Default Requirement' // schema lacks requirement; provide default
-    }));
-
-    const formatDate = (date: Date | string | null) => {
-      if (!date) return '';
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!customerid) return;
+      setLoading(true);
+      setError(null);
       try {
-        return new Date(date).toISOString().split('T')[0];
-      } catch (e) {
-        return '';
+        const res = await fetch(`/api/customer-edit?id=${customerid}`);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err?.message || 'Failed to load customer');
+        }
+        const json = await res.json();
+        setData(json);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load customer');
+      } finally {
+        setLoading(false);
       }
     };
 
-    const serializedCustomer = {
-      ...customer,
-      id: customer.id.toString(),
-      customerid: customer.customerid?.toString() || '',
-      reqbottles: customer.reqbottles?.toString() || '',
-      depositamount: customer.depositamount?.toString() || '',
-      tax: customer.tax?.toString() || '',
-      rate_per_bottle: customer.rate_per_bottle?.toString() || '',
-      delivery_person: customer.delivery_person,
-      dateofbirth: formatDate(customer.dateofbirth),
-      datefirstcontacted: formatDate(customer.datefirstcontacted),
-      deliverydate: formatDate(customer.deliverydate),
-      istaxable: customer.istaxable ?? false,
-      isdepositvoucherdone: customer.isdepositvoucherdone ?? false,
-      gender: customer.gender || 'Mr',
-    };
+    fetchData();
+  }, [customerid]);
 
-    return {
-      props: {
-        customerData: JSON.parse(JSON.stringify(serializedCustomer)) as CustomerDataFromServer,
-        customerTypes,
-        pickrequirement,
-        paymentmode: serializedPaymentMode,
-        employee: serializedEmployee,
-        deliveryAreas,
-      },
-    };
-  } catch (error) {
-    console.error(error);
-    
-    return {
-
-      notFound: true,
-    };
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh" gap={2}>
+        <CircularProgress />
+        <Typography variant="body1">Loading customer...</Typography>
+      </Box>
+    );
   }
+
+  if (error || !data) {
+    return (
+      <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="50vh" gap={2}>
+        <Typography variant="h6" color="error">
+          {error || 'Unable to load customer'}
+        </Typography>
+        <Button variant="outlined" onClick={() => router.push('/app/customers')}>
+          Back to customers
+        </Button>
+      </Box>
+    );
+  }
+
+  return (
+    <EditCustomerForm
+      customerData={data.customerData}
+      customerTypes={data.customerTypes}
+      pickrequirement={data.pickrequirement}
+      paymentmode={data.paymentmode}
+      deliveryPersons={data.employee}
+      deliveryAreas={data.deliveryAreas}
+    />
+  );
 };
 
 export default EditCustomerPage;
