@@ -94,23 +94,60 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
   }
 
   try {
-    const customerData = await prisma.$queryRaw<CustomerDataFromServer[]>`
-      SELECT
-        c.*,
-        json_build_object(
-          'empid', ep.empid::TEXT,
-          'firstname', ep.firstname,
-          'lastname', ep.lastname
-        ) AS delivery_person
-      FROM
-        customer c
-      LEFT JOIN
-        employee_personal ep
-      ON
-        c.delivery_person = ep.empid
-      WHERE
-        c.customerid = ${Number(id)}
-    `;
+    const [
+      customerData,
+      customerTypes,
+      pickrequirement,
+      paymentmode,
+      employee,
+      deliveryAreas
+    ] = await Promise.all([
+      prisma.$queryRaw<CustomerDataFromServer[]>`
+        SELECT
+          c.id,
+          c.customerid,
+          c.firstname,
+          c.lastname,
+          c.datefirstcontacted,
+          c.customertype,
+          c.dateofbirth,
+          c.accountno,
+          c.telephoneres,
+          c.telephoneoffice,
+          c.addressres,
+          c.email,
+          c.deliverydate,
+          c.deliveryarea,
+          c.paymentmode,
+          c.notes,
+          c.addressoffice,
+          c.depositamount,
+          c.requirement,
+          c.delivery_person,
+          c.reqbottles,
+          c.tax,
+          c.rate_per_bottle,
+          c.istaxable,
+          c.isdepositvoucherdone,
+          c.gender,
+          json_build_object(
+            'empid', ep.empid::TEXT,
+            'firstname', ep.firstname,
+            'lastname', ep.lastname
+          ) AS delivery_person
+        FROM customer c
+        LEFT JOIN employee_personal ep ON c.delivery_person = ep.empid
+        WHERE c.customerid = ${Number(id)}
+        LIMIT 1
+      `,
+      prisma.pick_customertype.findMany({ select: { id: true, customertype: true } }),
+      prisma.pick_requirement.findMany({ select: { id: true, requirement: true } }),
+      prisma.pick_paymentmode.findMany({ select: { id: true, paymentmode: true } }),
+      prisma.employee_personal.findMany({
+        select: { id: true, empid: true, employeecode: true, firstname: true, middlename: true, lastname: true, doj: true, salarypaydate: true, dob: true }
+      }),
+      prisma.pick_deliveryarea.findMany({ select: { id: true, deliveryarea: true } })
+    ]);
     
     if (!customerData || customerData.length === 0) {
       return {
@@ -119,12 +156,6 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
     }
 
     const customer = customerData[0];
-
-    const customerTypes = await prisma.pick_customertype.findMany();
-    const pickrequirement = await prisma.pick_requirement.findMany();
-    const paymentmode = await prisma.pick_paymentmode.findMany();
-    const employee = await prisma.employee_personal.findMany();
-    const deliveryAreas = await prisma.pick_deliveryarea.findMany();
 
     const serializedEmployee = employee.map(emp => ({
       ...emp,
@@ -136,7 +167,7 @@ export const getServerSideProps: GetServerSideProps<EditCustomerPageProps> = asy
 
     const serializedPaymentMode = paymentmode.map(pm => ({
       ...pm,
-      requirement: 'Default Requirement' // Replace this with actual requirement if available
+      requirement: 'Default Requirement' // schema lacks requirement; provide default
     }));
 
     const formatDate = (date: Date | string | null) => {
