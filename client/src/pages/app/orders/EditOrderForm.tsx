@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   Grid,
@@ -16,6 +16,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
 import { useForm, Controller } from 'react-hook-form';
+import { useRouter } from 'next/router';
 import CustomTextField from 'src/@core/components/mui/text-field';
 
 type Order = {
@@ -59,6 +60,8 @@ const RequiredLabel = ({ label }: { label: string }) => (
 );
 
 const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) => {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
   const orderDetail = orderdetails[0] || {};
 
   const {
@@ -82,9 +85,51 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
     mode: 'onChange',
   });
 
-  const onSubmit = (formData: any) => {
-    console.log(formData);
-    toast.success('Changes saved');
+  const toNumberOrNull = (value: any) => {
+    if (value === '' || value === null || value === undefined) return null;
+    const num = Number(value);
+    return Number.isNaN(num) ? null : num;
+  };
+
+  const onSubmit = async (formData: any) => {
+    setLoading(true);
+    const payload = {
+      orderid: data.orderid,
+      paymentmode: formData.paymentmode,
+      orderstatus: formData.orderstatus,
+      deliveryaddress: formData.deliveryaddress,
+      deliverynotes: formData.deliverynotes,
+      invoiceno: toNumberOrNull(formData.invoiceno),
+      invoicedate: formData.invoicedate || null,
+      telephone: formData.telephone || '',
+      orderqty: toNumberOrNull(formData.orderqty),
+      orderamount: toNumberOrNull(formData.orderamount),
+      deliverydate: formData.deliverydate || null,
+      productid: toNumberOrNull(formData.productid),
+      unitprice: toNumberOrNull(formData.unitprice),
+      returnqty: toNumberOrNull(formData.returnqty),
+      bottlereturndate: formData.bottlereturndate || null,
+    };
+
+    try {
+      const res = await fetch('/api/order-update', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || 'Failed to update order');
+      }
+
+      toast.success('Order updated');
+      router.push('/app/orders');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update order');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
