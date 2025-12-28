@@ -13,22 +13,43 @@ export default async function handler(
   try {
     const { customerid, ...data } = req.body;
 
-    if (!customerid) {
+    const idValue = customerid ?? data.customerid;
+    const numericCustomerId = Number(idValue);
+
+    if (Number.isNaN(numericCustomerId)) {
       return res.status(400).json({ error: 'Customer ID is required' });
     }
 
-    const { id, delivery_person, reqbottles, depositamount, tax, rate_per_bottle, notes, ...restData } = data;
+    const {
+      id,
+      delivery_person,
+      reqbottles,
+      depositamount,
+      tax,
+      rate_per_bottle,
+      notes,
+      // client-only helper object, not a DB column
+      delivery_person_obj,
+      ...restData
+    } = data;
+
+    const toNumberOrNull = (value: any) => {
+      if (value === '' || value === null || value === undefined) return null;
+      const num = Number(value);
+      return Number.isNaN(num) ? null : num;
+    };
 
     const updatedCustomer = await prisma.customer.update({
-      where: { id: Number(customerid) },
+      // Use primary key for update (Prisma requires unique field)
+      where: { id: numericCustomerId },
       data: {
         ...restData,
         notes: notes === null ? '' : notes, // Explicitly convert null to empty string
-        delivery_person: delivery_person ? Number(delivery_person) : null,
-        reqbottles: reqbottles ? Number(reqbottles) : null,
-        depositamount: depositamount ? Number(depositamount) : null,
-        tax: tax ? Number(tax) : null,
-        rate_per_bottle: rate_per_bottle ? Number(rate_per_bottle) : null,
+        delivery_person: toNumberOrNull(delivery_person),
+        reqbottles: toNumberOrNull(reqbottles),
+        depositamount: toNumberOrNull(depositamount),
+        tax: toNumberOrNull(tax),
+        rate_per_bottle: toNumberOrNull(rate_per_bottle),
         // Ensure date fields are correctly formatted if they exist
         dateofbirth: data.dateofbirth ? new Date(data.dateofbirth) : null,
         datefirstcontacted: data.datefirstcontacted ? new Date(data.datefirstcontacted) : null,
