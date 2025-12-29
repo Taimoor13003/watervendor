@@ -134,18 +134,24 @@ const VouchersForm: React.FC = () => {
   // 5) final submit
   const onSubmit = async (vals: FormValues) => {
     try {
-      await fetch('/api/vouchers', {
+      const res = await fetch('/api/vouchers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...vals, transactions: rows })
       })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.message || 'Failed to create voucher')
+      }
+
       toast.success('Voucher created!')
       reset()
       setRows([])
       setTotals({ debit: 0, credit: 0 })
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
-      toast.error('Failed to create voucher')
+      toast.error(err?.message || 'Failed to create voucher')
     }
   }
 

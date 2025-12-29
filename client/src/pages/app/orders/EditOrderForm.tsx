@@ -99,6 +99,7 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
       orderstatus: formData.orderstatus,
       deliveryaddress: formData.deliveryaddress,
       deliverynotes: formData.deliverynotes,
+      orderdate: formData.orderdate || null,
       invoiceno: toNumberOrNull(formData.invoiceno),
       invoicedate: formData.invoicedate || null,
       telephone: formData.telephone || '',
@@ -107,6 +108,7 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
       deliverydate: formData.deliverydate || null,
       productid: toNumberOrNull(formData.productid),
       unitprice: toNumberOrNull(formData.unitprice),
+      quantity: toNumberOrNull(formData.orderqty),
       returnqty: toNumberOrNull(formData.returnqty),
       bottlereturndate: formData.bottlereturndate || null,
     };

@@ -32,6 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       orderstatus: rest.orderstatus ?? null,
       deliveryaddress: rest.deliveryaddress ?? '',
       deliverynotes: rest.deliverynotes ?? '',
+      orderdate: toDateOrNull(rest.orderdate),
       invoiceno: toNumberOrNull(rest.invoiceno),
       invoicedate: toDateOrNull(rest.invoicedate),
       telephone: rest.telephone ?? '',
@@ -46,6 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const detailData = {
       productid: toNumberOrNull(productid),
       unitprice: toNumberOrNull(unitprice),
+      quantity: toNumberOrNull(rest.quantity ?? rest.orderqty),
       returnqty: toNumberOrNull(returnqty),
       bottlereturndate: toDateOrNull(bottlereturndate),
     }

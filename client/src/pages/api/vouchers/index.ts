@@ -4,38 +4,85 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-    if (req.method === 'GET') {
+  if (req.method === 'GET') {
+    try {
+      const { page = 1, limit = 10, searchText = '' } = req.query;
+      const pageNumber = parseInt(page as string);
+      const limitNumber = parseInt(limit as string);
+      const offset = (pageNumber - 1) * limitNumber;
+      const searchPattern = `%${searchText}%`;
 
-        try {
+      const vouchers = await prisma.$queryRaw`
+        SELECT *
+        FROM vouchers
+        WHERE CAST(voucherno AS varchar) ILIKE ${searchPattern}
+        OR CAST(voucheramount AS varchar) ILIKE ${searchPattern}
+        OR CAST(voucherdate AS varchar) ILIKE ${searchPattern}
+        ORDER BY voucherdate DESC NULLS LAST, id DESC
+        LIMIT ${limitNumber}
+        OFFSET ${offset}
+      `;
 
-            const { page = 1, limit = 10, searchText = '' } = req.query;
-            const pageNumber = parseInt(page as string)
-            const limitNumber = parseInt(limit as string);
-            const offset = (pageNumber - 1) * limitNumber;
-            const searchPattern = `%${searchText}%`;
+      const totalCount = await prisma.vouchers.count();
 
-            const vouchers = await prisma.$queryRaw`
-                SELECT *
-                FROM vouchers
-                WHERE CAST(voucherno AS varchar) ILIKE ${searchPattern}
-                OR CAST(voucheramount AS varchar) ILIKE ${searchPattern}
-                OR CAST(voucherdate AS varchar) ILIKE ${searchPattern}
-                ORDER BY id
-                LIMIT ${limitNumber}
-                OFFSET ${offset}
-                `;
-
-            const totalCount = await prisma.vouchers.count();
-
-            res.status(200).json({ data: vouchers, count: totalCount });
-
-        } catch (error) {
-            console.log(error, 'error')
-            res.status(400).json({ message: "Something went wrong!" });
-        }
-
-    } else {
-        res.setHeader('Allow', ['GET']);
-        res.status(405).end(`Method ${req.method} Not Allowed`);
+      return res.status(200).json({ data: vouchers, count: totalCount });
+    } catch (error) {
+      console.log(error, 'error');
+      return res.status(400).json({ message: 'Something went wrong!' });
     }
+  } else if (req.method === 'POST') {
+    try {
+      const { description, vouchertype, voucherdate, transactions = [] } = req.body;
+
+      if (!description || !voucherdate || !Array.isArray(transactions) || transactions.length === 0) {
+        return res.status(400).json({ message: 'Missing description, voucherdate, or transactions' });
+      }
+
+      const parsedDate = new Date(voucherdate);
+      if (Number.isNaN(parsedDate.getTime())) {
+        return res.status(400).json({ message: 'Invalid voucherdate' });
+      }
+
+      const totals = transactions.reduce(
+        (acc: { debit: number; credit: number }, t: any) => ({
+          debit: acc.debit + (Number(t.debit) || 0),
+          credit: acc.credit + (Number(t.credit) || 0),
+        }),
+        { debit: 0, credit: 0 }
+      );
+
+      const nextNumber = (await prisma.vouchers.count()) + 1;
+      const voucherRecord = await prisma.vouchers.create({
+        data: {
+          voucherno: nextNumber,
+          voucherdate: parsedDate,
+          description,
+          voucheramount: Math.max(totals.debit, totals.credit),
+          vouchertype: typeof vouchertype === 'number' ? vouchertype : null,
+          modifydate: new Date(),
+        },
+      });
+
+      // persist transactions
+      await prisma.voucher_trans.createMany({
+        data: transactions.map((t: any) => ({
+          voucherno: voucherRecord.voucherno ?? voucherRecord.id,
+          accountcode: t.accountCode || '',
+          chqno: t.chqno || '',
+          debitamount: Number(t.debit) || 0,
+          creditamount: Number(t.credit) || 0,
+        })),
+      });
+
+      return res.status(201).json({ message: 'Voucher created', voucherno: voucherRecord.voucherno });
+    } catch (error) {
+      console.error('Error creating voucher:', error);
+      return res.status(500).json({ message: 'Failed to create voucher' });
+    } finally {
+      await prisma.$disconnect();
+    }
+  } else {
+    res.setHeader('Allow', ['GET', 'POST']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
 }
