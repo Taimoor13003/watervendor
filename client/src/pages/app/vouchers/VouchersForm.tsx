@@ -23,7 +23,7 @@ import {
   Box,
   FormHelperText
 } from '@mui/material'
-import { useForm, Controller, useWatch } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import toast from 'react-hot-toast'
@@ -57,6 +57,8 @@ const RequiredLabel = ({ label }: { label: string }) => (
   </Box>
 )
 
+type AccountOption = { accountcode: string; accountname: string }
+
 const VouchersForm: React.FC = () => {
   // 1) form setup, now including getValues
   const {
@@ -79,39 +81,31 @@ const VouchersForm: React.FC = () => {
     }
   })
 
-  const selectedType = useWatch({ control, name: 'vouchertype' })
-
-  const [codes, setCodes] = useState<string[]>([])
+  const [accounts, setAccounts] = useState<AccountOption[]>([])
   const [loadingCodes, setLoadingCodes] = useState(false)
 
   useEffect(() => {
-    if (!selectedType) {
-      setCodes([])
-      return
-    }
-    const url =
-      selectedType === 'Received Voucher'
-        ? '/api/recieved'
-        : '/api/accountnames'
-
     setLoadingCodes(true)
-    fetch(url)
+    fetch('/api/accountnames')
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) {
-          setCodes(data.map((d: any) => d.accountno))
-        } else if (Array.isArray(data.accounts)) {
-          setCodes(data.accounts.map((a: any) => a.accountcode))
+        if (Array.isArray(data?.accounts)) {
+          setAccounts(
+            data.accounts.map((a: any) => ({
+              accountcode: a.accountcode,
+              accountname: a.accountname
+            }))
+          )
         } else {
-          setCodes([])
+          setAccounts([])
         }
       })
       .catch(err => {
         console.error('Failed to load account codes:', err)
-        setCodes([])
+        setAccounts([])
       })
       .finally(() => setLoadingCodes(false))
-  }, [selectedType])
+  }, [])
 
   // 4) transaction rows + totals
   const [rows, setRows] = useState<
@@ -245,9 +239,9 @@ const VouchersForm: React.FC = () => {
                           <CircularProgress size={20} />
                         </MenuItem>
                       ) : (
-                        codes.map(c => (
-                          <MenuItem key={c} value={c}>
-                            {c}
+                        accounts.map(({ accountcode, accountname }) => (
+                          <MenuItem key={accountcode} value={accountcode}>
+                            {accountcode} – {accountname}
                           </MenuItem>
                         ))
                       )}
