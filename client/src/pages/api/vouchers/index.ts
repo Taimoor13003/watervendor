@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types';
 import { PrismaClient } from '@prisma/client'; 
+import { vouchertypes } from 'src/constant';
 
 const prisma = new PrismaClient();
 
@@ -25,7 +26,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const totalCount = await prisma.vouchers.count();
 
-      return res.status(200).json({ data: vouchers, count: totalCount });
+      const typeMap = new Map(vouchertypes.map(t => [t.id, t.name]));
+      const decorated = (vouchers as any[]).map(v => ({
+        ...v,
+        vouchertype: typeMap.get(v.vouchertype as number) ?? v.vouchertype,
+      }));
+
+      return res.status(200).json({ data: decorated, count: totalCount });
     } catch (error) {
       console.log(error, 'error');
       return res.status(400).json({ message: 'Something went wrong!' });
@@ -51,6 +58,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         { debit: 0, credit: 0 }
       );
 
+      const typeMap = new Map(
+        vouchertypes.map(t => [t.name.toLowerCase(), t.id])
+      );
+      const typeId = typeof vouchertype === 'number'
+        ? vouchertype
+        : typeMap.get(String(vouchertype).toLowerCase()) ?? null;
+
       const nextNumber = (await prisma.vouchers.count()) + 1;
       const voucherRecord = await prisma.vouchers.create({
         data: {
@@ -58,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           voucherdate: parsedDate,
           description,
           voucheramount: Math.max(totals.debit, totals.credit),
-          vouchertype: typeof vouchertype === 'number' ? vouchertype : null,
+          vouchertype: typeId,
           modifydate: new Date(),
         },
       });
