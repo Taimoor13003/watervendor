@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
@@ -9,12 +9,16 @@ import * as yup from 'yup';
 import toast from 'react-hot-toast';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import MenuItem from '@mui/material/MenuItem';
+import { useRouter } from 'next/router';
 
 type FormValues = {
+  accountid?: number;
+  id?: number;
   accountcode: string;
   accountname: string;
-  accounttype: number;
-  openingbalance: number;
+  accounttype: number | string;
+  openingbalance: number | string;
   remarks: string | null;
 };
 
@@ -22,29 +26,81 @@ type EditAccountFormProps = {
   accountData: FormValues | null;
 };
 
+const accountTypeOptions = [
+  { label: 'Income', value: 1 },
+  { label: 'Expense', value: 2 },
+  { label: 'Liability', value: 4 },
+];
+
 const schema = yup.object().shape({
-  accountcode: yup.string().required('Account code is required'),
+  accountcode: yup
+    .number()
+    .typeError('Account code must be a number')
+    .required('Account code is required'),
   accountname: yup.string().required('Account name is required'),
-  accounttype: yup.number().required('Account type is required'),
-  openingbalance: yup.number().required('Opening balance is required').min(0, 'Balance cannot be negative'),
+  accounttype: yup
+    .number()
+    .typeError('Account type is required')
+    .oneOf([1, 2, 4], 'Select Income, Expense, or Liability'),
+  openingbalance: yup
+    .number()
+    .typeError('Opening balance must be a number')
+    .required('Opening balance is required')
+    .min(0, 'Balance cannot be negative'),
   remarks: yup.string().optional(),
 });
 
 const EditAccountForm = ({ accountData }: EditAccountFormProps) => {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
   const { control, handleSubmit, formState: { errors }} = useForm<FormValues>({
-    
-    //@ts-ignore
-    defaultValues: accountData,
+    defaultValues: accountData || undefined,
     mode: 'onChange',
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = (data: FormValues) => {
-    toast.success('Form Submitted');
-    console.log(data);
+  const toNumberOrNull = (val: any) => {
+    if (val === '' || val === null || val === undefined) return null;
+    const num = Number(val);
+    return Number.isNaN(num) ? null : num;
   };
 
-  console.log(accountData, "data");
+  const onSubmit = async (data: FormValues) => {
+    const accountId = data.accountid || data.id;
+    if (!accountId) {
+      toast.error('Missing account id');
+      return;
+    }
+
+    const payload = {
+      id: accountId,
+      accountcode: toNumberOrNull(data.accountcode),
+      accounttype: toNumberOrNull(data.accounttype),
+      accountname: data.accountname,
+      openingbalance: toNumberOrNull(data.openingbalance),
+      remarks: data.remarks,
+    };
+
+    setLoading(true);
+    try {
+      const res = await fetch('/api/accounts-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || 'Failed to update account');
+      }
+      toast.success('Account updated');
+      router.push('/app/accounts');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to update account');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Card>
@@ -60,6 +116,7 @@ const EditAccountForm = ({ accountData }: EditAccountFormProps) => {
                   <CustomTextField
                     fullWidth
                     label='Account Code'
+                    type='number'
                     placeholder='Enter account code'
                     error={Boolean(errors.accountcode)}
                     helperText={errors.accountcode?.message}
@@ -110,14 +167,23 @@ const EditAccountForm = ({ accountData }: EditAccountFormProps) => {
                 control={control}
                 render={({ field }) => (
                   <CustomTextField
+                    select
                     fullWidth
                     label='Account Type'
-                    type='number'
-                    placeholder='Enter opening balance'
+                    placeholder='Select account type'
                     error={Boolean(errors.accounttype)}
-                    helperText={errors.accounttype?.message}
+                    helperText={errors.accounttype?.message || 'Income (1), Expense (2), Liability (4)'}
                     {...field}
-                  />
+                  >
+                    <MenuItem disabled value=''>
+                      <em>Select type</em>
+                    </MenuItem>
+                    {accountTypeOptions.map(opt => (
+                      <MenuItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </MenuItem>
+                    ))}
+                  </CustomTextField>
                 )}
               />
             </Grid>
@@ -139,8 +205,8 @@ const EditAccountForm = ({ accountData }: EditAccountFormProps) => {
             </Grid>
 
             <Grid item xs={12}>
-              <Button type='submit' variant='contained'>
-                Submit
+              <Button type='submit' variant='contained' disabled={loading}>
+                {loading ? 'Saving...' : 'Save'}
               </Button>
             </Grid>
           </Grid>

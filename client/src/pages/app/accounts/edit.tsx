@@ -3,6 +3,7 @@ import prisma from 'src/lib/prisma'; // Ensure your Prisma client is correctly c
 import EditAccountForm from './EditAccountForm';
 
 type Account = {
+  id?: number;
   accountid: number;
   accountname: string;
   accountnumber: string;
@@ -22,10 +23,23 @@ const AccountPage = ({ accountData }: AccountPageProps) => {
 };
 
 //@ts-ignore
-
-export const getServerSideProps: GetServerSideProps<AccountPageProps> = async () => {
+export const getServerSideProps: GetServerSideProps<AccountPageProps> = async (context) => {
   try {
-    const accountData = await prisma.accounts_head.findFirst(); // Adjust query as needed
+    const accountid = context.query.accountid;
+    const idNumber = accountid ? Number(accountid) : null;
+
+    if (!idNumber || Number.isNaN(idNumber)) {
+      return { redirect: { destination: '/app/accounts', permanent: false } };
+    }
+
+    const accountData = await prisma.accounts_head.findFirst({
+      where: {
+        OR: [
+          { accountid: idNumber },
+          { id: idNumber }
+        ]
+      }
+    });
 
     return {
       props: {

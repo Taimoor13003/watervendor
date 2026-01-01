@@ -13,16 +13,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const offset = (pageNumber - 1) * limitNumber;
       const searchPattern = `%${searchText}%`;
 
-      const vouchers = await prisma.$queryRaw`
-        SELECT *
-        FROM vouchers
-        WHERE CAST(voucherno AS varchar) ILIKE ${searchPattern}
-        OR CAST(voucheramount AS varchar) ILIKE ${searchPattern}
-        OR CAST(voucherdate AS varchar) ILIKE ${searchPattern}
-        ORDER BY voucherdate DESC NULLS LAST, id DESC
-        LIMIT ${limitNumber}
-        OFFSET ${offset}
-      `;
+      // Build CASE expression for voucher type name lookup
+      const typeCase = vouchertypes
+        .map(t => `WHEN ${t.id} THEN '${t.name.replace(/'/g, "''")}'`)
+        .join(' ');
+      const typeCaseExpr = `CASE v.vouchertype ${typeCase} ELSE '' END`;
+
+      const vouchers = await prisma.$queryRawUnsafe<any[]>(
+        `
+        SELECT v.*, ${typeCaseExpr} AS vouchertype_name
+        FROM vouchers v
+        WHERE (
+          CAST(v.voucherno AS varchar) ILIKE $1
+          OR CAST(v.voucheramount AS varchar) ILIKE $1
+          OR CAST(v.voucherdate AS varchar) ILIKE $1
+          OR ${typeCaseExpr} ILIKE $1
+          OR COALESCE(v.description, '') ILIKE $1
+        )
+        ORDER BY v.voucherdate DESC NULLS LAST, v.id DESC
+        LIMIT $2
+        OFFSET $3
+      `,
+        searchPattern,
+        limitNumber,
+        offset
+      );
 
       const totalCount = await prisma.vouchers.count();
 

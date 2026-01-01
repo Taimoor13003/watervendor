@@ -21,7 +21,11 @@ const AccountPage = ({ accounts }: AccountPageProps) => {
 
 export const getServerSideProps: GetServerSideProps<AccountPageProps> = async () => {
   try {
-    const accounts = await prisma.accounts_head.findMany();
+    const accounts = await prisma.accounts_head.findMany({
+      where: {
+        OR: [{ isdeleted: null }, { isdeleted: false }],
+      },
+    });
 
     return {
       props: {

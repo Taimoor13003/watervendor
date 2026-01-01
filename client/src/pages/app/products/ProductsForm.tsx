@@ -1,247 +1,331 @@
-// ** React Imports
-// import { useState } from 'react'
+import React, { useState } from 'react';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import Grid from '@mui/material/Grid';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import Switch from '@mui/material/Switch';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import Box from '@mui/material/Box';
+import Icon from 'src/@core/components/icon';
+import CustomTextField from 'src/@core/components/mui/text-field';
+import * as yup from 'yup';
+import toast from 'react-hot-toast';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import { useRouter } from 'next/router';
 
-// ** MUI Imports
-import Card from '@mui/material/Card'
-import Grid from '@mui/material/Grid'
-import Button from '@mui/material/Button'
-import CardHeader from '@mui/material/CardHeader'
-import CardContent from '@mui/material/CardContent'
+type FormValues = {
+  productcode: string;
+  productname: string;
+  unitsinstock: number | string;
+  totalunits: number | string;
+  rateperunitcash: number | string;
+  rateperunitcoupon: number | string;
+  remarks: string;
+  isactive: boolean;
+};
 
-// ** Custom Component Import
-import CustomTextField from 'src/@core/components/mui/text-field'
+const schema = yup.object({
+  productcode: yup.string().required('Product code is required'),
+  productname: yup.string().required('Product name is required'),
+  unitsinstock: yup
+    .number()
+    .typeError('Must be a number')
+    .min(0, 'Cannot be negative')
+    .nullable()
+    .transform(v => (v === '' || v === null ? null : v)),
+  totalunits: yup
+    .number()
+    .typeError('Must be a number')
+    .min(0, 'Cannot be negative')
+    .nullable()
+    .transform(v => (v === '' || v === null ? null : v)),
+  rateperunitcash: yup
+    .number()
+    .typeError('Must be a number')
+    .min(0, 'Cannot be negative')
+    .required('Cash rate is required'),
+  rateperunitcoupon: yup
+    .number()
+    .typeError('Must be a number')
+    .min(0, 'Cannot be negative')
+    .required('Coupon rate is required'),
+  remarks: yup.string().max(500, 'Max 500 characters'),
+  isactive: yup.boolean(),
+});
 
-// ** Third Party Imports
-import * as yup from 'yup'
-import toast from 'react-hot-toast'
-import { useForm, Controller } from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
+const ProductsForm = () => {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
-// ** Icon Imports
-
-
-// interface State {
-//   password: string
-//   showPassword: boolean
-// }
-
-const defaultValues = {
-  email: '',
-  lastName: '',
-  password: '',
-  firstName: ''
-}
-
-const showErrors = (field: string, valueLen: number, min: number) => {
-  if (valueLen === 0) {
-    return `${field} field is required`
-  } else if (valueLen > 0 && valueLen < min) {
-    return `${field} must be at least ${min} characters`
-  } else {
-    return ''
-  }
-}
-
-const schema = yup.object().shape({
-  email: yup.string().email().required(),
-  lastName: yup
-    .string()
-    .min(3, obj => showErrors('lastName', obj.value.length, obj.min))
-    .required(),
-  password: yup
-    .string()
-    .min(8, obj => showErrors('password', obj.value.length, obj.min))
-    .required(),
-  firstName: yup
-    .string()
-    .min(3, obj => showErrors('firstName', obj.value.length, obj.min))
-    .required()
-})
-
-const FormValidationSchema = () => {
-  // ** States
-  // const [state, setState] = useState<State>({
-  //   password: '',
-  //   showPassword: false
-  // })
-
-  // ** Hook
-  const {
-    control,
-    handleSubmit,
-    formState: { errors }
-  } = useForm({
-    defaultValues,
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<FormValues>({
     mode: 'onChange',
-    resolver: yupResolver(schema)
-  })
+    resolver: yupResolver(schema),
+    defaultValues: {
+      productcode: '',
+      productname: '',
+      unitsinstock: '',
+      totalunits: '',
+      rateperunitcash: '',
+      rateperunitcoupon: '',
+      remarks: '',
+      isactive: true,
+    },
+  });
 
-  // const handleClickShowPassword = () => {
-  //   setState({ ...state, showPassword: !state.showPassword })
-  // }
+  const toNumberOrNull = (value: any) => {
+    if (value === '' || value === null || value === undefined) return null;
+    const num = Number(value);
+    return Number.isNaN(num) ? null : num;
+  };
 
-  const onSubmit = () => toast.success('Form Submitted')
+  const onSubmit = async (vals: FormValues) => {
+    setLoading(true);
+    const payload = {
+      productcode: vals.productcode.trim(),
+      productname: vals.productname.trim(),
+      unitsinstock: toNumberOrNull(vals.unitsinstock),
+      totalunits: toNumberOrNull(vals.totalunits),
+      rateperunitcash: toNumberOrNull(vals.rateperunitcash),
+      rateperunitcoupon: toNumberOrNull(vals.rateperunitcoupon),
+      remarks: vals.remarks,
+      isactive: !!vals.isactive,
+    };
+
+    try {
+      const res = await fetch('/api/products-create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || 'Failed to create product');
+      }
+
+      toast.success('Product created');
+      reset();
+      router.push('/app/products');
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to create product');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Card>
-      <CardHeader title='Products Form' />
+      <Box
+        sx={{
+          px: 5,
+          py: 4,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 2,
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          background: theme =>
+            theme.palette.mode === 'light'
+              ? 'linear-gradient(90deg, rgba(240,248,255,0.65), rgba(225,245,254,0.9))'
+              : 'rgba(255,255,255,0.03)'
+        }}
+      >
+        <Box display='flex' alignItems='center' gap={1}>
+          <Icon icon='mdi:cube-outline' />
+          <Box>
+            <Typography variant='h5' sx={{ fontWeight: 700 }}>
+              Create Product
+            </Typography>
+            <Typography variant='body2' color='text.secondary'>
+              Add a new product with pricing and stock details.
+            </Typography>
+          </Box>
+        </Box>
+        <Button variant='outlined' onClick={() => router.push('/app/products')}>
+          Back to products
+        </Button>
+      </Box>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Grid container spacing={5}>
+        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+          <Grid container spacing={4}>
             <Grid item xs={12}>
+              <Typography variant='h6'>Basics</Typography>
+              <Divider sx={{ mt: 1, mb: 3 }} />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
               <Controller
-                name='firstName'
+                name='productcode'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
+                    {...field}
                     fullWidth
-                    value={value}
                     label='Product Code'
-                    onChange={onChange}
-                    placeholder='Leonard'
-                    error={Boolean(errors.firstName)}
-                    aria-describedby='validation-schema-first-name'
-                    {...(errors.firstName && { helperText: errors.firstName.message })}
+                    placeholder='e.g. P-001'
+                    error={Boolean(errors.productcode)}
+                    helperText={errors.productcode?.message}
                   />
-
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid item xs={12} sm={6}>
               <Controller
-                name='lastName'
+                name='productname'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
+                    {...field}
                     fullWidth
-                    value={value}
                     label='Product Name'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    placeholder='e.g. 19L Water Bottle'
+                    error={Boolean(errors.productname)}
+                    helperText={errors.productname?.message}
                   />
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid item xs={12} sm={6}>
               <Controller
-                name='lastName'
+                name='unitsinstock'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
+                    {...field}
                     fullWidth
-                    value={value}
                     label='Units in Stock'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    type='number'
+                    inputProps={{ min: 0, step: 1 }}
+                    error={Boolean(errors.unitsinstock)}
+                    helperText={errors.unitsinstock?.message}
                   />
                 )}
               />
             </Grid>
-            <Grid item xs={12}>
+
+            <Grid item xs={12} sm={6}>
               <Controller
-                name='lastName'
+                name='totalunits'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
+                    {...field}
                     fullWidth
-                    value={value}
                     label='Total Units'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    type='number'
+                    inputProps={{ min: 0, step: 1 }}
+                    error={Boolean(errors.totalunits)}
+                    helperText={errors.totalunits?.message}
                   />
                 )}
               />
             </Grid>
+
             <Grid item xs={12}>
+              <Typography variant='h6'>Pricing</Typography>
+              <Divider sx={{ mt: 1, mb: 3 }} />
+            </Grid>
+
+            <Grid item xs={12} sm={6}>
               <Controller
-                name='lastName'
+                name='rateperunitcash'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
+                    {...field}
                     fullWidth
-                    value={value}
                     label='Rate per Unit (Cash)'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    type='number'
+                    inputProps={{ min: 0, step: '0.01' }}
+                    error={Boolean(errors.rateperunitcash)}
+                    helperText={errors.rateperunitcash?.message}
                   />
                 )}
               />
             </Grid>
+
+            <Grid item xs={12} sm={6}>
+              <Controller
+                name='rateperunitcoupon'
+                control={control}
+                render={({ field }) => (
+                  <CustomTextField
+                    {...field}
+                    fullWidth
+                    label='Rate per Unit (Coupon)'
+                    type='number'
+                    inputProps={{ min: 0, step: '0.01' }}
+                    error={Boolean(errors.rateperunitcoupon)}
+                    helperText={errors.rateperunitcoupon?.message}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12}>
+              <Typography variant='h6'>Notes</Typography>
+              <Divider sx={{ mt: 1, mb: 3 }} />
+            </Grid>
+
             <Grid item xs={12}>
               <Controller
-                name='lastName'
+                name='remarks'
                 control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
+                render={({ field }) => (
                   <CustomTextField
+                    {...field}
                     fullWidth
-                    value={value}
-                    label='Rate Per Unit (Coupon)'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+                    label='Remarks / Notes'
+                    placeholder='Optional notes about this product'
+                    multiline
+                    minRows={3}
+                    error={Boolean(errors.remarks)}
+                    helperText={errors.remarks?.message}
                   />
                 )}
               />
             </Grid>
 
-         
-
             <Grid item xs={12}>
-              <Controller
-                name='lastName'
-                control={control}
-                rules={{ required: true }}
-                render={({ field: { value, onChange } }) => (
-                  <CustomTextField
-                    fullWidth
-                    value={value}
-                    label='Remarks / Note'
-                    onChange={onChange}
-                    placeholder='Carter'
-                    error={Boolean(errors.lastName)}
-                    aria-describedby='validation-schema-last-name'
-                    {...(errors.lastName && { helperText: errors.lastName.message })}
+              <FormControlLabel
+                control={
+                  <Controller
+                    name='isactive'
+                    control={control}
+                    render={({ field }) => (
+                      <Switch
+                        checked={!!field.value}
+                        onChange={(_, v) => field.onChange(v)}
+                      />
+                    )}
                   />
-                )}
+                }
+                label='Active'
               />
             </Grid>
-           
-           
-           
-           
-            
-            
 
             <Grid item xs={12}>
-              <Button type='submit' variant='contained'>
-                Submit
-              </Button>
+              <Box display='flex' gap={2}>
+                <Button type='submit' variant='contained' disabled={loading}>
+                  {loading ? 'Saving...' : 'Save Product'}
+                </Button>
+                <Button variant='outlined' onClick={() => router.push('/app/products')}>
+                  Cancel
+                </Button>
+              </Box>
             </Grid>
           </Grid>
         </form>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default FormValidationSchema
+export default ProductsForm;
