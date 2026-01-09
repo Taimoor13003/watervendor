@@ -1,13 +1,13 @@
 import React from 'react'
-import ProductsForm from '../ProductsForm'
+import { GetServerSideProps } from 'next/types';
 
-function index() {
-    return (
-        <div>
-            <ProductsForm />
+// Creation is disabled; redirect to products list
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    redirect: { destination: '/app/products', permanent: false },
+  };
+};
 
-        </div>
-    )
-}
+const DisabledCreateProductPage = () => null;
 
-export default index
+export default DisabledCreateProductPage;

@@ -4,32 +4,38 @@ import EditProductsForm from './EditProductsForm';
 
 const prisma = new PrismaClient();
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getServerSideProps: GetServerSideProps = async (context) => {
   try {
-    const products = await prisma.products.findMany();
+    const idParam = context.query.id ?? context.query.productid;
+    const idNumber = idParam ? Number(idParam) : null;
 
-    const serializedProducts = products.map(product => ({
-      ...product,
-    }));
+    if (!idNumber || Number.isNaN(idNumber)) {
+      return { redirect: { destination: '/app/products', permanent: false } };
+    }
+
+    const product = await prisma.products.findFirst({ where: { id: idNumber } });
+
+    if (!product) {
+      return { redirect: { destination: '/app/products', permanent: false } };
+    }
 
     return {
       props: {
-        productData: serializedProducts[0] || {}, 
+        productData: product,
       },
     };
   } catch (error) {
     console.error(error);
     
     return {
-      props: {
-        productData: {},
-      },
+      redirect: { destination: '/app/products', permanent: false },
     };
   }
 };
 
 type ProductProps = {
   productData: {
+    id: number;
     productcode: string;
     productname: string;
     unitsinstock: number;
@@ -37,6 +43,7 @@ type ProductProps = {
     rateperunitcash: number;
     rateperunitcoupon: number;
     remarks: string;
+    isactive?: boolean | null;
   };
 };
 

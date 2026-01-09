@@ -130,20 +130,20 @@ const AccountTable = ({ data }: { data: any[] }) => {
           <Button
             variant='contained'
             onClick={() => {
-              const targetId = params.row.accountid ?? params.row.id;
-              router.push(`/app/accounts/edit?accountid=${targetId}`);
+              const targetId = params.row.id;
+              router.push(`/app/accounts/edit?id=${targetId}`);
             }}
-            disabled={!params.row.accountid && !params.row.id}
+            disabled={!params.row.id}
           >
             Edit
           </Button>
           <Button
             variant='contained'
             color='error'
-            disabled={deletingId === (params.row.id ?? params.row.accountid)}
-            onClick={() => askDelete(params.row.id ?? params.row.accountid)}
+            disabled={deletingId === params.row.id}
+            onClick={() => askDelete(params.row.id)}
           >
-            {deletingId === (params.row.id ?? params.row.accountid) ? 'Deleting...' : 'Delete'}
+            {deletingId === params.row.id ? 'Deleting...' : 'Delete'}
           </Button>
         </Box>
       ),

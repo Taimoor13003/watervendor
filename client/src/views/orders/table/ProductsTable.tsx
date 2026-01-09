@@ -2,13 +2,11 @@ import React, { useMemo, useState, ChangeEvent } from 'react';
 import Card from '@mui/material/Card';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Fab from '@mui/material/Fab';
 import Typography from '@mui/material/Typography';
 import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { useRouter } from 'next/router';
-import DialougeComponent from './DialougeComponent';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import Icon from 'src/@core/components/icon';
@@ -17,7 +15,6 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState<string>('');
   const [filteredData, setFilteredData] = useState<any[]>([]);
-  const [open, setOpen] = useState<boolean>(false);
   const router = useRouter();
 
   const filterFields = ['productcode', 'productname', 'unitsinstock'];
@@ -54,10 +51,6 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
     } else {
       setFilteredData([]);
     }
-  };
-
-  const onDelete = () => {
-    alert('Delete Function');
   };
 
   const handleResetFilters = () => {
@@ -136,11 +129,12 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
       headerName: 'Actions',
       renderCell: (params: GridRenderCellParams) => (
         <Box display='flex' gap={3}>
-          <Button variant='contained' onClick={() => router.push(`/app/products/edit?productid=${params.row.id}`)}>
-            Edit
-          </Button>
-          <Button variant='contained' onClick={() => setOpen(true)}>
-            Delete
+          <Button
+            variant='contained'
+            onClick={() => router.push(`/app/products/edit?id=${params.row.id}`)}
+            disabled={!params.row.id}
+          >
+            View
           </Button>
         </Box>
       ),
@@ -190,13 +184,6 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
             >
               Reset filters
             </Button>
-            <Button
-              variant='contained'
-              startIcon={<Icon icon='mdi:plus' />}
-              onClick={() => router.push('/app/products/create')}
-            >
-              Create product
-            </Button>
           </Box>
         </Box>
 
@@ -227,7 +214,6 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
         />
       </DatePickerWrapper>
 
-      <DialougeComponent open={open} setOpen={setOpen} onDelete={onDelete} />
     </Card>
   );
 };

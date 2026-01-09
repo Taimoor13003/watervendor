@@ -25,21 +25,14 @@ const AccountPage = ({ accountData }: AccountPageProps) => {
 //@ts-ignore
 export const getServerSideProps: GetServerSideProps<AccountPageProps> = async (context) => {
   try {
-    const accountid = context.query.accountid;
-    const idNumber = accountid ? Number(accountid) : null;
+    const idParam = context.query.id ?? context.query.accountid;
+    const idNumber = idParam ? Number(idParam) : null;
 
     if (!idNumber || Number.isNaN(idNumber)) {
       return { redirect: { destination: '/app/accounts', permanent: false } };
     }
 
-    const accountData = await prisma.accounts_head.findFirst({
-      where: {
-        OR: [
-          { accountid: idNumber },
-          { id: idNumber }
-        ]
-      }
-    });
+    const accountData = await prisma.accounts_head.findFirst({ where: { id: idNumber } });
 
     return {
       props: {

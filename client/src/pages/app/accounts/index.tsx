@@ -25,6 +25,9 @@ export const getServerSideProps: GetServerSideProps<AccountPageProps> = async ()
       where: {
         OR: [{ isdeleted: null }, { isdeleted: false }],
       },
+      orderBy: {
+        accountname: 'asc',
+      },
     });
 
     return {

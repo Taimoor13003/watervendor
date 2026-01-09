@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Card from '@mui/material/Card';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
@@ -54,11 +54,33 @@ const EditAccountForm = ({ accountData }: EditAccountFormProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const { control, handleSubmit, formState: { errors }} = useForm<FormValues>({
-    defaultValues: accountData || undefined,
+  const { control, handleSubmit, formState: { errors }, reset } = useForm<FormValues>({
+    defaultValues: {
+      accountid: accountData?.accountid ?? accountData?.id ?? undefined,
+      id: accountData?.id ?? undefined,
+      accountcode: accountData?.accountcode ?? '',
+      accountname: accountData?.accountname ?? '',
+      accounttype: accountData?.accounttype ?? '',
+      openingbalance: accountData?.openingbalance ?? '',
+      remarks: accountData?.remarks ?? '',
+    },
     mode: 'onChange',
     resolver: yupResolver(schema),
   });
+
+  useEffect(() => {
+    if (accountData) {
+      reset({
+        accountid: accountData.accountid ?? accountData.id ?? undefined,
+        id: accountData.id ?? undefined,
+        accountcode: accountData.accountcode ?? '',
+        accountname: accountData.accountname ?? '',
+        accounttype: accountData.accounttype ?? '',
+        openingbalance: accountData.openingbalance ?? '',
+        remarks: accountData.remarks ?? '',
+      });
+    }
+  }, [accountData, reset]);
 
   const toNumberOrNull = (val: any) => {
     if (val === '' || val === null || val === undefined) return null;
@@ -67,19 +89,19 @@ const EditAccountForm = ({ accountData }: EditAccountFormProps) => {
   };
 
   const onSubmit = async (data: FormValues) => {
-    const accountId = data.accountid || data.id;
-    if (!accountId) {
+    const id = data.id;
+    if (!id) {
       toast.error('Missing account id');
       return;
     }
 
     const payload = {
-      id: accountId,
+      id,
       accountcode: toNumberOrNull(data.accountcode),
       accounttype: toNumberOrNull(data.accounttype),
-      accountname: data.accountname,
+      accountname: data.accountname.trim(),
       openingbalance: toNumberOrNull(data.openingbalance),
-      remarks: data.remarks,
+      remarks: data.remarks?.toString().trim() ?? '',
     };
 
     setLoading(true);
