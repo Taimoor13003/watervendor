@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useMemo } from 'react';
 import Card from '@mui/material/Card';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -30,7 +30,8 @@ const AccountTable = ({ data }: { data: any[] }) => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingId, setPendingId] = useState<number | null>(null);
 
-  const totalAccounts = data.length;
+  const visibleData = useMemo(() => data.filter(row => row?.isdeleted !== true), [data]);
+  const totalAccounts = visibleData.length;
 
   const escapeRegExp = (value: string) => {
     return value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
@@ -42,7 +43,7 @@ const AccountTable = ({ data }: { data: any[] }) => {
     const value = valueRaw.replace(/\s+/g, ' ').trim();
     const searchRegex = new RegExp(escapeRegExp(value), 'i');
 
-    const filteredRows = data.filter(row => {
+    const filteredRows = visibleData.filter(row => {
       // full combined string for better matching
       const combined = `${row.accountname || ''} ${row.accountcode || ''} ${row.accountnumber || ''} ${row.balance ?? ''}`;
       if (combined && searchRegex.test(combined)) return true;
@@ -84,7 +85,7 @@ const AccountTable = ({ data }: { data: any[] }) => {
         throw new Error(err?.message || 'Failed to delete account');
       }
       toast.success('Account deleted');
-      const source = filteredData.length ? filteredData : data;
+      const source = filteredData.length ? filteredData : visibleData;
       const next = source.filter((row: any) => row.id !== id && row.accountid !== id);
       setFilteredData(next);
     } catch (err: any) {
@@ -209,7 +210,7 @@ const AccountTable = ({ data }: { data: any[] }) => {
           paginationModel={paginationModel}
           slots={{ toolbar: QuickSearchToolbar }}
           onPaginationModelChange={setPaginationModel}
-          rows={filteredData.length ? filteredData : data}
+          rows={filteredData.length ? filteredData : visibleData}
           sx={{
             '& .MuiSvgIcon-root': {
               fontSize: '1.125rem',
