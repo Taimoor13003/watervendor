@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Card,
   Grid,
@@ -67,6 +67,8 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
   const {
     control,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -84,6 +86,27 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
     },
     mode: 'onChange',
   });
+
+  const orderQty = watch('orderqty');
+  const unitPrice = watch('unitprice');
+
+  useEffect(() => {
+    const parsedOrderQty = Number(orderQty);
+    const parsedUnitPrice = Number(unitPrice);
+
+    if (
+      !Number.isNaN(parsedOrderQty) &&
+      !Number.isNaN(parsedUnitPrice) &&
+      orderQty !== '' &&
+      unitPrice !== ''
+    ) {
+      setValue('orderamount', (parsedOrderQty * parsedUnitPrice).toFixed(2));
+
+      return;
+    }
+
+    setValue('orderamount', '');
+  }, [orderQty, unitPrice, setValue]);
 
   const toNumberOrNull = (value: any) => {
     if (value === '' || value === null || value === undefined) return null;
@@ -104,11 +127,8 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
       invoicedate: formData.invoicedate || null,
       telephone: formData.telephone || '',
       orderqty: toNumberOrNull(formData.orderqty),
-      orderamount: toNumberOrNull(formData.orderamount),
       deliverydate: formData.deliverydate || null,
       productid: toNumberOrNull(formData.productid),
-      unitprice: toNumberOrNull(formData.unitprice),
-      quantity: toNumberOrNull(formData.orderqty),
       returnqty: toNumberOrNull(formData.returnqty),
       bottlereturndate: formData.bottlereturndate || null,
     };
@@ -189,6 +209,7 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
                       label="Product"
                       value={field.value || ''}
                       onChange={field.onChange}
+                      disabled
                     >
                       <MenuItem value={1}>Bottle</MenuItem>
                     </Select>
@@ -259,7 +280,8 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
                     >
                       <MenuItem value="New">New</MenuItem>
                       <MenuItem value="Completed">Completed</MenuItem>
-                      <MenuItem value="Canceled">Canceled</MenuItem>
+                      <MenuItem value="Cancel">Cancel</MenuItem>
+                      <MenuItem value="Canceled">Canceled (legacy)</MenuItem>
                     </Select>
                     <FormHelperText>{(errors.orderstatus as any)?.message}</FormHelperText>
                   </FormControl>
@@ -301,6 +323,7 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
                     inputProps={{ min: 0, step: '0.01' }}
                     error={Boolean(errors.orderamount)}
                     helperText={(errors.orderamount as any)?.message}
+                    disabled
                     {...field}
                   />
                 )}
@@ -478,8 +501,8 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
             </Grid>
 
             <Grid item xs={12}>
-              <Button type="submit" variant="contained">
-                Save Changes
+              <Button type="submit" variant="contained" disabled={loading}>
+                {loading ? 'Saving...' : 'Save Changes'}
               </Button>
             </Grid>
           </Grid>
