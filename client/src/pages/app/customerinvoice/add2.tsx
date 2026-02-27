@@ -1,5 +1,5 @@
 // src/pages/app/customerinvoice/add2.tsx
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Grid from '@mui/material/Grid'
 import Button from '@mui/material/Button'
 import axios from 'axios'
@@ -15,35 +15,49 @@ const InvoiceAdd: React.FC = () => {
   const [loading, setLoading] = useState(false)
 
   // parse out all IDs from the `?customerid=` param (it may be "905,1723" etc)
-  const bulkIds = typeof customerid === 'string'
-    ? customerid.split(',').filter(Boolean)
-    : []
+  const bulkIds = useMemo(
+    () => (typeof customerid === 'string' ? customerid.split(',').filter(Boolean) : []),
+    [customerid]
+  )
+  const bulkIdsParam = useMemo(() => bulkIds.join(','), [bulkIds])
 
   // fetch grouped invoice data for each of those IDs
   const [invoiceData, setInvoiceData] = useState<Record<string, any[]>>({})
 
-  const fetchData = useCallback(async () => {
-    if (!bulkIds.length || !startDate || !endDate) return
-    if (loading) return
-    setLoading(true)
-    try {
-      const resp = await axios.get('/api/invoice', {
-        params: {
-          customerids: bulkIds.join(','),
-          startDate,
-          endDate
-        }
-      })
-      setInvoiceData(resp.data)
-      setLoading(false)
-    } catch (err) {
-      toast.error('Error fetching grouped invoice data')
-    }
-  }, [bulkIds.join(','), startDate, endDate])
-
   useEffect(() => {
+    if (!bulkIdsParam || !startDate || !endDate) return
+
+    let active = true
+    const fetchData = async () => {
+      setLoading(true)
+      try {
+        const resp = await axios.get('/api/invoice', {
+          params: {
+            customerids: bulkIdsParam,
+            startDate,
+            endDate
+          }
+        })
+        if (active) {
+          setInvoiceData(resp.data)
+        }
+      } catch (err) {
+        if (active) {
+          toast.error('Error fetching grouped invoice data')
+        }
+      } finally {
+        if (active) {
+          setLoading(false)
+        }
+      }
+    }
+
     fetchData()
-  }, [fetchData])
+
+    return () => {
+      active = false
+    }
+  }, [bulkIdsParam, startDate, endDate])
 
   const handleBulkPrint = () => {
     if (!bulkIds.length) return

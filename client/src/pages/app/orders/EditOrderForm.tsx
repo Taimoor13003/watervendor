@@ -100,12 +100,12 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
       orderQty !== '' &&
       unitPrice !== ''
     ) {
-      setValue('orderamount', (parsedOrderQty * parsedUnitPrice).toFixed(2));
+      setValue('orderamount', Number((parsedOrderQty * parsedUnitPrice).toFixed(2)));
 
       return;
     }
 
-    setValue('orderamount', '');
+    setValue('orderamount', 0);
   }, [orderQty, unitPrice, setValue]);
 
   const toNumberOrNull = (value: any) => {
