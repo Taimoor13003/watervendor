@@ -152,6 +152,7 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
                     placeholder="Order Number"
                     error={Boolean(errors.orderno)}
                     helperText={(errors.orderno as any)?.message}
+                    disabled
                     {...field}
                   />
                 )}

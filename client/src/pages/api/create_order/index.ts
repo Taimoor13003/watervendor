@@ -9,28 +9,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { customerid, orderDate, orderStatus, quantity, unitPrice, totalAmount, ...rest } = req.body;
+    const { customerid, orderDate, orderStatus, quantity, ...rest } = req.body;
+    const parsedCustomerId = parseInt(customerid, 10);
+    const parsedQuantity = parseInt(quantity, 10);
 
     // Basic validation
-    if (!customerid || !orderDate || !quantity || !unitPrice || !totalAmount) {
+    if (!parsedCustomerId || !orderDate || !parsedQuantity || !orderStatus) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
+
+    const customer = await prisma.customer.findFirst({
+      where: { customerid: parsedCustomerId }
+    });
+
+    if (!customer || customer.rate_per_bottle === null || customer.rate_per_bottle === undefined) {
+      return res.status(400).json({ message: 'Customer rate is missing' });
+    }
+
+    const unitPrice = Number(customer.rate_per_bottle);
+    const totalAmount = parsedQuantity * unitPrice;
 
     await prisma.$transaction(async (tx) => {
       const newOrder = await tx.orders.create({
         data: {
-          customerid: parseInt(customerid),
+          customerid: parsedCustomerId,
           orderdate: new Date(orderDate),
           orderstatus: orderStatus,
-          orderqty: parseInt(quantity),
-          orderamount: parseFloat(totalAmount),
+          orderqty: parsedQuantity,
+          orderamount: totalAmount,
           paymentmode: rest.paymentMode,
           deliveryaddress: rest.deliveryAddress,
           deliverydate: rest.deliveryDate ? new Date(rest.deliveryDate) : null,
           notes: rest.remarks,
           deliverynotes: rest.deliveryNotes,
-          invoiceno: rest.invoiceNo ? parseInt(rest.invoiceNo) : null,
-          invoicedate: rest.invoiceDate ? new Date(rest.invoiceDate) : null,
+          invoiceno: null,
+          invoicedate: null,
           telephone: rest.telephone,
           orderno: 'PENDING', // placeholder, updated below
         },
@@ -48,8 +61,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         data: {
           orderid: updatedOrder.id,
           productid: 1, // Assuming 'Bottle' has a productid of 1
-          quantity: parseInt(quantity),
-          unitprice: parseFloat(unitPrice),
+          quantity: parsedQuantity,
+          unitprice: unitPrice,
           returnqty: rest.returnedQty ? parseInt(rest.returnedQty) : null,
           bottlereturndate: rest.bottleReturnedDate ? new Date(rest.bottleReturnedDate) : null,
         },

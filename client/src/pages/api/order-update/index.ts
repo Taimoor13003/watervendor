@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { orderid, productid, unitprice, returnqty, bottlereturndate, ...rest } = req.body
+    const { orderid, productid, unitprice, returnqty, bottlereturndate, orderno, ...rest } = req.body
     const numericOrderId = Number(orderid)
 
     if (Number.isNaN(numericOrderId)) {

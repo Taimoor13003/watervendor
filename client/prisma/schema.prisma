@@ -330,7 +330,7 @@ model orders {
   id                      Int       @id @default(autoincrement())
   orderid                 Int?
   customerid              Int?
-  orderno                 String?   @db.VarChar(50)
+  orderno                 String?   @unique @db.VarChar(50)
   orderdate               DateTime? @db.Timestamp(6)
   paymentmode             String?   @db.VarChar(50)
   notes                   String?   @db.VarChar(10485760)
