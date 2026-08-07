@@ -5,7 +5,6 @@ import Box from '@mui/material/Box'
 import { Settings } from 'src/@core/context/settingsContext'
 
 // ** Components
-import ModeToggler from 'src/@core/layouts/components/shared-components/ModeToggler'
 import UserDropdown from 'src/@core/layouts/components/shared-components/UserDropdown'
 import LanguageDropdown from 'src/@core/layouts/components/shared-components/LanguageDropdown'
 import NotificationDropdown, {
@@ -120,22 +119,14 @@ const shortcuts: ShortcutsType[] = [
 
 const AppBarContent = (props: Props) => {
   // ** Props
-  const { hidden, settings, saveSettings } = props
+  const { hidden, settings } = props
 
   // ** Hook
   const auth = useAuth()
 
   return (
     <Box sx={{ display: 'flex', alignItems: 'center' }}>
-      <LanguageDropdown settings={settings} saveSettings={saveSettings} />
-      <ModeToggler settings={settings} saveSettings={saveSettings} />
-      {auth.user && (
-        <>
-          <ShortcutsDropdown settings={settings} shortcuts={shortcuts} />
-          <NotificationDropdown settings={settings} notifications={notifications} />
-          <UserDropdown settings={settings} />
-        </>
-      )}
+      {auth.user && <UserDropdown settings={settings} />}
     </Box>
   )
 }

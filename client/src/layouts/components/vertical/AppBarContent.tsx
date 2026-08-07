@@ -9,7 +9,6 @@ import Icon from 'src/@core/components/icon'
 import { Settings } from 'src/@core/context/settingsContext'
 
 // ** Components
-import ModeToggler from 'src/@core/layouts/components/shared-components/ModeToggler'
 import UserDropdown from 'src/@core/layouts/components/shared-components/UserDropdown'
 import LanguageDropdown from 'src/@core/layouts/components/shared-components/LanguageDropdown'
 import NotificationDropdown, {
@@ -125,7 +124,7 @@ const shortcuts: ShortcutsType[] = [
 
 const AppBarContent = (props: Props) => {
   // ** Props
-  const { hidden, settings, saveSettings, toggleNavVisibility } = props
+  const { hidden, settings, toggleNavVisibility } = props
 
   // ** Hook
   const auth = useAuth()
@@ -140,8 +139,6 @@ const AppBarContent = (props: Props) => {
         ) : null}
       </Box>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>
-        {/* <LanguageDropdown settings={settings} saveSettings={saveSettings} /> */}
-        <ModeToggler settings={settings} saveSettings={saveSettings} />
         {auth.user && (
           <>
             {/* <ShortcutsDropdown settings={settings} shortcuts={shortcuts} /> */}
