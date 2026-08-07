@@ -12,11 +12,7 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import DialougeComponent from './DialougeComponent';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 import moment from 'moment';
-import { PrismaClient } from '@prisma/client'; // Adjust the import as needed
 import axios from 'axios';
-
-const prisma = new PrismaClient();
-console.log(prisma);
 
 const VoucherTable = () => {
   const [rows, setRows] = useState([]);

@@ -19,7 +19,6 @@ const InputComponent = () => {
       if (!response.ok) throw new Error('Network response was not ok');
 
       const data = await response.json();
-      console.log('Fetched data:', data);
       if (Array.isArray(data) && data.length === 0) {
         toast.error(`No customers found with bottle rate: ${ratePerBottle}`, { duration: 4000 });
       }

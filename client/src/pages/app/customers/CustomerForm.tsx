@@ -161,7 +161,6 @@ const EditCustomerForm = ({
   };
 
   const handleAddArea = async () => {
-    console.log(newArea, "newAArea")
     if (!newArea.trim()) {
       toast.error('Please enter a delivery area');
       return;

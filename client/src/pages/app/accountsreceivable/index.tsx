@@ -19,8 +19,6 @@ const AccountsReceivablePage = () => {
   const handleSubmit = () => {
     if (month && year) {
       setShowTable(true);
-      // You can fetch data using month/year here
-      console.log('Fetching report for:', month, year);
     }
   };
 

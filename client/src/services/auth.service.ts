@@ -7,17 +7,13 @@ class AuthService {
     try {
       const result = await signInWithPopup(firebaseAuth, provider)
 
-      const credential: any = GoogleAuthProvider.credentialFromResult(result);
-      const token = credential.accessToken;
-
       // The signed-in user info.
       const user = result.user;
+      const idToken = await user.getIdToken();
 
       const userData = { id: user.uid, role: "admin", fullName: user.displayName, username: user.displayName, email: user.email }
 
-      console.log("inside", token, user)
-
-      return { userData, idToken: token }
+      return { userData, idToken }
     } catch (error) {
       console.error('Google login error:', error)
       throw error

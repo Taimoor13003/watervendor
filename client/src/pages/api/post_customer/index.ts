@@ -12,7 +12,14 @@ export default async function handler(
   }
 
   try {
-    const body = req.body
+    const body = req.body || {}
+
+    const requiredFields = ['firstname', 'lastname', 'customertype', 'paymentmode', 'requirement'] as const
+    const missingField = requiredFields.find(field => !String(body[field] ?? '').trim())
+
+    if (missingField || body.reqbottles === undefined || body.reqbottles === null || body.reqbottles === '') {
+      return res.status(400).json({ error: 'First name, last name, customer type, payment mode, requirement, and bottles per visit are required' })
+    }
 
     // Normalize numeric fallbacks to avoid NOT NULL violations in legacy schema
     const taxValue =
@@ -34,6 +41,14 @@ export default async function handler(
       body.rate_per_bottle === undefined || body.rate_per_bottle === null || body.rate_per_bottle === ''
         ? 0
         : parseInt(body.rate_per_bottle, 10)
+
+    if ([taxValue, reqBottlesValue, depositValue, ratePerBottleValue].some(value => Number.isNaN(value))) {
+      return res.status(400).json({ error: 'Numeric customer fields must contain valid numbers' })
+    }
+
+    if (reqBottlesValue < 0 || depositValue < 0 || ratePerBottleValue < 0 || taxValue < 0) {
+      return res.status(400).json({ error: 'Numeric customer fields cannot be negative' })
+    }
 
     const newCustomer = await prisma.$transaction(async (tx) => {
       // 1) aggregate both customerid and accountno suffix

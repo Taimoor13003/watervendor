@@ -26,13 +26,6 @@ import MuiFormControlLabel, { FormControlLabelProps } from '@mui/material/FormCo
 import Icon from 'src/@core/components/icon'
 
 // ** Third Party Imports
-import * as yup from 'yup'
-
-// import { useForm, Controller } from 'react-hook-form'
-
-import { useForm} from 'react-hook-form'
-import { yupResolver } from '@hookform/resolvers/yup'
-
 
 // ** Hooks
 import { useAuth } from 'src/hooks/useAuth'
@@ -88,23 +81,9 @@ const FormControlLabel = styled(MuiFormControlLabel)<FormControlLabelProps>(({ t
   }
 }))
 
-const schema = yup.object().shape({
-  email: yup.string().email().required(),
-  password: yup.string().min(5).required()
-})
-
-const defaultValues = {
-  password: 'admin',
-  email: 'admin@vuexy.com'
-}
-
-interface FormData {
-  email: string
-  password: string
-}
-
 const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState<boolean>(true)
+  const [loginError, setLoginError] = useState<string | null>(null)
 
   // const [showPassword, setShowPassword] = useState<boolean>(false)
 
@@ -120,58 +99,11 @@ const LoginPage = () => {
   // ** Vars
   const { skin } = settings
 
-  const {
-
-    // control,
-
-    setError,
-    handleSubmit,
-    
-    // formState: { errors }
-    
-  } = useForm({
-    defaultValues,
-    mode: 'onBlur',
-    resolver: yupResolver(schema)
-  })
-
-  const onSubmit = (data: FormData) => {
-    const { email, password } = data
-
-  // (fauth, provider)
-  // .then((result) => {
-  //   // This gives you a Google Access Token. You can use it to access the Google API.
-  //   const credential: any = GoogleAuthProvider.credentialFromResult(result);
-  //   const token = credential.accessToken;
-  //   // The signed-in user info.
-  //   const user = result.user;
-  //   console.log(user, "userrrrr")
-  //   // IdP data available using getAdditionalUserInfo(result)
-  //   // ...
-  // }).catch((error) => {
-  //   // Handle Errors here.
-  //   const errorCode = error.code;
-  //   const errorMessage = error.message;
-  //   // The email of the user's account used.
-  //   const email = error.customData.email;
-  //   // The AuthCredential type that was used.
-  //   const credential = GoogleAuthProvider.credentialFromError(error);
-  //   // ...
-  // });
-
-    // auth.login({ email, password, rememberMe }, () => {
-    //   setError('email', {
-    //     type: 'manual',
-    //     message: 'Email or Password is invalid'
-    //   })
-    // })
-    auth.loginWithGoogle({ email, password, rememberMe }, () => {
-      setError('email', {
-        type: 'manual',
-        message: 'Email or Password is invalid'
-      })
+  const onSubmit = () => {
+    setLoginError(null)
+    auth.loginWithGoogle({ email: '', password: '', rememberMe }, () => {
+      setLoginError('Google sign-in failed. Please try again.')
     })
-
   }
 
   const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'
@@ -243,71 +175,15 @@ const LoginPage = () => {
               </Typography>
             </Box>
 
-            {/* <Alert icon={false} sx={{ py: 3, mb: 6, ...bgColors.primaryLight, '& .MuiAlert-message': { p: 0 } }}>
-              <Typography variant='body2' sx={{ mb: 2, color: 'primary.main' }}>
-                Admin: <strong>admin@vuexy.com</strong> / Pass: <strong>admin</strong>
-              </Typography>
-              <Typography variant='body2' sx={{ color: 'primary.main' }}>
-                Client: <strong>client@vuexy.com</strong> / Pass: <strong>client</strong>
-              </Typography>
-            </Alert> */}
-
-            <form noValidate autoComplete='off' onSubmit={handleSubmit(onSubmit)}>
-              
-              {/* <Box sx={{ mb: 4 }}>
-                <Controller
-                  name='email'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field: { value, onChange, onBlur } }) => (
-                    <CustomTextField
-                      fullWidth
-                      autoFocus
-                      label='Email'
-                      value={value}
-                      onBlur={onBlur}
-                      onChange={onChange}
-                      placeholder='admin@vuexy.com'
-                      error={Boolean(errors.email)}
-                      {...(errors.email && { helperText: errors.email.message })}
-                    />
-                  )}
-                />
-              </Box>
-              <Box sx={{ mb: 1.5 }}>
-                <Controller
-                  name='password'
-                  control={control}
-                  rules={{ required: true }}
-                  render={({ field: { value, onChange, onBlur } }) => (
-                    <CustomTextField
-                      fullWidth
-                      value={value}
-                      onBlur={onBlur}
-                      label='Password'
-                      onChange={onChange}
-                      id='auth-login-v2-password'
-                      error={Boolean(errors.password)}
-                      {...(errors.password && { helperText: errors.password.message })}
-                      type={showPassword ? 'text' : 'password'}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position='end'>
-                            <IconButton
-                              edge='end'
-                              onMouseDown={e => e.preventDefault()}
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              <Icon fontSize='1.25rem' icon={showPassword ? 'tabler:eye' : 'tabler:eye-off'} />
-                            </IconButton>
-                          </InputAdornment>
-                        )
-                      }}
-                    />
-                  )}
-                />
-              </Box> */}
-              
+            <form
+              noValidate
+              autoComplete='off'
+              onSubmit={event => {
+                event.preventDefault()
+                onSubmit()
+              }}
+            >
+              {loginError ? <Typography sx={{ mb: 3, color: 'error.main' }}>{loginError}</Typography> : null}
               <Box
                 sx={{
                   mb: 1.75,

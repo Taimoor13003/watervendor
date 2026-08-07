@@ -26,8 +26,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const startDate = new Date(yearNumber, monthNumber - 1, 1);
     const endDate = new Date(yearNumber, monthNumber, 0, 23, 59, 59); // end of the month
 
-    console.log(`✅ Fetching accounts receivable for: ${startDate.toISOString()} to ${endDate.toISOString()}`);
-
     const result = await prisma.$queryRaw`
       SELECT 
         c.firstname, 

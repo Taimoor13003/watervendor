@@ -9,7 +9,6 @@ const Index = () => {
       const response = await fetch('/api/productsreports'); 
       const data = await response.json(); 
       setProductData(data.result || []); 
-      console.log(data, 'Fetched Product Dataaaaaaaaaa');
     } catch (error) {
       console.error('Error fetching product data:', error);
     }

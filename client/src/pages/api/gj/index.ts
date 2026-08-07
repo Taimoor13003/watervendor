@@ -14,9 +14,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const start = new Date(startDate as string).toISOString();
     const end = new Date(endDate as string).toISOString();
 
-    console.log(voucherTypeId  ,start , end , "saqib")
-
-     
       const result = await prisma.$queryRaw`
        SELECT 
     v.voucherno, 
@@ -42,7 +39,6 @@ GROUP BY
 
           `;
 
-    console.log('Query Resultttttttt:', result);
     return res.status(200).json({ result });
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -51,6 +47,3 @@ GROUP BY
     await prisma.$disconnect();
   }
 }
-
-
-    

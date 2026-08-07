@@ -73,8 +73,9 @@ const VouchersForm: React.FC = () => {
       voucherNo: '',
       vouchertype: '',
       description: '',
+      // New vouchers should always start with a valid posting date; users can still change it.
       // @ts-ignore
-      voucherdate: '',
+      voucherdate: new Date().toISOString().slice(0, 10),
       accountCode: '',
       creditAmount: 0,
       debitAmount: 0
@@ -133,6 +134,16 @@ const VouchersForm: React.FC = () => {
 
   // 5) final submit
   const onSubmit = async (vals: FormValues) => {
+    if (rows.length === 0) {
+      toast.error('Add at least one transaction line')
+      return
+    }
+
+    if (totals.debit <= 0 || totals.credit <= 0 || Math.abs(totals.debit - totals.credit) > 0.001) {
+      toast.error('Debit and credit totals must be positive and balanced')
+      return
+    }
+
     try {
       const res = await fetch('/api/vouchers', {
         method: 'POST',

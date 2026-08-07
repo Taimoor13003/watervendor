@@ -58,9 +58,6 @@ const AuthProvider = ({ children }: Props) => {
          }
          setUser({...userData});
          setLoading(false)
-         console.log(authUser, "authUser")
-
-        // 
       } else {
         // No user is signed in
         // setUser(null);
@@ -143,22 +140,20 @@ const AuthProvider = ({ children }: Props) => {
 
   }
 
-  const handleLoginWithGoogle = (params: LoginParams, errorCallback?: ErrCallbackType) => {
+  const handleLoginWithGoogle = async (params: LoginParams, errorCallback?: ErrCallbackType) => {
     try {
-      authService.signInWithGoogle().then( ({userData , idToken}) => {
-        const rememberMe = true
-        rememberMe
+      const { userData, idToken } = await authService.signInWithGoogle()
+      const rememberMe = params.rememberMe
+      rememberMe
           ? window.localStorage.setItem(authConfig.storageTokenKeyName, idToken)
           : null
-        const returnUrl = router.query.returnUrl
+      const returnUrl = router.query.returnUrl
 
-        setUser({ ...userData })
-        rememberMe ? window.localStorage.setItem('userData', JSON.stringify(userData)) : null
+      setUser({ ...userData })
+      rememberMe ? window.localStorage.setItem('userData', JSON.stringify(userData)) : null
 
-        const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
-        router.replace(redirectURL as string)
-
-      })
+      const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+      await router.replace(redirectURL as string)
     } catch (err: any) {
       if (errorCallback) errorCallback(err)
     }
@@ -166,18 +161,14 @@ const AuthProvider = ({ children }: Props) => {
   }
 
   const handleLogout = () => {
-    signOut(firebaseAuth).then(()=>{
-      console.log("signout done")
-    }).catch((err)=>{
-      console.log(err)
+    signOut(firebaseAuth).catch(err => {
+      console.error('Failed to sign out:', err)
     })
     setUser(null)
     window.localStorage.removeItem('userData')
     window.localStorage.removeItem(authConfig.storageTokenKeyName)
     router.push('/login')
   }
-console.log(user,
-  loading,)
   const values = {
     user,
     loading,

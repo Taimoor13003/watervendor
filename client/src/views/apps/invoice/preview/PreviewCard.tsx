@@ -26,7 +26,7 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
 
   const datanew = Array.isArray(data) ? data : [];
   const totalBottlesDelivered = datanew.reduce((total: number, current) => total + (current.orderqty || 0), 0);
-  const totalBottlesReturned = datanew.reduce((total: number, current) => total + (current.reqbottles || 0), 0);
+  const totalBottlesReturned = datanew.reduce((total: number, current) => total + (current.returnqty || 0), 0);
 
   if (datanew.length === 0) {
     return null;
@@ -43,7 +43,6 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
     
     return format(date, 'dd/MM/yyyy');
   };
-  console.log(firstItem.accountno,'alllllllllllll')
   const currentDate = format(new Date(), 'EEEE, dd MMMM, yyyy');
 
   const totalAmountDue = datanew.reduce((total: number, item) => {
@@ -124,7 +123,7 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
                 <TableRow key={index}>
                   <TableCell>{formatDate(newData.InvoiceDate)}</TableCell>
                   <TableCell>{newData.orderqty}</TableCell>
-                  <TableCell>{newData.reqbottles}</TableCell>
+                  <TableCell>{newData.returnqty || 0}</TableCell>
                   <TableCell>{newData.rate_per_bottle}</TableCell>
                   <TableCell>{amount}</TableCell>
                 </TableRow>
