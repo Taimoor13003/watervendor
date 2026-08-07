@@ -27,6 +27,14 @@ const defaultProvider: AuthValuesType = {
   loginWithGoogle: () => Promise.resolve(),
 }
 
+const DEFAULT_AUTHENTICATED_ROUTE = '/app/customers'
+
+const getSafeReturnUrl = (returnUrl: string | string[] | undefined) => {
+  if (typeof returnUrl === 'string' && returnUrl.startsWith('/app/')) return returnUrl
+
+  return DEFAULT_AUTHENTICATED_ROUTE
+}
+
 const AuthContext = createContext(defaultProvider)
 
 type Props = {
@@ -129,7 +137,7 @@ const AuthProvider = ({ children }: Props) => {
         setUser({ ...response.data.userData })
         params.rememberMe ? window.localStorage.setItem('userData', JSON.stringify(response.data.userData)) : null
 
-        const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+        const redirectURL = getSafeReturnUrl(returnUrl)
 
         router.replace(redirectURL as string)
       })
@@ -152,7 +160,7 @@ const AuthProvider = ({ children }: Props) => {
       setUser({ ...userData })
       rememberMe ? window.localStorage.setItem('userData', JSON.stringify(userData)) : null
 
-      const redirectURL = returnUrl && returnUrl !== '/' ? returnUrl : '/'
+      const redirectURL = getSafeReturnUrl(returnUrl)
       await router.replace(redirectURL as string)
     } catch (err: any) {
       if (errorCallback) errorCallback(err)
