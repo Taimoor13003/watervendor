@@ -39,8 +39,6 @@ type ProductsPageProps = {
 };
 
 const ProductsPage = ({ products }: ProductsPageProps) => {
-  console.log(products,"data")
-
   return (
     <div>
       <ProductsTable products={products} />

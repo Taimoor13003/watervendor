@@ -25,8 +25,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
 
-    console.log('customers:', customers)
-
     res.status(200).json(customers)
   } catch (error) {
     console.error('Failed to fetch delivery areas:', error)

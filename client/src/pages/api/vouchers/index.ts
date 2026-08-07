@@ -49,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       return res.status(200).json({ data: decorated, count: totalCount });
     } catch (error) {
-      console.log(error, 'error');
+      console.error('Failed to fetch vouchers:', error);
       return res.status(400).json({ message: 'Something went wrong!' });
     }
   } else if (req.method === 'POST') {
@@ -73,6 +73,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         { debit: 0, credit: 0 }
       );
 
+      if (totals.debit <= 0 || totals.credit <= 0 || Math.abs(totals.debit - totals.credit) > 0.001) {
+        return res.status(400).json({ message: 'Voucher debit and credit totals must be positive and balanced' });
+      }
+
       const typeMap = new Map(
         vouchertypes.map(t => [t.name.toLowerCase(), t.id])
       );
@@ -80,28 +84,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ? vouchertype
         : typeMap.get(String(vouchertype).toLowerCase()) ?? null;
 
-      const nextNumber = (await prisma.vouchers.count()) + 1;
-      const voucherRecord = await prisma.vouchers.create({
-        data: {
-          voucherno: nextNumber,
-          voucherdate: parsedDate,
-          description,
-          voucheramount: Math.max(totals.debit, totals.credit),
-          vouchertype: typeId,
-          modifydate: new Date(),
-        },
-      });
+      const voucherRecord = await prisma.$transaction(async tx => {
+        const max = await tx.vouchers.aggregate({ _max: { voucherno: true } })
+        const nextNumber = (max._max.voucherno ?? 0) + 1
+        const created = await tx.vouchers.create({
+          data: {
+            voucherno: nextNumber,
+            voucherdate: parsedDate,
+            description,
+            voucheramount: Math.max(totals.debit, totals.credit),
+            vouchertype: typeId,
+            modifydate: new Date(),
+          },
+        })
 
-      // persist transactions
-      await prisma.voucher_trans.createMany({
-        data: transactions.map((t: any) => ({
-          voucherno: voucherRecord.voucherno ?? voucherRecord.id,
-          accountcode: t.accountCode || '',
-          chqno: t.chqno || '',
-          debitamount: Number(t.debit) || 0,
-          creditamount: Number(t.credit) || 0,
-        })),
-      });
+        await tx.voucher_trans.createMany({
+          data: transactions.map((t: any) => ({
+            voucherno: created.voucherno ?? created.id,
+            accountcode: t.accountCode || '',
+            chqno: t.chqno || '',
+            debitamount: Number(t.debit) || 0,
+            creditamount: Number(t.credit) || 0,
+          })),
+        })
+
+        return created
+      })
 
       return res.status(201).json({ message: 'Voucher created', voucherno: voucherRecord.voucherno });
     } catch (error) {

@@ -7,7 +7,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const result = await prisma.$queryRaw`SELECT * FROM products p`;
 
-    console.log('Query Result:', result);
     return res.status(200).json({ result });
   } catch (error) {
     console.error('Error fetching product data:', error);

@@ -16,8 +16,7 @@ function Index() {
     const fetchCustomers = async () => {
       try {
         const response = await axios.get('/api/customerOutstandingNames');
-        setCustomers(response.data); 
-        console.log(response.data, 'response of customer name API');
+        setCustomers(response.data.customers || []);
       } catch (error) {
         console.error('Error fetching customer names:', error);
       }
@@ -32,12 +31,11 @@ function Index() {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.get("/api/customeroutstanding", {
+      const response = await axios.get("/api/customerOutstandingNames/customeroutstanding", {
         params: { customerId: selectedCustomer }
       });
 
       setCustomerOutstandingData(response.data);
-      console.log('Customer Outstanding Data:', response.data);
     } catch (error) {
       console.error('Error fetching customer outstanding data:', error);
     }

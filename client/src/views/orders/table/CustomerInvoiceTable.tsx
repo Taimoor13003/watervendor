@@ -13,10 +13,6 @@ import { Button } from '@mui/material';
 import format from 'date-fns/format';
 import DatePicker from 'react-datepicker';
 
-import { useDispatch} from 'react-redux';
-import { fetchData } from 'src/store/apps/invoice';
-
-import { AppDispatch } from 'src/store';
 import { InvoiceType } from 'src/types/apps/invoiceTypes';
 import { DateType } from 'src/types/forms/reactDatepickerTypes';
 import CustomTextField from 'src/@core/components/mui/text-field';
@@ -59,19 +55,6 @@ const InvoiceList = ({ data }: { data: any[] }) => {
   const [selectedRowIds, setSelectedRowIds] = useState<any[]>([]);
   const [isDataReady, setIsDataReady] = useState<boolean>(false);
 
-  // ** Hooks
-  const dispatch = useDispatch<AppDispatch>();
-
-  useEffect(() => {
-    dispatch(
-      fetchData({
-        dates,
-        q: value,
-        status: statusValue
-      })
-    );
-  }, [dispatch, statusValue, value, dates]);
-
   useEffect(() => {
     const dataReady : any = selectedRowIds.length > 0 && startDateRange && endDateRange;
     setIsDataReady(dataReady);
@@ -109,7 +92,7 @@ const InvoiceList = ({ data }: { data: any[] }) => {
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-              {params.row.firstname + " " + params.row.middlename + " " + params.row.lastname}
+              {[params.row.firstname, params.row.middlename, params.row.lastname].filter(Boolean).join(' ')}
             </Typography>
           </Box>
         </Box>

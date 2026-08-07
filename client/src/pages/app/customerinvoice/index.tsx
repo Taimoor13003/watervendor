@@ -13,7 +13,6 @@ import CustomerInvoiceTable from 'src/views/orders/table/CustomerInvoiceTable';
 function Index({ customers }) {
   const router = useRouter();
   const { q } = router.query;
-  console.log(customers,q);
 
   return (
     <div>
@@ -25,24 +24,24 @@ function Index({ customers }) {
 export default Index;
 
 export const getServerSideProps = async () => {
-  // @ts-ignore
-
-  const customers = await prisma.customer.findMany();
-
-  // Serialize all date fields
-  // @ts-ignore
-
-  const serializedCustomers = customers.map(customer => ({
-    ...customer,
-    datefirstcontacted: customer.datefirstcontacted ? customer.datefirstcontacted.toISOString() : null,
-    dateofbirth: customer.dateofbirth ? customer.dateofbirth.toISOString() : null,
-  }));
-
-  console.log(serializedCustomers[0], "serialized customers");
+  const customers = await prisma.customer.findMany({
+    select: {
+      id: true,
+      customerid: true,
+      firstname: true,
+      middlename: true,
+      lastname: true,
+      customertype: true,
+      paymentmode: true,
+      telephoneres: true,
+      telephoneoffice: true,
+    },
+    orderBy: { firstname: 'asc' },
+  })
 
   return {
     props: {
-      customers: serializedCustomers,
+      customers,
     },
   };
 };

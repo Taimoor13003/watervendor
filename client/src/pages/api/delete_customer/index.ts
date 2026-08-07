@@ -16,8 +16,6 @@ export default async function handler(
         const idParam = req.query.id ?? req.body.id
         const id = typeof idParam === 'string' ? parseInt(idParam, 10) : idParam
 
-        console.log('Deleting customer with id:', id)
-
         if (!id || isNaN(id)) {
           return res.status(400).json({ error: 'Invalid or missing id' })
         }

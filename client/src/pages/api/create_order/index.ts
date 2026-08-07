@@ -9,13 +9,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { customerid, orderDate, orderStatus, quantity, ...rest } = req.body;
+    const { customerid, orderDate, invoiceDate, orderStatus, quantity, productId, returnedQty, ...rest } = req.body;
     const parsedCustomerId = parseInt(customerid, 10);
     const parsedQuantity = parseInt(quantity, 10);
+    const parsedProductId = productId === undefined || productId === null || productId === '' ? 1 : parseInt(productId, 10);
+    const parsedReturnedQty = returnedQty === undefined || returnedQty === null || returnedQty === '' ? null : parseInt(returnedQty, 10);
 
     // Basic validation
-    if (!parsedCustomerId || !orderDate || !parsedQuantity || !orderStatus) {
+    if (!Number.isInteger(parsedCustomerId) || parsedCustomerId <= 0 || !orderDate || !Number.isInteger(parsedQuantity) || parsedQuantity <= 0 || !orderStatus) {
       return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    const parsedOrderDate = new Date(orderDate);
+    const parsedInvoiceDate = invoiceDate ? new Date(invoiceDate) : parsedOrderDate;
+    if (Number.isNaN(parsedOrderDate.getTime()) || Number.isNaN(parsedInvoiceDate.getTime())) {
+      return res.status(400).json({ message: 'Order and invoice dates must be valid' });
+    }
+
+    if (!['New', 'Completed', 'Cancel', 'Canceled'].includes(orderStatus)) {
+      return res.status(400).json({ message: 'Invalid order status' });
+    }
+
+    if (parsedProductId !== 1) {
+      return res.status(400).json({ message: 'Only Bottle product is allowed' });
+    }
+
+    if (parsedReturnedQty !== null && (!Number.isInteger(parsedReturnedQty) || parsedReturnedQty < 0 || parsedReturnedQty > parsedQuantity)) {
+      return res.status(400).json({ message: 'Returned quantity must be between zero and the order quantity' });
     }
 
     const customer = await prisma.customer.findFirst({
@@ -33,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const newOrder = await tx.orders.create({
         data: {
           customerid: parsedCustomerId,
-          orderdate: new Date(orderDate),
+          orderdate: parsedOrderDate,
           orderstatus: orderStatus,
           orderqty: parsedQuantity,
           orderamount: totalAmount,
@@ -43,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           notes: rest.remarks,
           deliverynotes: rest.deliveryNotes,
           invoiceno: null,
-          invoicedate: null,
+          invoicedate: parsedInvoiceDate,
           telephone: rest.telephone,
           orderno: 'PENDING', // placeholder, updated below
         },
@@ -60,10 +80,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       await tx.order_details.create({
         data: {
           orderid: updatedOrder.id,
-          productid: 1, // Assuming 'Bottle' has a productid of 1
+          productid: parsedProductId,
           quantity: parsedQuantity,
           unitprice: unitPrice,
-          returnqty: rest.returnedQty ? parseInt(rest.returnedQty) : null,
+          returnqty: parsedReturnedQty,
           bottlereturndate: rest.bottleReturnedDate ? new Date(rest.bottleReturnedDate) : null,
         },
       });

@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const data: Array<{
       InvoiceDate: string;
-      reqbottles: number;
+      returnqty: number;
       rate_per_bottle: number;
       firstname: string;
       lastname: string;
@@ -27,10 +27,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       customerid: number;
       [key: string]: any;
     }> = await prisma.$queryRaw`
-      SELECT invoicedate AS "InvoiceDate", c.reqbottles, c.rate_per_bottle, c.firstname, c.lastname,
+      SELECT invoicedate AS "InvoiceDate", COALESCE(od.returnqty, 0) AS "returnqty", c.rate_per_bottle, c.firstname, c.lastname,
              c.addressres, o.*, o.customerid , c.accountno
       FROM orders o
       LEFT JOIN customer c ON o.customerid = c.customerid
+      LEFT JOIN LATERAL (
+        SELECT returnqty
+        FROM order_details
+        WHERE orderid = o.orderid
+        ORDER BY id DESC
+        LIMIT 1
+      ) od ON true
       WHERE o.customerid IN (${Prisma.join(ci)})
         AND orderdate BETWEEN ${new Date(startDate as string).toISOString()}::timestamp
         AND ${new Date(endDate as string).toISOString()}::timestamp

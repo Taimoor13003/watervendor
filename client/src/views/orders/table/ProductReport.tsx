@@ -22,7 +22,6 @@ const GeneralJournalReport = ({ data }: { data: any[] }) => {
     });
     setFilteredData(searchValue.length ? filteredRows : []);
   };
-console.log(data,'data coming from api component ')
   const columns: GridColDef[] = [
     { field: 'productcode', headerName: 'Product Code', flex: 0.15, minWidth: 120 },
     { field: 'unitsinstock', headerName: 'Units In Stock', flex: 0.15, minWidth: 120 },

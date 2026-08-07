@@ -45,8 +45,8 @@ const PrintPage: React.FC = () => {
   const [data, setData] = useState<Record<string, any[]>>({})
   const [dataLoaded, setDataLoaded] = useState(false)
 
-  // We have 3 logos per invoice block
-  const totalLogos = ids.length * 3
+  // The certification marks load before print/download begins.
+  const totalLogos = ids.length * 2
   const [logosLoaded, setLogosLoaded] = useState(0)
   const onLogoLoad = useCallback(() => setLogosLoaded(n => n + 1), [])
 
@@ -134,7 +134,7 @@ const PrintPage: React.FC = () => {
 
           // Compute totals
           const totDel = rows.reduce((s,r) => s + (r.orderqty||0), 0)
-          const totRet = rows.reduce((s,r) => s + (r.reqbottles||0), 0)
+          const totRet = rows.reduce((s,r) => s + (r.returnqty||0), 0)
           const totAmt = rows.reduce((s,r) => s + (r.orderqty||0)*(r.rate_per_bottle||0), 0)
 
           const first = rows[0]
@@ -175,13 +175,12 @@ const PrintPage: React.FC = () => {
                   />
                 </Grid>
                 <Grid item xs={4} textAlign="center">
-                  <img
-                    src="/images/avatars/output-onlinepngtools.png"
-                    alt="Rivielle"
-                    width={300}
-                    height={100}
-                    onLoad={onLogoLoad}
-                  />
+                  <Typography variant="h3" fontWeight={700} sx={{ color: '#1976d2' }}>
+                    Water Vendor
+                  </Typography>
+                  <Typography variant="body2" letterSpacing={2} sx={{ color: 'text.secondary' }}>
+                    PURE DRINKING WATER
+                  </Typography>
                 </Grid>
                 <Grid item xs={4} textAlign="right">
                   <img
@@ -226,7 +225,7 @@ const PrintPage: React.FC = () => {
                       <TableRow key={i}>
                         <MUITableCell>{fmt(r.InvoiceDate)}</MUITableCell>
                         <MUITableCell align="right">{r.orderqty}</MUITableCell>
-                        <MUITableCell align="right">{r.reqbottles}</MUITableCell>
+                        <MUITableCell align="right">{r.returnqty || 0}</MUITableCell>
                         <MUITableCell align="right">{r.rate_per_bottle.toFixed(2)}</MUITableCell>
                         <MUITableCell align="right">{amt.toFixed(2)}</MUITableCell>
                       </TableRow>

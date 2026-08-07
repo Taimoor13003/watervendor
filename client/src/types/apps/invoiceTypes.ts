@@ -49,7 +49,7 @@ export type InvoicePaymentType = {
 
 export type SingleInvoiceType = {
   orderqty: number
-  reqbottles: number
+  returnqty: number
   rate_per_bottle: number
   accountno: string
   InvoiceDate(InvoiceDate: any): import("react").ReactNode

@@ -15,7 +15,6 @@ const RatePerBottle = ({ data, ratePerBottle }: { data: any[], ratePerBottle: nu
   const [searchText, setSearchText] = useState<string>('');
   const [filteredData, setFilteredData] = useState<DataGridRowType[]>([]);
   const filterFields = ['firstname', 'lastname', 'customertype', 'paymentmode', 'telephoneoffice', 'telephoneres'];
-console.log(ratePerBottle,"rd")
   useEffect(() => {
     const filtered = data.filter(row => row.rate_per_bottle === ratePerBottle);
     setFilteredData(filtered);
@@ -52,7 +51,7 @@ console.log(ratePerBottle,"rd")
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-              {params.row.firstname + " " + params.row.middlename + " " + params.row.lastname}
+              {[params.row.firstname, params.row.middlename, params.row.lastname].filter(Boolean).join(' ')}
             </Typography>
             <Typography noWrap variant='caption'>
               {params.row.email}

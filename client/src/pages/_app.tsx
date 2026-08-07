@@ -23,8 +23,13 @@ import 'src/configs/i18n'
 import { defaultACLObj } from 'src/configs/acl'
 import themeConfig from 'src/configs/themeConfig'
 
-// ** Fake-DB Import
-import 'src/@fake-db'
+// Legacy demo routes are retained only for build compatibility. Loading their mock
+// adapter on the server keeps static generation intact without adding it to the
+// Water Vendor browser runtime.
+if (typeof window === 'undefined') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('src/@fake-db')
+}
 
 // ** Third Party Import
 import { Toaster } from 'react-hot-toast'
@@ -121,12 +126,12 @@ const App = (props: ExtendedAppProps) => {
     <Provider store={store}>
       <CacheProvider value={emotionCache}>
         <Head>
-          <title>{`${themeConfig.templateName} - Material Design React Admin Template`}</title>
+          <title>{themeConfig.templateName}</title>
           <meta
             name='description'
-            content={`${themeConfig.templateName} – Material Design React Admin Dashboard Template – is the most developer friendly & highly customizable Admin Dashboard Template based on MUI v5.`}
+            content='Water Vendor operations and billing management.'
           />
-          <meta name='keywords' content='Material Design, MUI, Admin Template, React Admin Template' />
+          <meta name='keywords' content='Water Vendor, water delivery, billing, operations' />
           <meta name='viewport' content='initial-scale=1, width=device-width' />
         </Head>
 
