@@ -28,6 +28,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import toast from 'react-hot-toast'
 import { vouchertypes } from 'src/constant'
+import { firebaseAuth } from 'src/services/firebase.service'
 
 // ------------ validation schema ------------
 const schema = yup.object({
@@ -45,7 +46,7 @@ const schema = yup.object({
     .number()
     .typeError('Debit must be a number')
     .min(0, 'Cannot be negative')
-    .required('Debit Amount is required'),
+    .required('Debit Amount is required')
 })
 
 type FormValues = yup.InferType<typeof schema>
@@ -53,7 +54,9 @@ type FormValues = yup.InferType<typeof schema>
 const RequiredLabel = ({ label }: { label: string }) => (
   <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
     <span>{label}</span>
-    <Box component='span' sx={{ color: 'error.main', fontWeight: 700 }}>*</Box>
+    <Box component='span' sx={{ color: 'error.main', fontWeight: 700 }}>
+      *
+    </Box>
   </Box>
 )
 
@@ -86,10 +89,17 @@ const VouchersForm: React.FC = () => {
   const [loadingCodes, setLoadingCodes] = useState(false)
 
   useEffect(() => {
-    setLoadingCodes(true)
-    fetch('/api/accountnames')
-      .then(res => res.json())
-      .then(data => {
+    const loadAccountCodes = async () => {
+      setLoadingCodes(true)
+
+      try {
+        const idToken = await firebaseAuth.currentUser?.getIdToken()
+        const res = await fetch('/api/accountnames', {
+          headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined
+        })
+        if (!res.ok) throw new Error('Unable to load account codes')
+
+        const data = await res.json()
         if (Array.isArray(data?.accounts)) {
           setAccounts(
             data.accounts.map((a: any) => ({
@@ -100,18 +110,19 @@ const VouchersForm: React.FC = () => {
         } else {
           setAccounts([])
         }
-      })
-      .catch(err => {
+      } catch (err) {
         console.error('Failed to load account codes:', err)
         setAccounts([])
-      })
-      .finally(() => setLoadingCodes(false))
+      } finally {
+        setLoadingCodes(false)
+      }
+    }
+
+    loadAccountCodes()
   }, [])
 
   // 4) transaction rows + totals
-  const [rows, setRows] = useState<
-    { accountCode: string; debit: number; credit: number }[]
-  >([])
+  const [rows, setRows] = useState<{ accountCode: string; debit: number; credit: number }[]>([])
   const [totals, setTotals] = useState({ debit: 0, credit: 0 })
 
   const onMove = () => {
@@ -177,9 +188,7 @@ const VouchersForm: React.FC = () => {
               <Controller
                 name='voucherNo'
                 control={control}
-                render={({ field }) => (
-                  <TextField {...field} fullWidth disabled label='Voucher #' />
-                )}
+                render={({ field }) => <TextField {...field} fullWidth disabled label='Voucher #' />}
               />
             </Grid>
 
@@ -316,11 +325,7 @@ const VouchersForm: React.FC = () => {
 
             {/* Submit */}
             <Grid item xs={12}>
-              <Button
-                type='submit'
-                variant='contained'
-                disabled={isSubmitting}
-              >
+              <Button type='submit' variant='contained' disabled={isSubmitting}>
                 Submit Voucher
               </Button>
             </Grid>
@@ -346,9 +351,15 @@ const VouchersForm: React.FC = () => {
                 </TableRow>
               ))}
               <TableRow>
-                <TableCell><strong>Totals</strong></TableCell>
-                <TableCell align='right'><strong>{totals.debit.toFixed(2)}</strong></TableCell>
-                <TableCell align='right'><strong>{totals.credit.toFixed(2)}</strong></TableCell>
+                <TableCell>
+                  <strong>Totals</strong>
+                </TableCell>
+                <TableCell align='right'>
+                  <strong>{totals.debit.toFixed(2)}</strong>
+                </TableCell>
+                <TableCell align='right'>
+                  <strong>{totals.credit.toFixed(2)}</strong>
+                </TableCell>
               </TableRow>
             </TableBody>
           </Table>

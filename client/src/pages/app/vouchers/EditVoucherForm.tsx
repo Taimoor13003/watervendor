@@ -1,49 +1,50 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import Card from '@mui/material/Card';
-import Grid from '@mui/material/Grid';
-import Button from '@mui/material/Button';
-import CardHeader from '@mui/material/CardHeader';
-import CardContent from '@mui/material/CardContent';
-import TextField from '@mui/material/TextField';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormHelperText from '@mui/material/FormHelperText';
-import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
-import * as yup from 'yup';
-import toast from 'react-hot-toast';
-import { useForm, Controller } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
-import { useRouter } from 'next/router';
-import { vouchertypes } from 'src/constant';
+import React, { useEffect, useMemo, useState } from 'react'
+import Card from '@mui/material/Card'
+import Grid from '@mui/material/Grid'
+import Button from '@mui/material/Button'
+import CardHeader from '@mui/material/CardHeader'
+import CardContent from '@mui/material/CardContent'
+import TextField from '@mui/material/TextField'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import FormHelperText from '@mui/material/FormHelperText'
+import Divider from '@mui/material/Divider'
+import Typography from '@mui/material/Typography'
+import Box from '@mui/material/Box'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
+import * as yup from 'yup'
+import toast from 'react-hot-toast'
+import { useForm, Controller } from 'react-hook-form'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { useRouter } from 'next/router'
+import { vouchertypes } from 'src/constant'
+import { firebaseAuth } from 'src/services/firebase.service'
 
 type Voucher = {
-  voucheramount: number | null;
-  description: string | null;
-  vouchertype: number | null;
-  voucherno: number | null;
-  id: number;
-  voucherdate: string | Date | null;
-};
+  voucheramount: number | null
+  description: string | null
+  vouchertype: number | null
+  voucherno: number | null
+  id: number
+  voucherdate: string | Date | null
+}
 
 type VoucherTrans = {
-  id: number;
-  voucherno: number | null;
-  accountcode: string | null;
-  chqno: string | null;
-  debitamount: number | null;
-  creditamount: number | null;
-};
+  id: number
+  voucherno: number | null
+  accountcode: string | null
+  chqno: string | null
+  debitamount: number | null
+  creditamount: number | null
+}
 
 type VoucherProps = {
-  vouchers: Voucher[];
-  vouchertrans: VoucherTrans[];
-};
+  vouchers: Voucher[]
+  vouchertrans: VoucherTrans[]
+}
 
 const schema = yup.object().shape({
   description: yup.string().required('Description is required'),
@@ -54,13 +55,13 @@ const schema = yup.object().shape({
   accountcode: yup.string().required('Account code is required'),
   chqno: yup.string().required('Cheque no is required'),
   debitamount: yup.number().typeError('Debit must be a number').required('Debit amount is required'),
-  creditamount: yup.number().typeError('Credit must be a number').required('Credit amount is required'),
-});
+  creditamount: yup.number().typeError('Credit must be a number').required('Credit amount is required')
+})
 
 const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [accounts, setAccounts] = useState<{ accountcode: string; accountname: string }[]>([]);
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [accounts, setAccounts] = useState<{ accountcode: string; accountname: string }[]>([])
 
   const voucher = vouchers[0] || {
     voucheramount: 0,
@@ -68,21 +69,21 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
     vouchertype: 0,
     voucherno: 0,
     id: 0,
-    voucherdate: null,
-  };
+    voucherdate: null
+  }
 
   const voucherTransaction = vouchertrans[0] || {
     accountcode: '',
     chqno: '',
     debitamount: 0,
-    creditamount: 0,
-  };
+    creditamount: 0
+  }
 
   const {
     control,
     handleSubmit,
     formState: { errors },
-    reset,
+    reset
   } = useForm({
     defaultValues: {
       description: voucher.description ?? '',
@@ -93,24 +94,34 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
       accountcode: voucherTransaction.accountcode ?? '',
       chqno: voucherTransaction.chqno ?? '',
       debitamount: voucherTransaction.debitamount ?? 0,
-      creditamount: voucherTransaction.creditamount ?? 0,
+      creditamount: voucherTransaction.creditamount ?? 0
     },
     mode: 'onChange',
-    resolver: yupResolver(schema),
-  });
+    resolver: yupResolver(schema)
+  })
 
   useEffect(() => {
-    fetch('/api/accountnames')
-      .then(res => res.json())
-      .then(data => {
+    const loadAccountCodes = async () => {
+      try {
+        const idToken = await firebaseAuth.currentUser?.getIdToken()
+        const res = await fetch('/api/accountnames', {
+          headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined
+        })
+        if (!res.ok) throw new Error('Unable to load account codes')
+
+        const data = await res.json()
         if (Array.isArray(data?.accounts)) {
-          setAccounts(data.accounts);
+          setAccounts(data.accounts)
         } else {
-          setAccounts([]);
+          setAccounts([])
         }
-      })
-      .catch(() => setAccounts([]));
-  }, []);
+      } catch {
+        setAccounts([])
+      }
+    }
+
+    loadAccountCodes()
+  }, [])
 
   useEffect(() => {
     reset({
@@ -122,21 +133,21 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
       accountcode: voucherTransaction.accountcode ?? '',
       chqno: voucherTransaction.chqno ?? '',
       debitamount: voucherTransaction.debitamount ?? 0,
-      creditamount: voucherTransaction.creditamount ?? 0,
-    });
+      creditamount: voucherTransaction.creditamount ?? 0
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [voucher.id]);
+  }, [voucher.id])
 
-  const typeOptions = useMemo(() => vouchertypes, []);
+  const typeOptions = useMemo(() => vouchertypes, [])
 
   const toNumberOrNull = (value: any) => {
-    if (value === '' || value === null || value === undefined) return null;
-    const num = Number(value);
-    return Number.isNaN(num) ? null : num;
-  };
+    if (value === '' || value === null || value === undefined) return null
+    const num = Number(value)
+    return Number.isNaN(num) ? null : num
+  }
 
   const onSubmit = async (formData: any) => {
-    setLoading(true);
+    setLoading(true)
     const payload = {
       voucherid: voucher.id,
       voucherno: voucher.voucherno,
@@ -147,52 +158,52 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
       accountcode: formData.accountcode,
       chqno: formData.chqno,
       debitamount: toNumberOrNull(formData.debitamount),
-      creditamount: toNumberOrNull(formData.creditamount),
-    };
+      creditamount: toNumberOrNull(formData.creditamount)
+    }
 
     try {
       const res = await fetch('/api/voucher-update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+        body: JSON.stringify(payload)
+      })
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message || 'Failed to update voucher');
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.message || 'Failed to update voucher')
       }
 
-      toast.success('Voucher updated');
-      router.push('/app/vouchers');
+      toast.success('Voucher updated')
+      router.push('/app/vouchers')
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to update voucher');
+      toast.error(err?.message || 'Failed to update voucher')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <Card>
-      <CardHeader title="Edit Voucher" subheader="Update voucher details and transaction." />
+      <CardHeader title='Edit Voucher' subheader='Update voucher details and transaction.' />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <Grid container spacing={4}>
             <Grid item xs={12}>
-              <Typography variant="h6">Voucher Details</Typography>
+              <Typography variant='h6'>Voucher Details</Typography>
               <Divider sx={{ mt: 1, mb: 3 }} />
             </Grid>
 
             <Grid item xs={12} sm={6}>
               <Controller
-                name="voucherno"
+                name='voucherno'
                 control={control}
                 render={({ field }) => (
                   <TextField
                     {...field}
                     fullWidth
-                    label="Voucher Number"
-                    placeholder="Voucher Number"
-                    type="number"
+                    label='Voucher Number'
+                    placeholder='Voucher Number'
+                    type='number'
                     disabled
                     error={Boolean(errors.voucherno)}
                     helperText={errors.voucherno?.message}
@@ -203,12 +214,12 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
 
             <Grid item xs={12} sm={6}>
               <Controller
-                name="vouchertype"
+                name='vouchertype'
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.vouchertype)}>
                     <InputLabel>Voucher Type</InputLabel>
-                    <Select {...field} label="Voucher Type">
+                    <Select {...field} label='Voucher Type'>
                       {typeOptions.map(t => (
                         <MenuItem key={t.id} value={t.id}>
                           {t.name}
@@ -223,14 +234,14 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
 
             <Grid item xs={12}>
               <Controller
-                name="description"
+                name='description'
                 control={control}
                 render={({ field }) => (
                   <TextField
                     {...field}
                     fullWidth
-                    label="Description"
-                    placeholder="Description"
+                    label='Description'
+                    placeholder='Description'
                     multiline
                     minRows={2}
                     error={Boolean(errors.description)}
@@ -242,15 +253,15 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
 
             <Grid item xs={12} sm={6}>
               <Controller
-                name="voucheramount"
+                name='voucheramount'
                 control={control}
                 render={({ field }) => (
                   <TextField
                     {...field}
                     fullWidth
-                    label="Amount"
-                    placeholder="Amount"
-                    type="number"
+                    label='Amount'
+                    placeholder='Amount'
+                    type='number'
                     inputProps={{ min: 0, step: '0.01' }}
                     error={Boolean(errors.voucheramount)}
                     helperText={errors.voucheramount?.message}
@@ -261,18 +272,18 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
 
             <Grid item xs={12} sm={6}>
               <Controller
-                name="voucherDate"
+                name='voucherDate'
                 control={control}
                 render={({ field }) => (
                   <DatePicker
                     selected={field.value ? new Date(field.value) : null}
-                    onChange={(date) => field.onChange(date)}
-                    placeholderText="Select Voucher Date"
-                    dateFormat="yyyy-MM-dd"
+                    onChange={date => field.onChange(date)}
+                    placeholderText='Select Voucher Date'
+                    dateFormat='yyyy-MM-dd'
                     customInput={
                       <TextField
                         fullWidth
-                        label="Voucher Date"
+                        label='Voucher Date'
                         error={Boolean(errors.voucherDate)}
                         helperText={errors.voucherDate?.message}
                       />
@@ -283,18 +294,18 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
             </Grid>
 
             <Grid item xs={12}>
-              <Typography variant="h6">Voucher Transaction</Typography>
+              <Typography variant='h6'>Voucher Transaction</Typography>
               <Divider sx={{ mt: 1, mb: 3 }} />
             </Grid>
 
             <Grid item xs={12} sm={6}>
               <Controller
-                name="accountcode"
+                name='accountcode'
                 control={control}
                 render={({ field }) => (
                   <FormControl fullWidth error={Boolean(errors.accountcode)}>
                     <InputLabel>Account Code</InputLabel>
-                    <Select {...field} label="Account Code">
+                    <Select {...field} label='Account Code'>
                       {accounts.map(acc => (
                         <MenuItem key={acc.accountcode} value={acc.accountcode}>
                           {acc.accountcode} – {acc.accountname}
@@ -309,14 +320,14 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
 
             <Grid item xs={12} sm={6}>
               <Controller
-                name="chqno"
+                name='chqno'
                 control={control}
                 render={({ field }) => (
                   <TextField
                     {...field}
                     fullWidth
-                    label="Cheque Number"
-                    placeholder="Cheque Number"
+                    label='Cheque Number'
+                    placeholder='Cheque Number'
                     error={Boolean(errors.chqno)}
                     helperText={errors.chqno?.message}
                   />
@@ -326,15 +337,15 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
 
             <Grid item xs={12} sm={6}>
               <Controller
-                name="debitamount"
+                name='debitamount'
                 control={control}
                 render={({ field }) => (
                   <TextField
                     {...field}
                     fullWidth
-                    label="Debit Amount"
-                    placeholder="Debit Amount"
-                    type="number"
+                    label='Debit Amount'
+                    placeholder='Debit Amount'
+                    type='number'
                     inputProps={{ min: 0, step: '0.01' }}
                     error={Boolean(errors.debitamount)}
                     helperText={errors.debitamount?.message}
@@ -345,15 +356,15 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
 
             <Grid item xs={12} sm={6}>
               <Controller
-                name="creditamount"
+                name='creditamount'
                 control={control}
                 render={({ field }) => (
                   <TextField
                     {...field}
                     fullWidth
-                    label="Credit Amount"
-                    placeholder="Credit Amount"
-                    type="number"
+                    label='Credit Amount'
+                    placeholder='Credit Amount'
+                    type='number'
                     inputProps={{ min: 0, step: '0.01' }}
                     error={Boolean(errors.creditamount)}
                     helperText={errors.creditamount?.message}
@@ -363,11 +374,11 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
             </Grid>
 
             <Grid item xs={12}>
-              <Box display="flex" gap={2}>
-                <Button type="submit" variant="contained" disabled={loading}>
+              <Box display='flex' gap={2}>
+                <Button type='submit' variant='contained' disabled={loading}>
                   {loading ? 'Saving...' : 'Save Changes'}
                 </Button>
-                <Button variant="outlined" onClick={() => router.push('/app/vouchers')}>
+                <Button variant='outlined' onClick={() => router.push('/app/vouchers')}>
                   Cancel
                 </Button>
               </Box>
@@ -376,7 +387,7 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
         </form>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default EditVoucherForm;
+export default EditVoucherForm

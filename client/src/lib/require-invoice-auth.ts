@@ -23,14 +23,14 @@ const getAdminAuth = () => {
   return getAuth()
 }
 
-export const requireInvoiceAuth = async (request: NextApiRequest, response: NextApiResponse) => {
+export const requireApiAuth = async (request: NextApiRequest, response: NextApiResponse) => {
   // Local development remains usable without production secrets. Production
   // fails closed when Firebase Admin credentials have not been configured.
   if (process.env.NODE_ENV !== 'production' && process.env.REQUIRE_API_AUTH !== 'true') return true
 
   const adminAuth = getAdminAuth()
   if (!adminAuth) {
-    response.status(503).json({ error: 'Invoice API authentication is not configured' })
+    response.status(503).json({ error: 'API authentication is not configured' })
 
     return false
   }
@@ -52,3 +52,6 @@ export const requireInvoiceAuth = async (request: NextApiRequest, response: Next
     return false
   }
 }
+
+// Kept as an alias while existing invoice routes migrate to the generic name.
+export const requireInvoiceAuth = requireApiAuth

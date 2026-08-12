@@ -1,56 +1,51 @@
-import React, { useState } from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
-} from '@mui/material';
-import AccountRecievableTable from 'src/views/orders/table/AccountRecievableTable';
+import React, { useState } from 'react'
+import { Box, Paper, Typography, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material'
+import AccountRecievableTable from 'src/views/orders/table/AccountRecievableTable'
 
 const AccountsReceivablePage = () => {
-  const [month, setMonth] = useState<string>('');
-  const [year, setYear] = useState<string>('');
-  const [showTable, setShowTable] = useState(false);
+  const [month, setMonth] = useState<string>('')
+  const [year, setYear] = useState<string>('')
+  const [showTable, setShowTable] = useState(false)
 
   const handleSubmit = () => {
     if (month && year) {
-      setShowTable(true);
+      setShowTable(true)
     }
-  };
+  }
 
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
-  ];
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December'
+  ]
 
-  const years = Array.from({ length: 10 }, (_, i) => `${2020 + i}`);
+  const years = Array.from({ length: new Date().getFullYear() - 2019 + 1 }, (_, i) => `${2020 + i}`)
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" textAlign="center" fontWeight="bold" gutterBottom>
-        Account Receivable Report
+      <Typography variant='h4' textAlign='center' fontWeight='bold' gutterBottom>
+        Accounts Receivable - Unpaid Orders
       </Typography>
 
       {/* White card with dropdowns */}
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2, maxWidth: 600, mx: 'auto' }}>
-        <Typography variant="h6" mb={2}>
-          Select Month & Year to view Account Receivable Report
+        <Typography variant='h6' mb={2}>
+          Select the invoice month and year to view unpaid, non-cancelled orders.
         </Typography>
 
-        <FormControl fullWidth margin="normal">
-          <InputLabel id="month-label">Month</InputLabel>
-          <Select
-            labelId="month-label"
-            value={month}
-            label="Month"
-            onChange={(e) => setMonth(e.target.value)}
-            required
-          >
-            {months.map((m) => (
+        <FormControl fullWidth margin='normal'>
+          <InputLabel id='month-label'>Month</InputLabel>
+          <Select labelId='month-label' value={month} label='Month' onChange={e => setMonth(e.target.value)} required>
+            {months.map(m => (
               <MenuItem key={m} value={m}>
                 {m}
               </MenuItem>
@@ -58,16 +53,10 @@ const AccountsReceivablePage = () => {
           </Select>
         </FormControl>
 
-        <FormControl fullWidth margin="normal">
-          <InputLabel id="year-label">Year</InputLabel>
-          <Select
-            labelId="year-label"
-            value={year}
-            label="Year"
-            onChange={(e) => setYear(e.target.value)}
-            required
-          >
-            {years.map((y) => (
+        <FormControl fullWidth margin='normal'>
+          <InputLabel id='year-label'>Year</InputLabel>
+          <Select labelId='year-label' value={year} label='Year' onChange={e => setYear(e.target.value)} required>
+            {years.map(y => (
               <MenuItem key={y} value={y}>
                 {y}
               </MenuItem>
@@ -75,22 +64,17 @@ const AccountsReceivablePage = () => {
           </Select>
         </FormControl>
 
-        <Box mt={3} display="flex" justifyContent="space-between">
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSubmit}
-            disabled={!month || !year}
-          >
+        <Box mt={3} display='flex' justifyContent='space-between'>
+          <Button variant='contained' color='primary' onClick={handleSubmit} disabled={!month || !year}>
             Run Report
           </Button>
           <Button
-            variant="outlined"
-            color="secondary"
+            variant='outlined'
+            color='secondary'
             onClick={() => {
-              setMonth('');
-              setYear('');
-              setShowTable(false);
+              setMonth('')
+              setYear('')
+              setShowTable(false)
             }}
           >
             Cancel
@@ -104,7 +88,7 @@ const AccountsReceivablePage = () => {
         </Box>
       )}
     </Box>
-  );
-};
+  )
+}
 
-export default AccountsReceivablePage;
+export default AccountsReceivablePage
