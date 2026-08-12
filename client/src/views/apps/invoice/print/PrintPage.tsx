@@ -28,11 +28,17 @@ const MUITableCell = styled(TableCell)(({ theme }) => ({
 const PrintPage: React.FC = () => {
   const router = useRouter()
   const { query } = router
-  const urlSearch = typeof window === 'undefined' ? '' : window.location.search
+  // Query parameters are unavailable during server rendering. Delay parsing
+  // until after hydration so the server and first client render match.
+  const [isClientReady, setIsClientReady] = useState(false)
+  useEffect(() => setIsClientReady(true), [])
+
+  const urlSearch = isClientReady ? window.location.search : ''
   const urlParams = useMemo(() => new URLSearchParams(urlSearch), [urlSearch])
 
   // Normalize into array of IDs
   const ids: string[] = useMemo(() => {
+    if (!isClientReady) return []
     if (typeof query.customerids === 'string') {
       return query.customerids.split(',').filter(Boolean)
     }
@@ -48,10 +54,10 @@ const PrintPage: React.FC = () => {
       return [customerid]
     }
     return []
-  }, [query.customerids, query.customerid, urlParams])
+  }, [isClientReady, query.customerids, query.customerid, urlParams])
 
-  const startDate = (query.startdate as string) || urlParams?.get('startdate') || ''
-  const endDate = (query.enddate as string) || urlParams?.get('enddate') || ''
+  const startDate = isClientReady ? (query.startdate as string) || urlParams.get('startdate') || '' : ''
+  const endDate = isClientReady ? (query.enddate as string) || urlParams.get('enddate') || '' : ''
 
   const [data, setData] = useState<Record<string, any[]>>({})
   const [dataLoaded, setDataLoaded] = useState(false)
@@ -217,7 +223,7 @@ const PrintPage: React.FC = () => {
     return Number(row.orderqty || 0) * Number(row.rate_per_bottle || 0)
   }
 
-  if (!ids.length || !startDate || !endDate) {
+  if (!isClientReady || !ids.length || !startDate || !endDate) {
     return <Box sx={{ p: 6 }}>A customer and an invoice date range are required.</Box>
   }
 
