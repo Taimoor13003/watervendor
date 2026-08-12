@@ -1,24 +1,29 @@
-import Link from 'next/link';
+import Link from 'next/link'
 
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import { GridRowId } from '@mui/x-data-grid';
-import MenuItem from '@mui/material/MenuItem';
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import { GridRowId } from '@mui/x-data-grid'
+import MenuItem from '@mui/material/MenuItem'
 
-import CustomTextField from 'src/@core/components/mui/text-field';
+import CustomTextField from 'src/@core/components/mui/text-field'
+import { format } from 'date-fns'
 
 interface TableHeaderProps {
-  value: string;
-  selectedRows: GridRowId[];
-  handleFilter: (val: string) => void;
-  selectedRowIds: any[]; // Assuming this is an array of selected row IDs or customer IDs
-  startDate: Date | null;
-  endDate: Date | null;
-  isDataReady: boolean; // New prop to determine if data is ready
+  value: string
+  selectedRows: GridRowId[]
+  handleFilter: (val: string) => void
+  selectedRowIds: any[] // Assuming this is an array of selected row IDs or customer IDs
+  startDate: Date | null
+  endDate: Date | null
+  isDataReady: boolean // New prop to determine if data is ready
 }
 
 const TableHeader = (props: TableHeaderProps) => {
-  const { value, selectedRows, handleFilter, selectedRowIds, startDate, endDate, isDataReady } = props;
+  const { value, selectedRows, handleFilter, selectedRowIds, startDate, endDate, isDataReady } = props
+  // Send calendar dates, not UTC timestamps. A timestamp shifts the selected
+  // day for customers whose local timezone is ahead of UTC.
+  const startDateParam = startDate ? format(startDate, 'yyyy-MM-dd') : ''
+  const endDateParam = endDate ? format(endDate, 'yyyy-MM-dd') : ''
 
   return (
     <Box
@@ -32,22 +37,21 @@ const TableHeader = (props: TableHeaderProps) => {
         justifyContent: 'space-between'
       }}
     >
-     
-
       <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
-        
         <Button
           sx={{ mb: 2 }}
           component={Link}
           variant='contained'
-          href={`/app/customerinvoice/add2?customerid=${selectedRowIds.join(',')}&startDate=${startDate ? startDate.toISOString() : ''}&endDate=${endDate ? endDate.toISOString() : ''}`}
-          disabled={!isDataReady} 
+          href={`/app/customerinvoice/add2?customerid=${selectedRowIds.join(
+            ','
+          )}&startDate=${startDateParam}&endDate=${endDateParam}`}
+          disabled={!isDataReady}
         >
           Create Invoice
         </Button>
       </Box>
     </Box>
-  );
-};
+  )
+}
 
-export default TableHeader;
+export default TableHeader

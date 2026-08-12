@@ -84,26 +84,34 @@ const FormControlLabel = styled(MuiFormControlLabel)<FormControlLabelProps>(({ t
 const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState<boolean>(true)
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [isSigningIn, setIsSigningIn] = useState(false)
 
   // const [showPassword, setShowPassword] = useState<boolean>(false)
 
   // ** Hooks
   const auth = useAuth()
   const theme = useTheme()
-  
+
   // const bgColors = useBgColor()
-  
+
   const { settings } = useSettings()
   const hidden = useMediaQuery(theme.breakpoints.down('md'))
 
   // ** Vars
   const { skin } = settings
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
+    if (isSigningIn) return
+
     setLoginError(null)
-    auth.loginWithGoogle({ email: '', password: '', rememberMe }, () => {
-      setLoginError('Google sign-in failed. Please try again.')
-    })
+    setIsSigningIn(true)
+    try {
+      await auth.loginWithGoogle({ email: '', password: '', rememberMe }, () => {
+        setLoginError('Google sign-in failed. Please try again.')
+      })
+    } finally {
+      setIsSigningIn(false)
+    }
   }
 
   const imageSource = skin === 'bordered' ? 'auth-v2-login-illustration-bordered' : 'auth-v2-login-illustration'
@@ -201,8 +209,8 @@ const LoginPage = () => {
                   Forgot Password?
                 </Typography>
               </Box>
-              <Button fullWidth type='submit' variant='contained' sx={{ mb: 4 }}>
-                Login With Google
+              <Button fullWidth type='submit' variant='contained' sx={{ mb: 4 }} disabled={isSigningIn}>
+                {isSigningIn ? 'Opening Google sign-in…' : 'Login With Google'}
               </Button>
               <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
                 <Typography sx={{ color: 'text.secondary', mr: 2 }}>New on our platform?</Typography>

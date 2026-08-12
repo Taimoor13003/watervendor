@@ -1,5 +1,7 @@
 // ** Next Import
 import Link from 'next/link'
+import axios from 'axios'
+import { firebaseAuth } from 'src/services/firebase.service'
 
 // ** MUI Imports
 import Card from '@mui/material/Card'
@@ -18,20 +20,32 @@ interface Props {
 }
 
 const PreviewActions = ({ id, startDate, endDate, toggleSendInvoiceDrawer, toggleAddPaymentDrawer }: Props) => {
+  const downloadInvoice = async () => {
+    const idToken = await firebaseAuth.currentUser?.getIdToken()
+    const response = await axios.get('/api/invoice/pdf', {
+      params: { customerid: id, startdate: startDate, enddate: endDate },
+      responseType: 'blob',
+      headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined
+    })
+    const url = URL.createObjectURL(response.data)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `Invoice_${id}.pdf`
+    link.click()
+    URL.revokeObjectURL(url)
+  }
 
   return (
     <Card>
       <CardContent>
-        
         <Button
           fullWidth
           sx={{ mb: 2 }}
           // color='secondary'
           // variant='tonal'
           variant='contained'
-          component={Link}
+          onClick={downloadInvoice}
           // target='_blank'
-          href={`/apps/invoice/print/?customerid=${id}&startdate=${startDate}&enddate=${endDate}&action=download`}
         >
           Download
         </Button>

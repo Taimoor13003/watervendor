@@ -1,17 +1,22 @@
 // authService.ts
-import { GoogleAuthProvider, firebaseAuth, signInWithPopup } from './firebase.service'
+import { firebaseAuth, firebaseGoogleAuthProvider, signInWithPopup } from './firebase.service'
 
 class AuthService {
   async signInWithGoogle(): Promise<any | null> {
-    const provider = new GoogleAuthProvider()
     try {
-      const result = await signInWithPopup(firebaseAuth, provider)
+      const result = await signInWithPopup(firebaseAuth, firebaseGoogleAuthProvider)
 
       // The signed-in user info.
-      const user = result.user;
-      const idToken = await user.getIdToken();
+      const user = result.user
+      const idToken = await user.getIdToken()
 
-      const userData = { id: user.uid, role: "admin", fullName: user.displayName, username: user.displayName, email: user.email }
+      const userData = {
+        id: user.uid,
+        role: 'admin',
+        fullName: user.displayName,
+        username: user.displayName,
+        email: user.email
+      }
 
       return { userData, idToken }
     } catch (error) {
@@ -20,16 +25,14 @@ class AuthService {
     }
   }
 
-
   // isAuthStateChanged() {
   //    return onAuthStateChanged
   // }
-  
+
   // async verifyAuthToken(): Promise<any | null> {
 
   //   const currentUser = firebaseAuth.currentUser;
   //   console.log(currentUser, "currentUser")
-
 
   //   onAuthStateChanged(auth, (user) => {
   //     if (user) {
@@ -42,9 +45,6 @@ class AuthService {
   //       // ...
   //     }
   //   });
-
-
-
 
   // }
 
