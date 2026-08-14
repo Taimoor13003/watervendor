@@ -1,0 +1,4 @@
+client/.next
+client/*.dump
+client/*.gz
+client/node_modules

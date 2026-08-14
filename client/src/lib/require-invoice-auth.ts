@@ -9,6 +9,24 @@ const getBearerToken = (request: NextApiRequest) => {
   return authorization.slice('Bearer '.length).trim() || null
 }
 
+const verifyWithIdentityToolkit = async (token: string) => {
+  const apiKey = process.env.FIREBASE_WEB_API_KEY
+
+  if (!apiKey) return null
+
+  try {
+    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: token })
+    })
+
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
 const getAdminAuth = () => {
   if (!getApps().length) {
     const projectId = process.env.FIREBASE_PROJECT_ID
@@ -29,12 +47,6 @@ export const requireApiAuth = async (request: NextApiRequest, response: NextApiR
   if (process.env.NODE_ENV !== 'production' && process.env.REQUIRE_API_AUTH !== 'true') return true
 
   const adminAuth = getAdminAuth()
-  if (!adminAuth) {
-    response.status(503).json({ error: 'API authentication is not configured' })
-
-    return false
-  }
-
   const token = getBearerToken(request)
   if (!token) {
     response.status(401).json({ error: 'Authentication is required' })
@@ -43,7 +55,21 @@ export const requireApiAuth = async (request: NextApiRequest, response: NextApiR
   }
 
   try {
-    await adminAuth.verifyIdToken(token)
+    if (adminAuth) {
+      await adminAuth.verifyIdToken(token)
+
+      return true
+    }
+
+    // Vercel production can securely verify Firebase sessions without storing a
+    // private service-account key. The Identity Toolkit validates the ID token
+    // with the Firebase project before protected report data is returned.
+    const isValidToken = await verifyWithIdentityToolkit(token)
+    if (!isValidToken) {
+      response.status(401).json({ error: 'Invalid or expired authentication token' })
+
+      return false
+    }
 
     return true
   } catch {
