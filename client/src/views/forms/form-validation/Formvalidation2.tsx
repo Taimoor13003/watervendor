@@ -53,6 +53,7 @@ const FormValidationSchema = ({ customers }) => {
     formState: { errors },
     reset,
     setValue,
+    getValues,
     watch
   } = useForm({
     defaultValues: freshValues(),
@@ -116,6 +117,7 @@ const FormValidationSchema = ({ customers }) => {
 
     try {
       const res = await authFetch(`/api/customer-info?id=${customer.customerid}`)
+      if (!res.ok) throw new Error(`customer-info ${res.status}`)
       const data = await res.json()
       setValue('paymentMode', data.paymentmode || '')
       setValue('deliveryAddress', data.addressres || '')
@@ -123,6 +125,7 @@ const FormValidationSchema = ({ customers }) => {
       setValue('telephone', data.telephoneres || '')
     } catch (error) {
       console.error('Failed to fetch customer details:', error)
+      toast.error('Could not load this customer\'s rate and address. Please pick the customer again.')
     }
   };
 
@@ -222,8 +225,14 @@ const FormValidationSchema = ({ customers }) => {
                 name='returnedQty'
                 control={control}
                 rules={{
-                  validate: value =>
-                    value === '' || (Number.isInteger(Number(value)) && Number(value) >= 0) || 'Returned quantity must be a whole number of bottles'
+                  validate: value => {
+                    if (value === '') return true
+                    if (!Number.isInteger(Number(value)) || Number(value) < 0) return 'Returned quantity must be a whole number of bottles'
+                    const ordered = Number(getValues('quantity'))
+                    if (Number.isInteger(ordered) && Number(value) > ordered) return `Cannot return more than the ${ordered} bottles ordered`
+
+                    return true
+                  }
                 }}
                 render={({ field }) => (
                   <CustomTextField
@@ -240,8 +249,14 @@ const FormValidationSchema = ({ customers }) => {
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Controller name='unitPrice' 
-              control={control} 
+              <Controller name='unitPrice'
+              control={control}
+              // The rate comes from the customer record; without it the order cannot be priced.
+              rules={{
+                validate: value =>
+                  !getValues('customerid') || (value !== '' && value !== null && !Number.isNaN(Number(value))) ||
+                  'This customer has no rate per bottle. Set it in Customers first.'
+              }}
               render={({ field }) => (
                 <CustomTextField 
                 fullWidth 
@@ -250,6 +265,8 @@ const FormValidationSchema = ({ customers }) => {
                 placeholder='Unit Price'
                 type='number'
                 inputProps={{ min: 0, step: '0.01' }}
+                error={Boolean(errors.unitPrice)}
+                helperText={errors.unitPrice?.message}
                 disabled={true}
               />
             )} />
@@ -259,7 +276,6 @@ const FormValidationSchema = ({ customers }) => {
               <Controller
                 name='totalAmount'
                 control={control}
-                rules={{ required: 'Total amount is required' }}
                 render={({ field }) => (
                   <CustomTextField
                     fullWidth
