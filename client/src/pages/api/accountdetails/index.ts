@@ -36,40 +36,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid report period or voucher type' })
     }
 
-    const [accountRows, openingRows, result] = await Promise.all([
-      prisma.$queryRaw<Array<{ openingbalance: number }>>`
-        SELECT COALESCE(openingbalance, 0)::int AS "openingbalance"
-        FROM accounts_head
-        WHERE accountcode = ${accountcode}
-          AND COALESCE(isdeleted, false) = false
-        ORDER BY id DESC
-        LIMIT 1
-      `,
-      prisma.$queryRaw<Array<{ openingbalance: number }>>`
-        SELECT COALESCE(SUM(COALESCE(vt.debitamount, 0) - COALESCE(vt.creditamount, 0)), 0)::int AS "openingbalance"
-        FROM voucher_trans vt
-        JOIN vouchers v ON v.voucherno = vt.voucherno
-        WHERE vt.accountcode = ${accountcode}
-          AND v.voucherdate < ${from}
-          AND COALESCE(v.isdeleted, false) = false
-      `,
-      prisma.$queryRaw`
-        SELECT vt.id, vt.voucherno, vt.accountcode, COALESCE(vt.debitamount, 0)::int AS debitamount,
-               COALESCE(vt.creditamount, 0)::int AS creditamount, v.voucherdate, v.vouchertype, v.description
-        FROM voucher_trans vt
-        JOIN vouchers v ON v.voucherno = vt.voucherno
-        WHERE vt.accountcode = ${accountcode}
-          AND v.voucherdate >= ${from}
-          AND v.voucherdate < ${toExclusive}
-          AND COALESCE(v.isdeleted, false) = false
-          AND (${type}::int IS NULL OR v.vouchertype = ${type})
-        ORDER BY v.voucherdate ASC, vt.id ASC
-      `
-    ])
+    // Matches the desktop RMS "Accounts Details" report: only the vouchers posted
+    // to the account inside the period, with their debit/credit totals. It does
+    // not carry an opening balance in from earlier years, which on an expense
+    // account like Plant Supplies added up to tens of lakhs of old spending.
+    const result = await prisma.$queryRaw`
+      SELECT vt.id, vt.voucherno, vt.accountcode, vt.chqno, COALESCE(vt.debitamount, 0)::int AS debitamount,
+             COALESCE(vt.creditamount, 0)::int AS creditamount, v.voucherdate, v.vouchertype, v.description
+      FROM voucher_trans vt
+      JOIN vouchers v ON v.voucherno = vt.voucherno
+      WHERE vt.accountcode = ${accountcode}
+        AND v.voucherdate >= ${voucherperiodfrom}::date
+        AND v.voucherdate < (${voucherperiodto}::date + INTERVAL '1 day')
+        AND COALESCE(v.isdeleted, false) = false
+        AND (${type}::int IS NULL OR v.vouchertype = ${type})
+      ORDER BY v.voucherdate ASC, vt.id ASC
+    `
 
-    const openingBalance = (accountRows[0]?.openingbalance || 0) + (openingRows[0]?.openingbalance || 0)
-
-    return res.status(200).json({ result, openingBalance })
+    return res.status(200).json({ result })
   } catch (error) {
     console.error('Failed to fetch account details:', error)
     return res.status(500).json({ error: 'Failed to fetch account details' })

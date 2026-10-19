@@ -11,7 +11,8 @@ import Paper from '@mui/material/Paper'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
 import Alert from '@mui/material/Alert'
-import AccountDetailsTable from 'src/views/orders/table/AccountDetailsTable'
+import AccountDetailsTable, { AccountDetailRow, voucherTypeLabel } from 'src/views/orders/table/AccountDetailsTable'
+import { vouchertypes } from 'src/constant'
 import { firebaseAuth } from 'src/services/firebase.service'
 
 interface Account {
@@ -19,31 +20,22 @@ interface Account {
   accountname: string
 }
 
-interface Voucher {
-  id: number | string
-  paymentmode: string
-}
+// The desktop RMS opens this report with both dates set to today.
+const todayInputValue = () => {
+  const now = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
 
-interface RowData {
-  id: number
-  voucherno: string
-  accountcode: string
-  voucherdate: string
-  debitamount: number
-  creditamount: number
-  description?: string
-  runningBalance?: number
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
 const AccountAndVoucherPage = () => {
   const [accountCode, setAccountCode] = useState<string>('')
   const [voucherType, setVoucherTypeValue] = useState<number | ''>('')
-  const [voucherPeriodFrom, setVoucherPeriodFrom] = useState<string>('')
-  const [voucherPeriodTo, setVoucherPeriodTo] = useState<string>('')
+  const [voucherPeriodFrom, setVoucherPeriodFrom] = useState<string>(todayInputValue)
+  const [voucherPeriodTo, setVoucherPeriodTo] = useState<string>(todayInputValue)
   const [accounts, setAccounts] = useState<Account[]>([])
-  const [vouchers, setVouchers] = useState<Voucher[]>([])
-  const [accountDetails, setAccountDetails] = useState<RowData[]>([]) // State to store fetched account details
-  const [openingBalance, setOpeningBalance] = useState<number>(0)
+  const [accountDetails, setAccountDetails] = useState<AccountDetailRow[]>([])
+  const [reportCriteria, setReportCriteria] = useState({ accountTitle: '', periodFrom: '', periodTo: '' })
   const [loading, setLoading] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
   const [hasRunReport, setHasRunReport] = useState(false)
@@ -67,8 +59,6 @@ const AccountAndVoucherPage = () => {
         const headers = await getAuthHeaders()
         const accountResponse = await axios.get<{ accounts: Account[] }>('/api/accountnames', { headers })
         setAccounts(accountResponse.data.accounts)
-        const voucherResponse = await axios.get<{ vouchers: Voucher[] }>('/api/vouchersdropdown', { headers })
-        setVouchers(voucherResponse.data.vouchers)
       } catch (error) {
         setError('Failed to fetch data.')
       } finally {
@@ -89,7 +79,7 @@ const AccountAndVoucherPage = () => {
     setHasRunReport(false)
     try {
       const headers = await getAuthHeaders()
-      const response = await axios.get<{ result: RowData[]; openingBalance: number }>('/api/accountdetails', {
+      const response = await axios.get<{ result: AccountDetailRow[] }>('/api/accountdetails', {
         headers,
         params: {
           accountcode: accountCode,
@@ -98,15 +88,13 @@ const AccountAndVoucherPage = () => {
           voucherperiodto: voucherPeriodTo
         }
       })
-      let runningBalance = Number(response.data.openingBalance || 0)
-      setOpeningBalance(runningBalance)
-      setAccountDetails(
-        response.data.result.map(row => {
-          runningBalance += Number(row.debitamount || 0) - Number(row.creditamount || 0)
-
-          return { ...row, runningBalance }
-        })
-      )
+      const account = accounts.find(item => item.accountcode === accountCode)
+      setAccountDetails(response.data.result)
+      setReportCriteria({
+        accountTitle: account ? `${account.accountcode}-${account.accountname}` : accountCode,
+        periodFrom: voucherPeriodFrom,
+        periodTo: voucherPeriodTo
+      })
       setHasRunReport(true)
     } catch (error) {
       setError('Failed to fetch data from account details API.')
@@ -149,18 +137,21 @@ const AccountAndVoucherPage = () => {
 
           <Grid item xs={12} md={6}>
             <FormControl fullWidth>
-              <InputLabel id='vouchertype-label'>Voucher Type</InputLabel>
+              <InputLabel id='vouchertype-label' shrink>
+                Voucher Type
+              </InputLabel>
               <Select
                 labelId='vouchertype-label'
                 value={voucherType}
-                onChange={e => setVoucherTypeValue(e.target.value as number)}
+                onChange={e => setVoucherTypeValue(e.target.value === '' ? '' : Number(e.target.value))}
                 label='Voucher Type'
-                required
+                notched
+                displayEmpty
               >
-                <MenuItem value=''>All voucher types</MenuItem>
-                {vouchers.map(voucher => (
-                  <MenuItem key={voucher.id} value={voucher.id}>
-                    {voucher.paymentmode}
+                <MenuItem value=''>All Vouchers</MenuItem>
+                {vouchertypes.map(type => (
+                  <MenuItem key={type.id} value={type.id}>
+                    {voucherTypeLabel(type.id)}
                   </MenuItem>
                 ))}
               </Select>
@@ -209,11 +200,10 @@ const AccountAndVoucherPage = () => {
               color='secondary'
               onClick={() => {
                 setAccountCode('')
-                setVoucherTypeValue('' as any)
-                setVoucherPeriodFrom('')
-                setVoucherPeriodTo('')
+                setVoucherTypeValue('')
+                setVoucherPeriodFrom(todayInputValue())
+                setVoucherPeriodTo(todayInputValue())
                 setAccountDetails([])
-                setOpeningBalance(0)
                 setHasRunReport(false)
                 setError('')
               }}
@@ -240,7 +230,7 @@ const AccountAndVoucherPage = () => {
 
       {hasRunReport && accountDetails.length > 0 && (
         <Box>
-          <AccountDetailsTable data={accountDetails} openingBalance={openingBalance} />
+          <AccountDetailsTable data={accountDetails} {...reportCriteria} />
         </Box>
       )}
       {hasRunReport && accountDetails.length === 0 && (
