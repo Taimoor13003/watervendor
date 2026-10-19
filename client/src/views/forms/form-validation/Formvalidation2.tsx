@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import {
   Card, Grid, Button, CardHeader, CardContent,
-  FormControl, InputLabel, Select, MenuItem, CircularProgress, Box, FormHelperText, Autocomplete, TextField
+  CircularProgress, Box, Autocomplete, TextField
 } from '@mui/material'
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -9,6 +9,10 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 import { useForm, Controller } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import axios from 'axios';
+import { authFetch } from 'src/lib/api-client'
+import { toCalendarDateString } from 'src/lib/calendar-date'
+import { useSubmitOnce } from 'src/hooks/useSubmitOnce'
+import { DISPLAY_DATE_FORMAT } from 'src/lib/display-date'
 
 const RequiredLabel = ({ label }: { label: string }) => (
   <Box component='span' sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
@@ -17,25 +21,30 @@ const RequiredLabel = ({ label }: { label: string }) => (
   </Box>
 )
 
+// Bottle is the only product sold, so the order form does not ask for it.
+const BOTTLE_PRODUCT_ID = 1
+
 const defaultValues = {
   customerid: '',
-  productId: 1, // Set default value here
+  productId: BOTTLE_PRODUCT_ID,
   paymentMode: '',
-  orderDate: '',
-  orderStatus: '',
+  orderDate: '' as Date | '',
+  orderStatus: 'New',
   quantity: '',
   remarks: '',
   unitPrice: '',
   totalAmount: '',
   bottleReturnedDate: '',
   returnedQty: '',
-  deliveryDate: '',
   deliveryAddress: '',
   deliveryNotes: '',
-  invoiceNo: '',
-  invoiceDate: '',
   telephone: ''
 }
+
+// Like the desktop RMS "Create New Order": the order date starts at today, the
+// status is always "New", and there is no separate delivery date (it is the
+// order date). Invoice number and date are set later from the order itself.
+const freshValues = () => ({ ...defaultValues, orderDate: new Date() as Date | '' })
 // @ts-ignore
 const FormValidationSchema = ({ customers }) => {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
@@ -47,9 +56,10 @@ const FormValidationSchema = ({ customers }) => {
     setValue,
     watch
   } = useForm({
-    defaultValues,
+    defaultValues: freshValues(),
     mode: 'onChange'
   })
+  const { once: submitOnce, submitting } = useSubmitOnce();
 
   const quantity = watch('quantity')
   const unitPrice = watch('unitPrice')
@@ -70,10 +80,19 @@ const FormValidationSchema = ({ customers }) => {
 
   const onSubmit = async (data: any) => {
     try {
-      const response = await axios.post('/api/create_order', data);
+      // Dates go as the picked calendar day so the time zone cannot move them
+      // into the previous day (and month).
+      const response = await axios.post('/api/create_order', {
+        ...data,
+        orderStatus: 'New',
+        orderDate: toCalendarDateString(data.orderDate),
+        deliveryDate: toCalendarDateString(data.orderDate),
+        bottleReturnedDate: toCalendarDateString(data.bottleReturnedDate),
+        productId: BOTTLE_PRODUCT_ID
+      });
       if (response.status === 201) {
         toast.success('Order created successfully!');
-        reset();
+        reset(freshValues());
         setSelectedCustomer(null);
       }
     } catch (error: any) {
@@ -98,7 +117,7 @@ const FormValidationSchema = ({ customers }) => {
     setValue('customerid', customer.customerid)
 
     try {
-      const res = await fetch(`/api/customer-info?id=${customer.customerid}`)
+      const res = await authFetch(`/api/customer-info?id=${customer.customerid}`)
       const data = await res.json()
       setValue('paymentMode', data.paymentmode || '')
       setValue('deliveryAddress', data.addressres || '')
@@ -112,9 +131,9 @@ const FormValidationSchema = ({ customers }) => {
 
   return (
     <Card>
-      <CardHeader title='Create Order' subheader='Capture order details, delivery, and invoice info.' />
+      <CardHeader title='Create Order' subheader='Capture order details and delivery info.' />
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit, (errors)=> console.log(errors, "error"))}>
+        <form onSubmit={submitOnce(handleSubmit(onSubmit))}>
           <Grid container spacing={5}>
 
             <Grid item xs={12} sm={6}>
@@ -154,45 +173,8 @@ const FormValidationSchema = ({ customers }) => {
             </Grid>
 
 
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name='productId'
-                control={control}
-                rules={{ required: 'Product is required' }}
-                render={({ field }) => (
-                  <FormControl fullWidth error={Boolean(errors.productId)}>
-                    <InputLabel required id='product-label'>Product</InputLabel>
-                    <Select
-                      {...field}
-                      labelId='product-label'
-                      label='Product'
-                      value={field.value || ''}
-                      onChange={field.onChange}
-                      readOnly={true}
-                      renderValue={(value) => (value ? 'Bottle' : '')}
-                    >
-                      <MenuItem selected value={1}>Bottle</MenuItem>
-                    </Select>
-                    <FormHelperText>{errors.productId?.message}</FormHelperText>
-                  </FormControl>
-                )}
-              />
-            </Grid>
-            {/* Payment Mode */}
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name='paymentMode'
-                control={control}
-                render={({ field }) => (
-                  <CustomTextField
-                    fullWidth
-                    {...field}
-                    label='Payment Mode'
-                    placeholder='Payment Mode'
-                    disabled={true}
-                  />
-                )} />
-            </Grid>
+            {/* Payment mode is taken from the customer record and saved with the
+                order behind the scenes; the client does not want it on this form. */}
 
             <Grid item xs={12} sm={6}>
               <Controller
@@ -201,6 +183,7 @@ const FormValidationSchema = ({ customers }) => {
                 rules={{ required: 'Order date is required' }}
                 render={({ field }) => (
                   <DatePicker
+                    dateFormat={DISPLAY_DATE_FORMAT}
                     selected={field.value ? new Date(field.value) : null}
                     onChange={(date) => field.onChange(date)}
                     placeholderText='Select Order Date'
@@ -211,35 +194,17 @@ const FormValidationSchema = ({ customers }) => {
             </Grid>
 
             <Grid item xs={12} sm={6}>
-              <Controller
-                name="orderStatus"
-                control={control}
-                rules={{ required: 'Order status is required' }}
-                render={({ field }) => (
-                  <FormControl fullWidth error={Boolean(errors.orderStatus)}>
-                    <InputLabel required id="order-status-label">Order Status</InputLabel>
-                    <Select
-                      {...field}
-                      labelId="order-status-label"
-                      label="Order Status"
-                      value={field.value || ''}
-                      onChange={field.onChange}
-                    >
-                      <MenuItem value="New">New</MenuItem>
-                      <MenuItem value="Completed">Completed</MenuItem>
-                      <MenuItem value="Cancel">Cancel</MenuItem>
-                    </Select>
-                    <FormHelperText>{errors.orderStatus?.message}</FormHelperText>
-                  </FormControl>
-                )}
-              />
+              <CustomTextField fullWidth label='Order Status' value='New' disabled />
             </Grid>
 
             <Grid item xs={12} sm={6}>
               <Controller
                 name='quantity'
                 control={control}
-                rules={{ required: 'Quantity is required' }}
+                rules={{
+                  required: 'Quantity is required',
+                  validate: value => (Number.isInteger(Number(value)) && Number(value) > 0) || 'Quantity must be a whole number of bottles'
+                }}
                 render={({ field }) => (
                   <CustomTextField
                     fullWidth
@@ -255,16 +220,26 @@ const FormValidationSchema = ({ customers }) => {
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <Controller name='returnedQty' control={control} render={({ field }) => (
-                <CustomTextField
-                  fullWidth
-                  {...field}
-                  label='Returned Quantity'
-                  placeholder='Returned Quantity'
-                  type='number'
-                  inputProps={{ min: 0, step: 1 }}
-                />
-              )} />
+              <Controller
+                name='returnedQty'
+                control={control}
+                rules={{
+                  validate: value =>
+                    value === '' || (Number.isInteger(Number(value)) && Number(value) >= 0) || 'Returned quantity must be a whole number of bottles'
+                }}
+                render={({ field }) => (
+                  <CustomTextField
+                    fullWidth
+                    {...field}
+                    label='Returned Quantity'
+                    placeholder='Returned Quantity'
+                    type='number'
+                    inputProps={{ min: 0, step: 1 }}
+                    error={Boolean(errors.returnedQty)}
+                    helperText={errors.returnedQty?.message}
+                  />
+                )}
+              />
             </Grid>
             <Grid item xs={12} sm={6}>
               <Controller name='unitPrice' 
@@ -315,27 +290,11 @@ const FormValidationSchema = ({ customers }) => {
                 control={control}
                 render={({ field }) => (
                   <DatePicker
+                    dateFormat={DISPLAY_DATE_FORMAT}
                     selected={field.value ? new Date(field.value) : null}
                     onChange={(date) => field.onChange(date)}
                     placeholderText='Select Bottle Returned Date'
                     customInput={<CustomTextField fullWidth label='Bottle Returned Date' />}
-                  />
-                )}
-              />
-            </Grid>
-
-
-
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name='deliveryDate'
-                control={control}
-                render={({ field }) => (
-                  <DatePicker
-                    selected={field.value ? new Date(field.value) : null}
-                    onChange={(date) => field.onChange(date)}
-                    placeholderText='Select Delivery Date'
-                    customInput={<CustomTextField fullWidth label='Delivery Date' />}
                   />
                 )}
               />
@@ -359,40 +318,6 @@ const FormValidationSchema = ({ customers }) => {
               />
             </Grid>
 
-
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name='invoiceNo'
-                control={control}
-                render={({ field }) => (
-                  <CustomTextField
-                    fullWidth
-                    {...field}
-                    label='Invoice No'
-                    placeholder='Auto-generated after order creation'
-                    type='number'
-                    inputProps={{ min: 0, step: 1 }}
-                    disabled
-                  />
-                )}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name='invoiceDate'
-                control={control}
-                render={({ field }) => (
-                  <DatePicker
-                    selected={field.value ? new Date(field.value) : null}
-                    onChange={(date) => field.onChange(date)}
-                    placeholderText='Select Invoice Date'
-                    customInput={<CustomTextField fullWidth label='Invoice Date' />}
-                  />
-                )}
-              />
-            </Grid>
-
             <Grid item xs={12} sm={6}>
               <Controller
                 name='telephone'
@@ -409,7 +334,7 @@ const FormValidationSchema = ({ customers }) => {
             </Grid>
 
             <Grid item xs={12}>
-              <Button type='submit' variant='contained'>Submit</Button>
+              <Button type='submit' variant='contained' disabled={submitting}>Submit</Button>
             </Grid>
 
 

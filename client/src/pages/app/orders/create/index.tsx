@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Formvalidation2 from 'src/views/forms/form-validation/Formvalidation2';
+import { authFetch } from 'src/lib/api-client'
 
 const CreateOrder = () => {
   const [customers, setCustomers] = useState([]);
@@ -8,7 +9,7 @@ const CreateOrder = () => {
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const res = await fetch('/api/allcustomers'); // ✅ updated route here
+        const res = await authFetch('/api/allcustomers'); // ✅ updated route here
         const { customers } = await res.json();
         setCustomers(customers);
       } catch (err) {
