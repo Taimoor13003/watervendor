@@ -9,7 +9,7 @@ import CustomTextField from 'src/@core/components/mui/text-field'
 import { useForm, Controller } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import axios from 'axios';
-import { authFetch } from 'src/lib/api-client'
+import { authFetch, authHeaders } from 'src/lib/api-client'
 import { toCalendarDateString } from 'src/lib/calendar-date'
 import { useSubmitOnce } from 'src/hooks/useSubmitOnce'
 import { DISPLAY_DATE_FORMAT } from 'src/lib/display-date'
@@ -34,7 +34,6 @@ const defaultValues = {
   remarks: '',
   unitPrice: '',
   totalAmount: '',
-  bottleReturnedDate: '',
   returnedQty: '',
   deliveryAddress: '',
   deliveryNotes: '',
@@ -87,9 +86,8 @@ const FormValidationSchema = ({ customers }) => {
         orderStatus: 'New',
         orderDate: toCalendarDateString(data.orderDate),
         deliveryDate: toCalendarDateString(data.orderDate),
-        bottleReturnedDate: toCalendarDateString(data.bottleReturnedDate),
         productId: BOTTLE_PRODUCT_ID
-      });
+      }, { headers: await authHeaders() });
       if (response.status === 201) {
         toast.success('Order created successfully!');
         reset(freshValues());
@@ -97,7 +95,7 @@ const FormValidationSchema = ({ customers }) => {
       }
     } catch (error: any) {
       console.error('Failed to create order:', error);
-      toast.error(error.response?.data?.message || 'Failed to create order.');
+      toast.error(error.response?.data?.message || error.response?.data?.error || 'Failed to create order.');
     }
   }
 
@@ -284,21 +282,6 @@ const FormValidationSchema = ({ customers }) => {
               )} />
             </Grid>
 
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name='bottleReturnedDate'
-                control={control}
-                render={({ field }) => (
-                  <DatePicker
-                    dateFormat={DISPLAY_DATE_FORMAT}
-                    selected={field.value ? new Date(field.value) : null}
-                    onChange={(date) => field.onChange(date)}
-                    placeholderText='Select Bottle Returned Date'
-                    customInput={<CustomTextField fullWidth label='Bottle Returned Date' />}
-                  />
-                )}
-              />
-            </Grid>
 
             <Grid item xs={12} sm={6}>
               <Controller
