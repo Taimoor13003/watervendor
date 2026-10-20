@@ -44,8 +44,10 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data, startDate, endDate }) =
   const firstname = firstItem?.firstname || 'N/A'
   const lastname = firstItem?.lastname || 'N/A'
   const address = firstItem?.addressres || 'N/A'
-  const telephone =
-    (firstItem as any)?.telephoneres || (firstItem as any)?.telephoneoffice || (firstItem as any)?.telephone || 'N/A'
+
+  // Amounts read like the desktop invoice: 1,320.00
+  const money = (value: number) =>
+    value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A'
@@ -108,18 +110,17 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data, startDate, endDate }) =
           {[firstname, lastname].filter(name => name && name !== 'N/A').join(' ') || 'N/A'}
         </Typography>
         <Typography sx={{ whiteSpace: 'pre-line' }}>{address}</Typography>
-        <Typography>Telephone: {telephone}</Typography>
-        <br />
-        <Typography>Date: {currentDate}</Typography>
-        <Typography variant='h6'>Invoice no.# {invoiceNumber}</Typography>
-        <Typography variant='h6'>Account no.# {firstItem.accountno}</Typography>
-        <br />
 
-        <Divider />
-        <Typography variant='h1' align='center' sx={{ fontSize: ['2rem', '3rem', undefined] }}>
-          Invoice Summary
+        {/* Same order as the desktop RMS invoice: date, account, then our invoice number. */}
+        <Typography sx={{ mt: 3, fontWeight: 700 }}>Date: {currentDate}</Typography>
+        <Typography variant='body2'>Account #: {firstItem.accountno}</Typography>
+        <Typography variant='body2' sx={{ mb: 3 }}>
+          Invoice #: {invoiceNumber}
         </Typography>
-        <Divider />
+
+        <Box sx={{ border: '1px solid', borderColor: 'text.primary', py: 1, textAlign: 'center' }}>
+          <Typography sx={{ fontWeight: 700, letterSpacing: 4 }}>INVOICE DETAILS</Typography>
+        </Box>
       </CardContent>
 
       <TableContainer>
@@ -127,10 +128,10 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data, startDate, endDate }) =
           <TableHead>
             <TableRow>
               <TableCell>Invoice Date</TableCell>
-              <TableCell>Bottles Delivered</TableCell>
-              <TableCell>Bottles Returned</TableCell>
-              <TableCell>Rate</TableCell>
-              <TableCell>Total</TableCell>
+              <TableCell align='right'>Bottles Delivered</TableCell>
+              <TableCell align='right'>Bottles Returned</TableCell>
+              <TableCell align='right'>Rate</TableCell>
+              <TableCell align='right'>Total</TableCell>
             </TableRow>
           </TableHead>
           <TableBody
@@ -147,25 +148,27 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data, startDate, endDate }) =
               return (
                 <TableRow key={index}>
                   <TableCell>{formatDate(newData.InvoiceDate)}</TableCell>
-                  <TableCell>{newData.orderqty}</TableCell>
-                  <TableCell>{newData.returnqty || 0}</TableCell>
-                  <TableCell>{newData.rate_per_bottle}</TableCell>
-                  <TableCell>{amount}</TableCell>
+                  <TableCell align='right'>{newData.orderqty}</TableCell>
+                  <TableCell align='right'>{newData.returnqty || 0}</TableCell>
+                  <TableCell align='right'>{money(Number(newData.rate_per_bottle || 0))}</TableCell>
+                  <TableCell align='right'>{money(amount)}</TableCell>
                 </TableRow>
               )
             })}
             <TableRow
               sx={{
                 '& .MuiTableCell-root': {
-                  fontWeight: 700
+                  fontWeight: 700,
+                  borderTop: '2px solid',
+                  borderColor: 'text.primary'
                 }
               }}
             >
-              <TableCell>Total</TableCell>
-              <TableCell>{totalBottlesDelivered}</TableCell>
-              <TableCell>{totalBottlesReturned}</TableCell>
+              <TableCell>TOTAL</TableCell>
+              <TableCell align='right'>{totalBottlesDelivered}</TableCell>
+              <TableCell align='right'>{totalBottlesReturned}</TableCell>
               <TableCell />
-              <TableCell>{totalAmountDue}</TableCell>
+              <TableCell align='right'>{money(totalAmountDue)}</TableCell>
             </TableRow>
           </TableBody>
         </Table>
@@ -174,13 +177,10 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data, startDate, endDate }) =
       <Divider />
 
       <CardContent sx={{ px: [6, 10] }}>
-        <Typography sx={{ color: 'text.secondary' }}>
-          <Typography component='span' sx={{ mr: 1.5, fontWeight: 500, color: 'inherit' }}>
-            Note:
-          </Typography>
-          Total Amount Due is Rs:{totalAmountDue}
+        <Typography>
+          Total amount due is Rs.<b>{money(totalAmountDue)}</b> only.
         </Typography>
-        <Typography>Thank you</Typography>
+        <Typography sx={{ mt: 2 }}>Thank you.</Typography>
       </CardContent>
     </Card>
   )

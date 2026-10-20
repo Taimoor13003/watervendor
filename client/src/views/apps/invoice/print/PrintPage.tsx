@@ -9,7 +9,6 @@ import jsPDF from 'jspdf'
 import Box from '@mui/material/Box'
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
-import Divider from '@mui/material/Divider'
 import Table from '@mui/material/Table'
 import TableHead from '@mui/material/TableHead'
 import TableBody from '@mui/material/TableBody'
@@ -18,6 +17,7 @@ import TableCell from '@mui/material/TableCell'
 import { styled } from '@mui/material/styles'
 import { GlobalStyles } from '@mui/material'
 import { firebaseAuth } from 'src/services/firebase.service'
+import { buildInvoiceNumber } from 'src/lib/invoice-number'
 
 const MUITableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: 0,
@@ -68,7 +68,7 @@ const PrintPage: React.FC = () => {
 
   // The certification marks load before print/download begins.
   const invoiceCount = Object.values(data).filter(rows => Array.isArray(rows) && rows.length > 0).length
-  const totalLogos = invoiceCount * 2
+  const totalLogos = invoiceCount * 3
   const [logosLoaded, setLogosLoaded] = useState(0)
   const onLogoLoad = useCallback(() => setLogosLoaded(n => n + 1), [])
 
@@ -217,6 +217,9 @@ const PrintPage: React.FC = () => {
       return '—'
     }
   }
+  // Amounts print like the desktop invoice: 1,320.00
+  const money = (value: number) =>
+    value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const getLineTotal = (row: any) => {
     if (row.orderamount !== null && row.orderamount !== undefined) return Number(row.orderamount)
 
@@ -272,6 +275,12 @@ const PrintPage: React.FC = () => {
           const totAmt = rows.reduce((s, r) => s + getLineTotal(r), 0)
 
           const first = rows[0]
+          const invoiceNumber = buildInvoiceNumber({
+            accountNo: first.accountno,
+            customerId: cid,
+            startDate,
+            endDate
+          })
 
           return (
             <Box
@@ -283,7 +292,7 @@ const PrintPage: React.FC = () => {
                 pageBreakAfter: 'always'
               }}
               className='invoice-block'
-              data-account={first.accountno}
+              data-account={invoiceNumber}
             >
               {/* HEADER WITH LOGOS */}
               <Grid
@@ -310,11 +319,16 @@ const PrintPage: React.FC = () => {
                   />
                 </Grid>
                 <Grid item xs={4} textAlign='center'>
-                  <Typography variant='h3' fontWeight={700} sx={{ color: '#1976d2' }}>
-                    Water Vendor
-                  </Typography>
-                  <Typography variant='body2' letterSpacing={2} sx={{ color: 'text.secondary' }}>
-                    PURE DRINKING WATER
+                  <img
+                    src='/images/avatars/output-onlinepngtools.png'
+                    alt='Rivielle - The Premium Drinking Water'
+                    width={240}
+                    height={105}
+                    onLoad={onLogoLoad}
+                    onError={onLogoLoad}
+                  />
+                  <Typography variant='body2' sx={{ color: '#000' }}>
+                    Rivielle.com
                   </Typography>
                 </Grid>
                 <Grid item xs={4} textAlign='right'>
@@ -331,23 +345,19 @@ const PrintPage: React.FC = () => {
 
               {/* CUSTOMER INFO */}
               <Typography variant='h6' fontWeight={700}>
-                {first.firstname} {first.lastname}
+                {[first.firstname, first.lastname].filter(Boolean).join(' ') || '—'}
               </Typography>
-              <Typography>
-                <b>Address:</b> {first.addressres}
+              <Typography sx={{ whiteSpace: 'pre-line' }}>{first.addressres || '—'}</Typography>
+
+              {/* Same order as the desktop RMS invoice: date, account, then our invoice number. */}
+              <Typography sx={{ mt: 2 }}>
+                <b>Date: {format(new Date(), 'EEEE, dd MMMM, yyyy')}</b>
               </Typography>
-              <Typography>
-                <b>Invoice period:</b> {fmt(startDate)} – {fmt(endDate)}
-              </Typography>
-              <Typography>
-                <b>Issued:</b> {format(new Date(), 'EEEE, dd MMMM, yyyy')}
-              </Typography>
-              <Typography>
-                <b>Account no.:</b> {first.accountno}
+              <Typography variant='body2'>Account #: {first.accountno}</Typography>
+              <Typography variant='body2' sx={{ mb: 2 }}>
+                Invoice #: {invoiceNumber}
               </Typography>
 
-              {/* DIVIDER + LABEL */}
-              <Divider sx={{ borderBottomWidth: 2, my: 2 }} />
               <Box sx={{ textAlign: 'center', border: '1px solid rgba(0,0,0,0.7)', py: 1, mb: 1 }}>
                 <Typography letterSpacing={4} fontWeight={700}>
                   INVOICE DETAILS
@@ -355,7 +365,14 @@ const PrintPage: React.FC = () => {
               </Box>
 
               {/* DETAILS TABLE */}
-              <Table>
+              {/* Compact black rows with plain bold headings, like the desktop invoice. */}
+              <Table
+                size='small'
+                sx={{
+                  '& th, & td': { color: '#000', borderBottom: 'none', py: 0.5 },
+                  '& th': { textTransform: 'none', letterSpacing: 0, fontSize: '0.875rem', borderBottom: '2px solid #000' }
+                }}
+              >
                 <TableHead>
                   <TableRow>
                     <MUITableCell>
@@ -383,12 +400,12 @@ const PrintPage: React.FC = () => {
                         <MUITableCell>{fmt(r.InvoiceDate)}</MUITableCell>
                         <MUITableCell align='right'>{r.orderqty}</MUITableCell>
                         <MUITableCell align='right'>{r.returnqty || 0}</MUITableCell>
-                        <MUITableCell align='right'>{Number(r.rate_per_bottle || 0).toFixed(2)}</MUITableCell>
-                        <MUITableCell align='right'>{amt.toFixed(2)}</MUITableCell>
+                        <MUITableCell align='right'>{money(Number(r.rate_per_bottle || 0))}</MUITableCell>
+                        <MUITableCell align='right'>{money(amt)}</MUITableCell>
                       </TableRow>
                     )
                   })}
-                  <TableRow>
+                  <TableRow sx={{ '& td': { borderTop: '2px solid #000', borderBottom: '2px solid #000' } }}>
                     <MUITableCell>
                       <b>TOTAL</b>
                     </MUITableCell>
@@ -400,7 +417,7 @@ const PrintPage: React.FC = () => {
                     </MUITableCell>
                     <MUITableCell />
                     <MUITableCell align='right'>
-                      <b>{totAmt.toFixed(2)}</b>
+                      <b>{money(totAmt)}</b>
                     </MUITableCell>
                   </TableRow>
                 </TableBody>
@@ -409,9 +426,9 @@ const PrintPage: React.FC = () => {
               {/* NOTE & THANK YOU */}
               <Box mt={2}>
                 <Typography>
-                  <b>Note:</b> Total amount due is Rs:{totAmt.toFixed(2)} only.
+                  Total amount due is Rs.<b>{money(totAmt)}</b> only.
                 </Typography>
-                <Typography>Thank you.</Typography>
+                <Typography sx={{ mt: 3 }}>Thank you.</Typography>
               </Box>
 
               {/* INLINE FOOTER */}
@@ -426,7 +443,8 @@ const PrintPage: React.FC = () => {
                   py: 1,
                   backgroundColor: '#DCF0FB',
                   borderTop: '1px solid rgba(0,0,0,0.2)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
                   color: '#000',
                   WebkitPrintColorAdjust: 'exact',
                   printColorAdjust: 'exact',
@@ -436,8 +454,8 @@ const PrintPage: React.FC = () => {
                   }
                 }}
               >
-                Plot C-3-28, Block-B, Korangi Industrial Area, Karachi │ Cell: 0300-2734089, 0332-4422385 │ Ph:
-                021-35151000
+                Plot # C-3-28 Block-B Korangi Industrial Area, Karachi. Cell: 0300-2734089 - 0332-4422385 Ph:
+                021-3515-1000
               </Box>
             </Box>
           )
