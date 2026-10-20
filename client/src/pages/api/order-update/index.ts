@@ -59,6 +59,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'Invoice number must be a positive integer' })
     }
 
+    // An invoice number belongs to one order only, like the desktop RMS.
+    if (parsedInvoiceNo !== null) {
+      const clash = await prisma.orders.findFirst({
+        where: {
+          invoiceno: parsedInvoiceNo,
+          orderid: { not: numericOrderId },
+          OR: [{ isdeleted: false }, { isdeleted: null }],
+        },
+        select: { orderno: true },
+      })
+
+      if (clash) {
+        return res.status(400).json({ message: `Invoice number ${parsedInvoiceNo} is already used by order ${clash.orderno}` })
+      }
+    }
+
     await prisma.$transaction(async tx => {
       const existingOrder = await tx.orders.findFirst({
         where: { orderid: numericOrderId, isdeleted: { not: true } },
