@@ -281,7 +281,6 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
                       <MenuItem value="New">New</MenuItem>
                       <MenuItem value="Completed">Completed</MenuItem>
                       <MenuItem value="Cancel">Cancel</MenuItem>
-                      <MenuItem value="Canceled">Canceled (legacy)</MenuItem>
                     </Select>
                     <FormHelperText>{(errors.orderstatus as any)?.message}</FormHelperText>
                   </FormControl>
