@@ -1,4 +1,5 @@
 // ** Next Import
+import { useState } from 'react'
 import Link from 'next/link'
 import axios from 'axios'
 import { firebaseAuth } from 'src/services/firebase.service'
@@ -10,6 +11,7 @@ import CardContent from '@mui/material/CardContent'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
+import SendWhatsAppDialog from './SendWhatsAppDialog'
 
 interface Props {
   id: string | null
@@ -20,6 +22,8 @@ interface Props {
 }
 
 const PreviewActions = ({ id, startDate, endDate, toggleSendInvoiceDrawer, toggleAddPaymentDrawer }: Props) => {
+  const [whatsAppOpen, setWhatsAppOpen] = useState(false)
+
   const downloadInvoice = async () => {
     const idToken = await firebaseAuth.currentUser?.getIdToken()
     const response = await axios.get('/api/invoice/pdf', {
@@ -64,6 +68,18 @@ const PreviewActions = ({ id, startDate, endDate, toggleSendInvoiceDrawer, toggl
         <Button
           fullWidth
           variant='contained'
+          color='success'
+          onClick={() => setWhatsAppOpen(true)}
+          sx={{ mb: 2, '& svg': { mr: 2 } }}
+          disabled={!id || !startDate || !endDate}
+        >
+          <Icon fontSize='1.125rem' icon='tabler:brand-whatsapp' />
+          Send on WhatsApp
+        </Button>
+
+        <Button
+          fullWidth
+          variant='contained'
           onClick={toggleSendInvoiceDrawer}
           sx={{ mb: 2, '& svg': { mr: 2 } }}
           disabled={true}
@@ -84,6 +100,14 @@ const PreviewActions = ({ id, startDate, endDate, toggleSendInvoiceDrawer, toggl
           Edit Invoice {'>'} disabled
         </Button>
       </CardContent>
+
+      <SendWhatsAppDialog
+        open={whatsAppOpen}
+        onClose={() => setWhatsAppOpen(false)}
+        customerId={id}
+        startDate={startDate}
+        endDate={endDate}
+      />
     </Card>
   )
 }
