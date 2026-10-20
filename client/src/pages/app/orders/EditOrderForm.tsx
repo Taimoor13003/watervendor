@@ -275,7 +275,7 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
                       {...field}
                       labelId="order-status-label"
                       label="Order Status"
-                      value={field.value || ''}
+                      value={field.value === 'Canceled' ? 'Cancel' : field.value || ''}
                       onChange={field.onChange}
                     >
                       <MenuItem value="New">New</MenuItem>

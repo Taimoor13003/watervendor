@@ -26,7 +26,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const parsedReturnQty = toNumberOrNull(returnqty)
     const parsedInvoiceNo = toNumberOrNull(rest.invoiceno)
     const parsedProductId = toNumberOrNull(productid) ?? 1
-    const normalizedOrderStatus = typeof rest.orderstatus === 'string' ? rest.orderstatus.trim() : ''
+    // There is one cancelled status, "Cancel"; the old "Canceled" spelling is saved as it.
+    const trimmedOrderStatus = typeof rest.orderstatus === 'string' ? rest.orderstatus.trim() : ''
+    const normalizedOrderStatus = trimmedOrderStatus === 'Canceled' ? 'Cancel' : trimmedOrderStatus
 
     if (!Number.isInteger(numericOrderId) || numericOrderId <= 0) {
       return res.status(400).json({ message: 'Order ID is required' })

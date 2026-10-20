@@ -18,7 +18,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const { customerid, orderDate, invoiceDate, orderStatus: rawOrderStatus, quantity, productId, returnedQty, ...rest } = req.body;
     // New orders start as "New" unless staff picked another status.
-    const orderStatus = typeof rawOrderStatus === 'string' && rawOrderStatus.trim() ? rawOrderStatus.trim() : 'New';
+    const requestedStatus = typeof rawOrderStatus === 'string' && rawOrderStatus.trim() ? rawOrderStatus.trim() : 'New';
+    // There is one cancelled status, "Cancel"; the old "Canceled" spelling is saved as it.
+    const orderStatus = requestedStatus === 'Canceled' ? 'Cancel' : requestedStatus;
     // Bottle counts must be whole numbers: parseInt turned "2.5" into 2 silently.
     const toWholeNumber = (value: unknown) =>
       typeof value === 'number' || (typeof value === 'string' && /^\s*-?\d+(\.\d+)?\s*$/.test(value)) ? Number(value) : NaN;
