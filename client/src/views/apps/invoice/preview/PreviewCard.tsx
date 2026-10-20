@@ -16,12 +16,15 @@ import TableCell from '@mui/material/TableCell'
 import { format } from 'date-fns'
 import Image from 'next/image'
 import { SingleInvoiceType } from 'src/types/apps/invoiceTypes'
+import { buildInvoiceNumber } from 'src/lib/invoice-number'
 
 interface PreviewCardProps {
   data: SingleInvoiceType[] // Expecting an array
+  startDate?: string
+  endDate?: string
 }
 
-const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
+const PreviewCard: React.FC<PreviewCardProps> = ({ data, startDate, endDate }) => {
   const theme = useTheme()
 
   const datanew = Array.isArray(data) ? data : []
@@ -41,6 +44,8 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
   const firstname = firstItem?.firstname || 'N/A'
   const lastname = firstItem?.lastname || 'N/A'
   const address = firstItem?.addressres || 'N/A'
+  const telephone =
+    (firstItem as any)?.telephoneres || (firstItem as any)?.telephoneoffice || (firstItem as any)?.telephone || 'N/A'
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A'
@@ -54,6 +59,13 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
     return total + getLineTotal(item)
   }, 0)
 
+  const invoiceNumber = buildInvoiceNumber({
+    accountNo: (firstItem as any)?.accountno,
+    customerId: (firstItem as any)?.customerid,
+    startDate,
+    endDate
+  })
+
   return (
     <Card>
       <CardContent sx={{ px: [6, 10] }}>
@@ -62,14 +74,18 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            padding: '20px',
-            gap: 2
+            padding: ['8px 0', '20px'],
+            gap: 2,
+            // Logos shrink on phones instead of pushing the page sideways.
+            '& > *': { minWidth: 0 },
+            '& img': { maxWidth: '100%', height: 'auto' }
           }}
         >
-          <Box>
+          <Box sx={{ flex: '1 1 150px' }}>
             <Image src='/images/avatars/5.-Manfaat-ISO-22000-Bagi-Bisnis.webp' alt='Left' width={150} height={100} />
           </Box>
           {/* Center logo: crop 2px from the right to hide embedded separator line */}
+          <Box sx={{ flex: '2 1 330px' }}>
           <Image
             src='/images/avatars/WhatsApp Image 2024-09-04 at 01.17.42_00181990.jpg'
             alt='Center'
@@ -81,16 +97,26 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
               clipPath: 'inset(0 2px 0 0)'
             }}
           />
+          </Box>
 
-          <Box>
+          <Box sx={{ flex: '1 1 150px' }}>
             <Image src='/images/avatars/pngwing.com.png' alt='Right' width={150} height={80} />
           </Box>
         </Box>
+        {/* Customer block: the invoice has to identify who it is addressed to. */}
+        <Typography variant='h6' sx={{ fontWeight: 700 }}>
+          {[firstname, lastname].filter(name => name && name !== 'N/A').join(' ') || 'N/A'}
+        </Typography>
+        <Typography sx={{ whiteSpace: 'pre-line' }}>{address}</Typography>
+        <Typography>Telephone: {telephone}</Typography>
+        <br />
+        <Typography>Date: {currentDate}</Typography>
+        <Typography variant='h6'>Invoice no.# {invoiceNumber}</Typography>
         <Typography variant='h6'>Account no.# {firstItem.accountno}</Typography>
         <br />
 
         <Divider />
-        <Typography variant='h1' align='center'>
+        <Typography variant='h1' align='center' sx={{ fontSize: ['2rem', '3rem', undefined] }}>
           Invoice Summary
         </Typography>
         <Divider />
@@ -104,7 +130,7 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data }) => {
               <TableCell>Bottles Delivered</TableCell>
               <TableCell>Bottles Returned</TableCell>
               <TableCell>Rate</TableCell>
-              <TableCell>To</TableCell>
+              <TableCell>Total</TableCell>
             </TableRow>
           </TableHead>
           <TableBody

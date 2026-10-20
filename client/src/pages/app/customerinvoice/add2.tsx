@@ -105,7 +105,11 @@ const InvoiceAdd: React.FC = () => {
             {Array.isArray(invoiceData[id]) && invoiceData[id].length > 0 ? (
               <>
                 <Grid item xl={9} md={8} xs={12}>
-                  <PreviewCard data={invoiceData[id]} />
+                  <PreviewCard
+                    data={invoiceData[id]}
+                    startDate={startDate as string}
+                    endDate={endDate as string}
+                  />
                 </Grid>
                 <Grid item xl={3} md={4} xs={12}>
                   <PreviewActions
