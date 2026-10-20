@@ -145,7 +145,8 @@ const PrintPage: React.FC = () => {
       for (let i = 0; i < blocks.length; i++) {
         const el = blocks[i]
         const canvas = await html2canvas(el, {
-          scale: 2,
+          // 3x keeps logos and text crisp in the downloaded PDF (2x looked soft).
+          scale: 3,
           useCORS: true,
           backgroundColor: '#ffffff',
           imageTimeout: 5000,
@@ -328,7 +329,7 @@ const PrintPage: React.FC = () => {
                     onError={onLogoLoad}
                   />
                   <Typography variant='body2' sx={{ color: '#000' }}>
-                    Rivielle.com
+                    Rivielle.org
                   </Typography>
                 </Grid>
                 <Grid item xs={4} textAlign='right'>

@@ -84,7 +84,7 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data, startDate, endDate }) =
           }}
         >
           <Box sx={{ flex: '1 1 150px' }}>
-            <Image src='/images/avatars/5.-Manfaat-ISO-22000-Bagi-Bisnis.webp' alt='Left' width={150} height={100} />
+            <Image src='/images/avatars/5.-Manfaat-ISO-22000-Bagi-Bisnis.webp' alt='Left' width={150} height={100} unoptimized />
           </Box>
           {/* Center logo: crop 2px from the right to hide embedded separator line */}
           <Box sx={{ flex: '2 1 330px' }}>
@@ -93,16 +93,21 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data, startDate, endDate }) =
             alt='Center'
             width={330}
             height={150}
+            // Served as-is: Next's resizing recompressed the logos and blurred them.
+            unoptimized
             style={{
               objectFit: 'contain',
               display: 'block',
               clipPath: 'inset(0 2px 0 0)'
             }}
           />
+          <Typography variant='body2' align='center'>
+            Rivielle.org
+          </Typography>
           </Box>
 
           <Box sx={{ flex: '1 1 150px' }}>
-            <Image src='/images/avatars/pngwing.com.png' alt='Right' width={150} height={80} />
+            <Image src='/images/avatars/pngwing.com.png' alt='Right' width={150} height={80} unoptimized />
           </Box>
         </Box>
         {/* Customer block: the invoice has to identify who it is addressed to. */}
