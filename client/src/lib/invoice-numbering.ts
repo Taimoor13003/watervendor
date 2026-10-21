@@ -4,8 +4,6 @@ import prisma from 'src/lib/prisma'
 // Invoice numbers continue the desktop RMS series: RI-345693, RI-345694, ...
 // The imported RMS data keeps its invoice numbers in orders.invoiceno, so each
 // new number is one past the highest number used so far, there or here.
-// INVOICE_NUMBER_START can raise the starting point (for example to RMS's
-// current number) so the web never reuses a number RMS has already printed.
 //
 // An invoice is a printout of a customer's UNPAID orders in a period (paid
 // orders never appear on an invoice). The number belongs to that exact set of
@@ -46,12 +44,6 @@ const ensureTable = () => {
 
 export const formatInvoiceNumber = (invoiceNo: number) => `${INVOICE_PREFIX}${invoiceNo}`
 
-const startingFloor = () => {
-  const value = Number(process.env.INVOICE_NUMBER_START)
-
-  return Number.isInteger(value) && value > 0 ? value : 0
-}
-
 export type InvoiceToNumber = { customerId: number; startDate: string; endDate: string; orderIds: number[] }
 
 export const issueInvoiceNumber = async ({ customerId, startDate, endDate, orderIds }: InvoiceToNumber) => {
@@ -75,8 +67,7 @@ export const issueInvoiceNumber = async ({ customerId, startDate, endDate, order
     const [{ next }] = await tx.$queryRaw<Array<{ next: number }>>`
       SELECT (GREATEST(
         COALESCE((SELECT MAX(invoiceno) FROM orders), 0),
-        COALESCE((SELECT MAX(invoiceno) FROM customer_invoice_numbers), 0),
-        ${startingFloor() - 1}::int
+        COALESCE((SELECT MAX(invoiceno) FROM customer_invoice_numbers), 0)
       ) + 1)::int AS "next"
     `
     await tx.$executeRaw`
