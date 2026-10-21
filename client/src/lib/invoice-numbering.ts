@@ -1,14 +1,19 @@
 import { createHash } from 'crypto'
 import prisma from 'src/lib/prisma'
 
-// Short running invoice numbers (INV-1001, INV-1002, ...), like the desktop RMS
-// "RI-349270" numbers but with our own prefix so the two systems never clash.
+// Invoice numbers continue the desktop RMS series: RI-345693, RI-345694, ...
+// The imported RMS data keeps its invoice numbers in orders.invoiceno, so each
+// new number is one past the highest number used so far, there or here.
+// INVOICE_NUMBER_START can raise the starting point (for example to RMS's
+// current number) so the web never reuses a number RMS has already printed.
 //
 // An invoice is a printout of a customer's UNPAID orders in a period (paid
 // orders never appear on an invoice). The number belongs to that exact set of
 // orders: reprinting the same unpaid orders shows the same number, and once the
 // set changes (an order was paid, or a new one delivered) it gets a new number.
-const FIRST_NUMBER_OFFSET = 1000
+const INVOICE_PREFIX = 'RI-'
+// Arbitrary but fixed key: serialises number allocation across requests.
+const INVOICE_NUMBER_LOCK = 918273646
 
 let tableReady: Promise<unknown> | null = null
 
@@ -21,6 +26,7 @@ const ensureTable = () => {
       .$executeRawUnsafe(
         `CREATE TABLE IF NOT EXISTS customer_invoice_numbers (
           id SERIAL PRIMARY KEY,
+          invoiceno INTEGER NOT NULL UNIQUE,
           customerid INTEGER NOT NULL,
           startdate DATE,
           enddate DATE,
@@ -38,7 +44,13 @@ const ensureTable = () => {
   return tableReady
 }
 
-export const formatInvoiceNumber = (id: number) => `INV-${FIRST_NUMBER_OFFSET + id}`
+export const formatInvoiceNumber = (invoiceNo: number) => `${INVOICE_PREFIX}${invoiceNo}`
+
+const startingFloor = () => {
+  const value = Number(process.env.INVOICE_NUMBER_START)
+
+  return Number.isInteger(value) && value > 0 ? value : 0
+}
 
 export type InvoiceToNumber = { customerId: number; startDate: string; endDate: string; orderIds: number[] }
 
@@ -47,21 +59,35 @@ export const issueInvoiceNumber = async ({ customerId, startDate, endDate, order
   const ids = [...new Set(orderIds)].sort((a, b) => a - b)
   const orderKey = createHash('sha256').update(`${customerId}:${ids.join(',')}`).digest('hex')
 
-  // Insert-or-reuse in one statement, safe when two people print at once.
-  const rows = await prisma.$queryRaw<Array<{ id: number }>>`
-    WITH inserted AS (
-      INSERT INTO customer_invoice_numbers (customerid, startdate, enddate, orderkey, orderids)
-      VALUES (${customerId}, ${startDate}::date, ${endDate}::date, ${orderKey}, ${ids}::int[])
-      ON CONFLICT (orderkey) DO NOTHING
-      RETURNING id
-    )
-    SELECT id FROM inserted
-    UNION ALL
-    SELECT id FROM customer_invoice_numbers WHERE orderkey = ${orderKey}
-    LIMIT 1
-  `
+  const invoiceNo = await prisma.$transaction(async tx => {
+    const existing = await tx.$queryRaw<Array<{ invoiceno: number }>>`
+      SELECT invoiceno FROM customer_invoice_numbers WHERE orderkey = ${orderKey}
+    `
+    if (existing.length) return Number(existing[0].invoiceno)
 
-  return formatInvoiceNumber(Number(rows[0].id))
+    // One allocation at a time, so two people printing at once never share a number.
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${INVOICE_NUMBER_LOCK})`
+    const again = await tx.$queryRaw<Array<{ invoiceno: number }>>`
+      SELECT invoiceno FROM customer_invoice_numbers WHERE orderkey = ${orderKey}
+    `
+    if (again.length) return Number(again[0].invoiceno)
+
+    const [{ next }] = await tx.$queryRaw<Array<{ next: number }>>`
+      SELECT (GREATEST(
+        COALESCE((SELECT MAX(invoiceno) FROM orders), 0),
+        COALESCE((SELECT MAX(invoiceno) FROM customer_invoice_numbers), 0),
+        ${startingFloor() - 1}::int
+      ) + 1)::int AS "next"
+    `
+    await tx.$executeRaw`
+      INSERT INTO customer_invoice_numbers (invoiceno, customerid, startdate, enddate, orderkey, orderids)
+      VALUES (${next}, ${customerId}, ${startDate}::date, ${endDate}::date, ${orderKey}, ${ids}::int[])
+    `
+
+    return Number(next)
+  })
+
+  return formatInvoiceNumber(invoiceNo)
 }
 
 /** Numbers for several customers' invoices at once, keyed by customer id. */
