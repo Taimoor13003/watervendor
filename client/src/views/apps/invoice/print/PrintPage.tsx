@@ -17,7 +17,6 @@ import TableCell from '@mui/material/TableCell'
 import { styled } from '@mui/material/styles'
 import { GlobalStyles } from '@mui/material'
 import { firebaseAuth } from 'src/services/firebase.service'
-import { buildInvoiceNumber } from 'src/lib/invoice-number'
 
 const MUITableCell = styled(TableCell)(({ theme }) => ({
   borderBottom: 0,
@@ -276,12 +275,8 @@ const PrintPage: React.FC = () => {
           const totAmt = rows.reduce((s, r) => s + getLineTotal(r), 0)
 
           const first = rows[0]
-          const invoiceNumber = buildInvoiceNumber({
-            accountNo: first.accountno,
-            customerId: cid,
-            startDate,
-            endDate
-          })
+          const invoiceNumbers = (data.__invoiceNumbers as unknown as Record<string, string>) || {}
+          const invoiceNumber = invoiceNumbers[cid] || '—'
 
           return (
             <Box

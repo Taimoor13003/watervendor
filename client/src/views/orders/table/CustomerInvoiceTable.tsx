@@ -1,385 +1,261 @@
-import { useState, useEffect, forwardRef } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
-import Typography from '@mui/material/Typography';
 import CardContent from '@mui/material/CardContent';
-import { SelectChangeEvent } from '@mui/material/Select';
-import { DataGrid, GridColDef, GridRenderCellParams, GridRowId} from '@mui/x-data-grid';
-import { Alert, Button, Checkbox, FormControlLabel } from '@mui/material';
+import Typography from '@mui/material/Typography';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import { Alert, Checkbox, FormControlLabel } from '@mui/material';
 import axios from 'axios';
-import toast from 'react-hot-toast';
-
-
 import format from 'date-fns/format';
+import startOfMonth from 'date-fns/startOfMonth';
 import DatePicker from 'react-datepicker';
 
-import { InvoiceType } from 'src/types/apps/invoiceTypes';
-import { DateType } from 'src/types/forms/reactDatepickerTypes';
 import CustomTextField from 'src/@core/components/mui/text-field';
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import Header from 'src/pages/app/customerinvoice/Header';
 import { firebaseAuth } from 'src/services/firebase.service';
 import { DISPLAY_DATE_FORMAT } from 'src/lib/display-date';
 
+// Laid out like the desktop RMS "Customer Invoice Report": Sales Period From /
+// To, then one scrolling list of the customers who still have UNPAID orders in
+// that period (paid orders never appear on an invoice), with a search box,
+// "Show only Credit Clients" and Select All. Payments are recorded on the
+// invoice itself or per order in Edit Order, not here.
 
-interface CustomInputProps {
-  dates: Date[];
-  label: string;
-  end: number | Date;
-  start: number | Date;
-  setDates?: (value: Date[]) => void;
-}
+type CustomerRow = {
+  id: number;
+  customerid: number | null;
+  firstname?: string | null;
+  middlename?: string | null;
+  lastname?: string | null;
+  customertype?: string | null;
+  accountno?: string | null;
+  paymentmode?: string | null;
+  telephoneres?: string | null;
+  telephoneoffice?: string | null;
+};
 
-interface CellType {
-  row: InvoiceType;
-}
+const fullName = (row: CustomerRow) => [row.firstname, row.middlename, row.lastname].filter(Boolean).join(' ');
 
-const CustomInput = forwardRef((props: CustomInputProps, ref) => {
-  const startDate = props.start !== null ? format(props.start, DISPLAY_DATE_FORMAT) : '';
-  const endDate = props.end !== null ? ` - ${format(props.end, DISPLAY_DATE_FORMAT)}` : null;
+const InvoiceList = ({ data }: { data: CustomerRow[] }) => {
+  // Opens on the current month to date, like the client's usual run.
+  const [fromDate, setFromDate] = useState<Date | null>(() => startOfMonth(new Date()));
+  const [toDate, setToDate] = useState<Date | null>(() => new Date());
+  const [search, setSearch] = useState('');
+  const [creditOnly, setCreditOnly] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-  const value = `${startDate}${endDate !== null ? endDate : ''}`;
-  props.start === null && props.dates.length && props.setDates ? props.setDates([]) : null;
-  const updatedProps = { ...props };
-  delete updatedProps.setDates;
+  const [unpaidCustomerIds, setUnpaidCustomerIds] = useState<number[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  return <CustomTextField fullWidth inputRef={ref} {...updatedProps} label={props.label || ''} value={value} />;
-});
-
-const InvoiceList = ({ data }: { data: any[] }) => {
-  const [dates, setDates] = useState<Date[]>([]);
-  const [value, setValue] = useState<string>('');
-  const [statusValue, setStatusValue] = useState<string>('');
-  const [endDateRange, setEndDateRange] = useState<DateType>(null);
-  const [selectedRows] = useState<GridRowId[]>([]);
-  const [startDateRange, setStartDateRange] = useState<DateType>(null);
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
-  const [selectedRowIds, setSelectedRowIds] = useState<any[]>([]);
-  const [isDataReady, setIsDataReady] = useState<boolean>(false);
-
-  // Customers who still owe money for the selected range. Customers who already
-  // paid are hidden so only outstanding invoices get printed.
-  const [pendingCustomerIds, setPendingCustomerIds] = useState<number[] | null>(null);
-  const [pendingLoading, setPendingLoading] = useState<boolean>(false);
-  const [pendingError, setPendingError] = useState<string | null>(null);
-  const [showPaidCustomers, setShowPaidCustomers] = useState<boolean>(false);
-  const [pendingRefresh, setPendingRefresh] = useState<number>(0);
-  const [savingPayment, setSavingPayment] = useState<boolean>(false);
+  const fromParam = fromDate ? format(fromDate, 'yyyy-MM-dd') : '';
+  const toParam = toDate ? format(toDate, 'yyyy-MM-dd') : '';
+  const rangeValid = Boolean(fromParam && toParam && fromParam <= toParam);
 
   useEffect(() => {
-    const dataReady : any = selectedRowIds.length > 0 && startDateRange && endDateRange;
-    setIsDataReady(dataReady);
-  }, [selectedRowIds, startDateRange, endDateRange]);
-
-  const rangeStartParam = startDateRange ? format(startDateRange, 'yyyy-MM-dd') : '';
-  const rangeEndParam = endDateRange ? format(endDateRange, 'yyyy-MM-dd') : '';
-
-  useEffect(() => {
-    if (!rangeStartParam || !rangeEndParam) {
-      setPendingCustomerIds(null);
-      setPendingError(null);
+    setSelectedIds([]);
+    if (!rangeValid) {
+      setUnpaidCustomerIds(null);
 
       return;
     }
 
     let active = true;
-    setPendingLoading(true);
-    setPendingError(null);
+    setLoading(true);
+    setLoadError(null);
 
-    const loadPendingCustomers = async () => {
+    const load = async () => {
       try {
         const idToken = await firebaseAuth.currentUser?.getIdToken();
         const resp = await axios.get('/api/invoice-pending-customers', {
-          params: { startDate: rangeStartParam, endDate: rangeEndParam },
+          params: { startDate: fromParam, endDate: toParam },
           headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined
         });
-        if (!active) return;
-        setPendingCustomerIds(Array.isArray(resp.data?.customerIds) ? resp.data.customerIds : []);
-      } catch (error) {
-        if (!active) return;
-        // Fail open: showing every customer is better than hiding customers who
-        // do owe money because a request failed.
-        setPendingCustomerIds(null);
-        setPendingError('Could not check which customers have already paid, so every customer is listed.');
+        if (active) setUnpaidCustomerIds(Array.isArray(resp.data?.customerIds) ? resp.data.customerIds : []);
+      } catch {
+        // Never fall back to listing everyone: that would offer paid customers
+        // for invoicing.
+        if (active) {
+          setUnpaidCustomerIds(null);
+          setLoadError('Could not load the customers with unpaid orders. Please try again.');
+        }
       } finally {
-        if (active) setPendingLoading(false);
+        if (active) setLoading(false);
       }
     };
 
-    loadPendingCustomers();
+    load();
 
     return () => {
       active = false;
     };
-  }, [rangeStartParam, rangeEndParam, pendingRefresh]);
+  }, [fromParam, toParam, rangeValid]);
 
-  // Desktop "Payment Received": marks every order invoiced in the selected range
-  // as paid, which removes the customer from this list for that period.
-  const recordPayment = async (customerIds: number[], received: boolean) => {
-    if (!rangeStartParam || !rangeEndParam || !customerIds.length) return
+  const rows = useMemo(() => {
+    if (!unpaidCustomerIds) return [];
+    const unpaid = new Set(unpaidCustomerIds);
+    const term = search.trim().toLowerCase();
 
-    const period = `${format(startDateRange as Date, 'dd/MM/yyyy')} to ${format(endDateRange as Date, 'dd/MM/yyyy')}`
-    const who = customerIds.length === 1 ? 'this customer' : `${customerIds.length} customers`
-    const question = received
-      ? `Mark ${who} as PAID for ${period}? They will no longer appear in the invoice list for this period.`
-      : `Mark ${who} as NOT PAID for ${period}?`
-    if (!window.confirm(question)) return
+    return data
+      .filter(row => row.customerid !== null && unpaid.has(Number(row.customerid)))
+      .filter(row => !creditOnly || String(row.paymentmode || '').toLowerCase() === 'credit')
+      .filter(row => {
+        if (!term) return true;
 
-    setSavingPayment(true)
-    try {
-      const idToken = await firebaseAuth.currentUser?.getIdToken();
-      const resp = await axios.post(
-        '/api/payment-received',
-        { customerIds, startDate: rangeStartParam, endDate: rangeEndParam, received },
-        { headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined }
-      );
-      const updated = Number(resp.data?.updated ?? 0)
-      toast.success(
-        received
-          ? `Payment recorded (${updated} order${updated === 1 ? '' : 's'} marked paid).`
-          : `Marked as not paid (${updated} order${updated === 1 ? '' : 's'}).`
-      )
-      setPendingRefresh(count => count + 1)
-    } catch (error: any) {
-      toast.error(error?.response?.data?.error || 'Could not record the payment. Please try again.')
-    } finally {
-      setSavingPayment(false)
-    }
-  };
+        return [fullName(row), row.accountno, row.telephoneres, row.telephoneoffice, row.customertype]
+          .filter(Boolean)
+          .some(value => String(value).toLowerCase().includes(term));
+      })
+      .sort((a, b) => fullName(a).localeCompare(fullName(b)));
+  }, [data, unpaidCustomerIds, search, creditOnly]);
 
-  const hidingPaidCustomers = !showPaidCustomers && pendingCustomerIds !== null;
+  const visibleIds = rows.map(row => Number(row.customerid));
+  const allVisibleSelected = visibleIds.length > 0 && visibleIds.every(id => selectedIds.includes(id));
+  const someVisibleSelected = visibleIds.some(id => selectedIds.includes(id));
 
-  const visibleRows = hidingPaidCustomers
-    ? data.filter(row => pendingCustomerIds.includes(Number(row.customerid)))
-    : data;
-
-  const hiddenCustomerCount = data.length - visibleRows.length;
-
-  const handleFilter = (val: string) => {
-    setValue(val);
-  };
-
-  const handleStatusValue = (e: SelectChangeEvent<unknown>) => {
-    setStatusValue(e.target.value as string);
-  };
-
-  const handleOnChangeRange = (dates: any) => {
-    const [start, end] = dates;
-    if (start !== null && end !== null) {
-      setDates(dates);
-    }
-    setStartDateRange(start);
-    setEndDateRange(end);
-  };
-
-  const onRowsSelectionHandler = (ids: GridRowId[]) => {
-    const selectedRowsData = ids
-      .map((id: GridRowId) => data.find((row) => row.id === id)?.customerid)
-      .filter((customerid) => customerid !== undefined && customerid !== null);
-    setSelectedRowIds(selectedRowsData);
-  };
-
-  const columns: GridColDef[] = [
-    {
-      flex: 0.25,
-      minWidth: 290,
-      field: 'firstname',
-      headerName: 'Customer Name',
-      renderCell: (params: CellType) => (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-            <Typography noWrap variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
-              {[params.row.firstname, params.row.middlename, params.row.lastname].filter(Boolean).join(' ')}
-            </Typography>
-          </Box>
-        </Box>
-      ),
-    },
-    {
-      flex: 0.175,
-      minWidth: 110,
-      field: 'customertype',
-      headerName: 'Customer Type',
-      renderCell: (params: CellType) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.customertype}
-        </Typography>
-      ),
-    },
-    {
-      flex: 0.175,
-      minWidth: 120,
-      headerName: 'Payment Mode',
-      field: 'paymentmode',
-      renderCell: (params: CellType) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.paymentmode}
-        </Typography>
-      ),
-    },
-    {
-      flex: 0.175,
-      minWidth: 120,
-      headerName: 'Telephone (Delivery)',
-      field: 'telephoneres',
-      renderCell: (params: CellType) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.telephoneres}
-        </Typography>
-      ),
-    },
-    {
-      flex: 0.175,
-      minWidth: 120,
-      headerName: 'WhatsApp Number',
-      field: 'telephoneoffice',
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.telephoneoffice}
-        </Typography>
-      ),
-    },
-    {
-      flex: 0.25,
-      minWidth: 290,
-      field: 'actions',
-      headerName: 'Payment',
-      sortable: false,
-      renderCell: (params: GridRenderCellParams) => {
-        if (!rangeStartParam || !rangeEndParam) {
-          return (
-            <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-              Select a date range
-            </Typography>
-          );
-        }
-
-        const customerId = Number(params.row.customerid);
-        const owes = pendingCustomerIds === null || pendingCustomerIds.includes(customerId);
-
-        return owes ? (
-          <Button
-            variant='contained'
-            size='small'
-            color='success'
-            disabled={savingPayment}
-            onClick={() => recordPayment([customerId], true)}
-          >
-            Payment Received
-          </Button>
-        ) : (
-          <Button
-            variant='outlined'
-            size='small'
-            disabled={savingPayment}
-            onClick={() => recordPayment([customerId], false)}
-          >
-            Undo (mark unpaid)
-          </Button>
-        );
-      },
-    },
-  ];
+  const toggleAll = () =>
+    setSelectedIds(current =>
+      allVisibleSelected ? current.filter(id => !visibleIds.includes(id)) : [...new Set([...current, ...visibleIds])]
+    );
+  const toggleOne = (id: number) =>
+    setSelectedIds(current => (current.includes(id) ? current.filter(value => value !== id) : [...current, id]));
 
   return (
     <DatePickerWrapper>
       <Grid container spacing={6}>
         <Grid item xs={12}>
           <Card>
-            <CardHeader title='Filter Customer Invoice' />
+            <CardHeader title='Customer Invoice' subheader='Customers with unpaid orders in the period (based on invoice date).' />
             <CardContent>
-              <Grid container spacing={6}>
-                <Grid item xs={12} sm={6}>
-                  
-                </Grid>
-                <Grid item xs={12} sm={6}>
+              <Grid container spacing={4}>
+                <Grid item xs={12} sm={6} md={3}>
                   <DatePicker
-                    isClearable
-                    selectsRange
-                    monthsShown={2}
-                    endDate={endDateRange}
-                    selected={startDateRange}
-                    startDate={startDateRange}
-                    shouldCloseOnSelect={false}
-                    id='date-range-picker-months'
-                    onChange={handleOnChangeRange}
-                    customInput={
-                      <CustomInput
-                        dates={dates}
-                        setDates={setDates}
-                        label='Invoice Date'
-                        end={endDateRange as number | Date}
-                        start={startDateRange as number | Date}
-                      />
-                    }
+                    selected={fromDate}
+                    onChange={(date: Date | null) => setFromDate(date)}
+                    dateFormat={DISPLAY_DATE_FORMAT}
+                    customInput={<CustomTextField fullWidth label='Sales Period From' />}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <DatePicker
+                    selected={toDate}
+                    onChange={(date: Date | null) => setToDate(date)}
+                    dateFormat={DISPLAY_DATE_FORMAT}
+                    customInput={<CustomTextField fullWidth label='Sales Period To' />}
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <CustomTextField
+                    fullWidth
+                    label='Search customer'
+                    placeholder='Name, account #, or phone'
+                    value={search}
+                    onChange={event => setSearch(event.target.value)}
                   />
                 </Grid>
               </Grid>
             </CardContent>
           </Card>
         </Grid>
+
         <Grid item xs={12}>
           <Card>
-            <Header value={value} selectedRows={selectedRows} handleFilter={handleFilter} selectedRowIds={selectedRowIds} startDate={dates[0]} endDate={dates[1]} isDataReady={isDataReady}    />
-            <Box sx={{ px: 5, pb: 2 }}>
-              {rangeStartParam && rangeEndParam && selectedRowIds.length > 0 ? (
-                <Button
-                  variant='contained'
-                  color='success'
-                  size='small'
-                  sx={{ mb: 2 }}
-                  disabled={savingPayment}
-                  onClick={() => recordPayment(selectedRowIds.map(Number), true)}
-                >
-                  Payment Received for {selectedRowIds.length} selected
-                </Button>
-              ) : null}
+            <Header
+              value={search}
+              selectedRows={[]}
+              handleFilter={setSearch}
+              selectedRowIds={selectedIds}
+              startDate={fromDate}
+              endDate={toDate}
+              isDataReady={rangeValid && selectedIds.length > 0}
+            />
+            <Box sx={{ px: 5, pb: 2, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4 }}>
               <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={showPaidCustomers}
-                    onChange={(event) => setShowPaidCustomers(event.target.checked)}
-                  />
-                }
-                label='Show customers who already paid for this period'
+                control={<Checkbox checked={creditOnly} onChange={event => setCreditOnly(event.target.checked)} />}
+                label='Show only Credit Clients'
               />
-              {pendingLoading ? (
+              {unpaidCustomerIds ? (
                 <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-                  Checking which customers still have unpaid invoices…
-                </Typography>
-              ) : null}
-              {pendingError ? (
-                <Alert severity='warning' sx={{ mt: 2 }}>
-                  {pendingError}
-                </Alert>
-              ) : null}
-              {hidingPaidCustomers && hiddenCustomerCount > 0 ? (
-                <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-                  {hiddenCustomerCount} customer{hiddenCustomerCount === 1 ? '' : 's'} hidden — already paid, or no
-                  orders in this date range.
-                </Typography>
-              ) : null}
-              {!startDateRange || !endDateRange ? (
-                <Typography variant='body2' sx={{ color: 'text.secondary' }}>
-                  Select an invoice date range to hide customers who have already paid.
+                  {rows.length} customer{rows.length === 1 ? '' : 's'}
+                  {selectedIds.length ? ` · ${selectedIds.length} selected` : ''}
                 </Typography>
               ) : null}
             </Box>
-            <DataGrid
-              autoHeight
-              pagination
-              rowHeight={62}
-              rows={visibleRows}
-              columns={columns}
-              checkboxSelection  
-              disableRowSelectionOnClick
-              pageSizeOptions={[10, 25, 50]}
-              paginationModel={paginationModel}
-              onPaginationModelChange={setPaginationModel}
-              onRowSelectionModelChange={(ids) => onRowsSelectionHandler(ids)}
-            />
+            {!rangeValid ? (
+              <Alert severity='info' sx={{ mx: 5, mb: 4 }}>
+                Choose a Sales Period From and To date (From on or before To).
+              </Alert>
+            ) : null}
+            {loadError ? (
+              <Alert severity='error' sx={{ mx: 5, mb: 4 }}>
+                {loadError}
+              </Alert>
+            ) : null}
+            {loading ? (
+              <Typography variant='body2' sx={{ px: 5, pb: 4, color: 'text.secondary' }}>
+                Loading customers with unpaid orders…
+              </Typography>
+            ) : null}
+
+            {/* Every customer in one scrolling list, no pages, like the desktop. */}
+            <TableContainer sx={{ maxHeight: '65vh' }}>
+              <Table stickyHeader size='small' aria-label='Customers with unpaid orders'>
+                <TableHead>
+                  <TableRow>
+                    <TableCell padding='checkbox'>
+                      <Checkbox
+                        checked={allVisibleSelected}
+                        indeterminate={!allVisibleSelected && someVisibleSelected}
+                        onChange={toggleAll}
+                        disabled={!rows.length}
+                        inputProps={{ 'aria-label': 'Select all' }}
+                      />
+                    </TableCell>
+                    <TableCell>Customer Name</TableCell>
+                    <TableCell>Customer Type</TableCell>
+                    <TableCell>Account #</TableCell>
+                    <TableCell>Payment Mode</TableCell>
+                    <TableCell>Telephone (Delivery)</TableCell>
+                    <TableCell>WhatsApp Number</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rows.map(row => {
+                    const id = Number(row.customerid);
+                    const checked = selectedIds.includes(id);
+
+                    return (
+                      <TableRow key={row.id} hover selected={checked} onClick={() => toggleOne(id)} sx={{ cursor: 'pointer' }}>
+                        <TableCell padding='checkbox'>
+                          <Checkbox checked={checked} inputProps={{ 'aria-label': `Select ${fullName(row)}` }} />
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{fullName(row)}</TableCell>
+                        <TableCell>{row.customertype}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.accountno}</TableCell>
+                        <TableCell>{row.paymentmode}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.telephoneres}</TableCell>
+                        <TableCell sx={{ whiteSpace: 'nowrap' }}>{row.telephoneoffice}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {unpaidCustomerIds && !loading && rows.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} sx={{ py: 6, textAlign: 'center', color: 'text.secondary' }}>
+                        {search ? 'No customer matches this search.' : 'No customers have unpaid orders in this period.'}
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </Card>
         </Grid>
       </Grid>

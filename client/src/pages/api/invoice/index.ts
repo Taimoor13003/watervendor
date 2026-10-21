@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { Prisma } from '@prisma/client'
 import prisma from 'src/lib/prisma'
 import { requireInvoiceAuth } from 'src/lib/require-invoice-auth'
+import { issueInvoiceNumbers } from 'src/lib/invoice-numbering'
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -54,26 +55,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       SELECT invoicedate AS "InvoiceDate", COALESCE(od.returnqty, 0) AS "returnqty",
              COALESCE(od.unitprice, CASE WHEN o.orderqty > 0 THEN o.orderamount / o.orderqty ELSE NULL END, c.rate_per_bottle) AS "rate_per_bottle",
              c.firstname, c.lastname,
-             c.addressres, o.*, o.customerid , c.accountno
+             NULLIF(TRIM(BOTH E' \n\t' FROM replace(c.addressres, E'\r', '')), '') AS "addressres", c.telephoneres, c.telephoneoffice,
+             o.*, o.customerid , c.accountno
       FROM orders o
       LEFT JOIN customer c ON o.customerid = c.customerid
       LEFT JOIN LATERAL (
-        SELECT returnqty, unitprice
-        FROM order_details
-        WHERE orderid = o.orderid
-        ORDER BY id DESC
-        LIMIT 1
+        -- A handful of orders carry more than one detail line. Taking only the
+        -- newest one dropped the rest of the returned bottles from the invoice,
+        -- so returns are summed and the latest rate is used for pricing.
+        SELECT SUM(COALESCE(d.returnqty, 0))::int AS returnqty,
+               (ARRAY_AGG(d.unitprice ORDER BY d.id DESC))[1] AS unitprice
+        FROM order_details d
+        WHERE d.orderid = o.orderid
       ) od ON true
       WHERE o.customerid IN (${Prisma.join(ci)})
         AND o.invoicedate >= ${rangeStart}::date
         AND o.invoicedate < (${rangeEnd}::date + INTERVAL '1 day')
         AND COALESCE(o.isdeleted, false) = false
         AND COALESCE(o.orderstatus, '') NOT IN ('Cancel', 'Canceled')
+        -- A paid order has left accounts receivable: it never appears on an
+        -- invoice again (the desktop RMS rule).
+        AND COALESCE(o.ispaymentreceived, false) = false
       ORDER BY o.customerid ASC, o.invoicedate ASC, o.orderid ASC
     `
 
     const requestedCustomers = await prisma.customer.findMany({
-      where: { customerid: { in: ci }, isdeleted: { not: true } },
+      where: { customerid: { in: ci }, OR: [{ isdeleted: false }, { isdeleted: null }] /* `not: true` drops NULL rows */ },
       select: { customerid: true, firstname: true, middlename: true, lastname: true }
     })
     const customerNames = requestedCustomers.reduce<Record<string, string>>((result, customer) => {
@@ -97,7 +104,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return acc
     }, {})
 
-    res.status(200).json({ ...groupedData, __customerNames: customerNames })
+    const invoiceNumbers = await issueInvoiceNumbers(data as any[], rangeStart, rangeEnd)
+
+    res.status(200).json({ ...groupedData, __customerNames: customerNames, __invoiceNumbers: invoiceNumbers })
   } catch (error) {
     console.error('Error fetching data:', error)
     res.status(500).json({ error: 'Failed to fetch data' })

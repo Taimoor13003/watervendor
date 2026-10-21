@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { requireInvoiceAuth } from 'src/lib/require-invoice-auth'
 import { requestOrigin } from 'src/lib/invoice-link'
-import { buildInvoicePdf, invoiceFileName, loadInvoiceRows } from 'src/lib/invoice-pdf'
+import { buildInvoicePdf, loadInvoiceRows } from 'src/lib/invoice-pdf'
 
 const parseDate = (value: unknown) => {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
@@ -37,9 +37,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const rows = await loadInvoiceRows(customerIds, startDate, endDate)
     if (!rows.length) return res.status(404).json({ error: 'No invoiceable orders found' })
 
-    const pdfBytes = await buildInvoicePdf(rows, startDate, endDate, requestOrigin(req.headers))
+    const { bytes: pdfBytes, fileName } = await buildInvoicePdf(rows, startDate, endDate, requestOrigin(req.headers))
     res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', `attachment; filename="${invoiceFileName(rows, startDate, endDate)}"`)
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`)
     res.setHeader('Content-Length', pdfBytes.length)
 
     return res.status(200).send(pdfBytes)

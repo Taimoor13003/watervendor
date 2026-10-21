@@ -505,3 +505,15 @@ model vouchers {
   modifydate    DateTime? @db.Timestamp(6)
   modifybyuser  Int?
 }
+
+// Running invoice numbers (INV-1001, ...): one row per distinct set of unpaid
+// orders printed for a customer. See src/lib/invoice-numbering.ts.
+model customer_invoice_numbers {
+  id         Int       @id @default(autoincrement())
+  customerid Int
+  startdate  DateTime? @db.Date
+  enddate    DateTime? @db.Date
+  orderkey   String    @unique @db.VarChar(64)
+  orderids   Int[]
+  createdat  DateTime? @default(now()) @db.Timestamp(6)
+}

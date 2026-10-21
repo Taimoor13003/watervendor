@@ -3,13 +3,14 @@ import path from 'path'
 import { jsPDF } from 'jspdf'
 import { Prisma } from '@prisma/client'
 import prisma from 'src/lib/prisma'
-import { buildInvoiceNumber } from 'src/lib/invoice-number'
+import { issueInvoiceNumbers } from 'src/lib/invoice-numbering'
 
 // One PDF for both the in-app Download button and the link sent to customers on
 // WhatsApp, laid out like the printed invoice (and the desktop RMS invoice).
 
 export type InvoiceRow = {
   customerid: number
+  orderid: number
   InvoiceDate: Date
   returnqty: number
   rate_per_bottle: number
@@ -25,7 +26,7 @@ export type InvoiceRow = {
 
 export const loadInvoiceRows = (customerIds: number[], startDate: string, endDate: string) =>
   prisma.$queryRaw<InvoiceRow[]>`
-    SELECT o.customerid, o.invoicedate AS "InvoiceDate", COALESCE(od.returnqty, 0) AS "returnqty",
+    SELECT o.customerid, o.orderid, o.invoicedate AS "InvoiceDate", COALESCE(od.returnqty, 0) AS "returnqty",
            COALESCE(od.unitprice, CASE WHEN o.orderqty > 0 THEN o.orderamount / o.orderqty ELSE NULL END, c.rate_per_bottle) AS "rate_per_bottle",
            c.firstname, c.lastname, NULLIF(TRIM(BOTH E' \n\t' FROM replace(c.addressres, E'\r', '')), '') AS "addressres", c.telephoneres, c.telephoneoffice,
            c.accountno, o.orderqty, o.orderamount
@@ -43,6 +44,8 @@ export const loadInvoiceRows = (customerIds: number[], startDate: string, endDat
       AND o.invoicedate < (${endDate}::date + INTERVAL '1 day')
       AND COALESCE(o.isdeleted, false) = false
       AND COALESCE(o.orderstatus, '') NOT IN ('Cancel', 'Canceled')
+      -- Paid orders never appear on an invoice again (the desktop RMS rule).
+      AND COALESCE(o.ispaymentreceived, false) = false
     ORDER BY o.customerid, o.invoicedate, o.orderid
   `
 
@@ -100,15 +103,12 @@ const issueDate = (now = new Date()) => {
 
 const FOOTER = 'Plot # C-3-28 Block-B Korangi Industrial Area, Karachi. Cell: 0300-2734089 - 0332-4422385 Ph: 021-3515-1000'
 
-export const invoiceFileName = (rows: InvoiceRow[], startDate: string, endDate: string) => {
-  const customers = new Set(rows.map(row => row.customerid))
-  if (customers.size !== 1) return 'Invoices.pdf'
-
-  return `${buildInvoiceNumber({ accountNo: rows[0].accountno, customerId: rows[0].customerid, startDate, endDate })}.pdf`
-}
-
+// Returns the PDF and a file name: the invoice number for one customer,
+// "Invoices.pdf" for several.
 export const buildInvoicePdf = async (rows: InvoiceRow[], startDate: string, endDate: string, origin?: string) => {
-  const logos = await loadLogos(origin)
+  const [logos, invoiceNumbers] = await Promise.all([loadLogos(origin), issueInvoiceNumbers(rows, startDate, endDate)])
+  const customerCount = new Set(rows.map(row => row.customerid)).size
+  const fileName = customerCount === 1 ? `${invoiceNumbers[String(rows[0].customerid)]}.pdf` : 'Invoices.pdf'
   const grouped = rows.reduce<Record<number, InvoiceRow[]>>((result, row) => {
     ;(result[row.customerid] ||= []).push(row)
 
@@ -150,7 +150,7 @@ export const buildInvoicePdf = async (rows: InvoiceRow[], startDate: string, end
   Object.values(grouped).forEach((invoiceRows, invoiceIndex) => {
     if (invoiceIndex > 0) pdf.addPage()
     const first = invoiceRows[0]
-    const invoiceNumber = buildInvoiceNumber({ accountNo: first.accountno, customerId: first.customerid, startDate, endDate })
+    const invoiceNumber = invoiceNumbers[String(first.customerid)]
     pdf.setTextColor(0, 0, 0)
 
     // Header: certification marks either side of the Rivielle logo.
@@ -247,5 +247,5 @@ export const buildInvoicePdf = async (rows: InvoiceRow[], startDate: string, end
     drawFooter()
   })
 
-  return Buffer.from(pdf.output('arraybuffer'))
+  return { bytes: Buffer.from(pdf.output('arraybuffer')), fileName }
 }

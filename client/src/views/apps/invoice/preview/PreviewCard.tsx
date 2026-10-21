@@ -16,15 +16,14 @@ import TableCell from '@mui/material/TableCell'
 import { format } from 'date-fns'
 import Image from 'next/image'
 import { SingleInvoiceType } from 'src/types/apps/invoiceTypes'
-import { buildInvoiceNumber } from 'src/lib/invoice-number'
 
 interface PreviewCardProps {
   data: SingleInvoiceType[] // Expecting an array
-  startDate?: string
-  endDate?: string
+  // Issued by the server (src/lib/invoice-numbering.ts), e.g. INV-1001.
+  invoiceNumber?: string
 }
 
-const PreviewCard: React.FC<PreviewCardProps> = ({ data, startDate, endDate }) => {
+const PreviewCard: React.FC<PreviewCardProps> = ({ data, invoiceNumber = '—' }) => {
   const theme = useTheme()
 
   const datanew = Array.isArray(data) ? data : []
@@ -60,13 +59,6 @@ const PreviewCard: React.FC<PreviewCardProps> = ({ data, startDate, endDate }) =
   const totalAmountDue = datanew.reduce((total: number, item) => {
     return total + getLineTotal(item)
   }, 0)
-
-  const invoiceNumber = buildInvoiceNumber({
-    accountNo: (firstItem as any)?.accountno,
-    customerId: (firstItem as any)?.customerid,
-    startDate,
-    endDate
-  })
 
   return (
     <Card>

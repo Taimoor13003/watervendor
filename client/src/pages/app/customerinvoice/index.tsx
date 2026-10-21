@@ -25,6 +25,8 @@ export default Index;
 
 export const getServerSideProps = async () => {
   const customers = await prisma.customer.findMany({
+    // Deleted customers must not be offered for invoicing.
+    where: { OR: [{ isdeleted: false }, { isdeleted: null }] },
     select: {
       id: true,
       customerid: true,
@@ -32,6 +34,7 @@ export const getServerSideProps = async () => {
       middlename: true,
       lastname: true,
       customertype: true,
+      accountno: true,
       paymentmode: true,
       telephoneres: true,
       telephoneoffice: true,

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { requestOrigin, verifyInvoiceLinkToken } from 'src/lib/invoice-link'
-import { buildInvoicePdf, invoiceFileName, loadInvoiceRows } from 'src/lib/invoice-pdf'
+import { buildInvoicePdf, loadInvoiceRows } from 'src/lib/invoice-pdf'
 
 // The invoice PDF a customer opens from the WhatsApp message. There is no login
 // here: the signed, expiring token in the link is the permission, and it covers
@@ -21,11 +21,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const rows = await loadInvoiceRows([claims.customerId], claims.startDate, claims.endDate)
-    if (!rows.length) return res.status(404).send('No invoice was found for this link.')
+    // Paid orders drop off invoices, so a fully paid invoice has nothing left.
+    if (!rows.length) return res.status(404).send('Nothing is outstanding on this invoice any more. Thank you.')
 
-    const pdfBytes = await buildInvoicePdf(rows, claims.startDate, claims.endDate, requestOrigin(req.headers))
+    const { bytes: pdfBytes, fileName } = await buildInvoicePdf(rows, claims.startDate, claims.endDate, requestOrigin(req.headers))
     res.setHeader('Content-Type', 'application/pdf')
-    res.setHeader('Content-Disposition', `inline; filename="${invoiceFileName(rows, claims.startDate, claims.endDate)}"`)
+    res.setHeader('Content-Disposition', `inline; filename="${fileName}"`)
     res.setHeader('Content-Length', pdfBytes.length)
     res.setHeader('Cache-Control', 'private, no-store')
     res.setHeader('X-Robots-Tag', 'noindex')

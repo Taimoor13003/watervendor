@@ -26,6 +26,7 @@ const InvoiceAdd: React.FC = () => {
   // fetch grouped invoice data for each of those IDs
   const [invoiceData, setInvoiceData] = useState<Record<string, any[]>>({})
   const customerNames = (invoiceData.__customerNames as unknown as Record<string, string>) || {}
+  const invoiceNumbers = (invoiceData.__invoiceNumbers as unknown as Record<string, string>) || {}
   const invoiceCustomerIds = useMemo(
     () => bulkIds.filter(id => Array.isArray(invoiceData[id]) && invoiceData[id].length > 0),
     [bulkIds, invoiceData]
@@ -105,11 +106,7 @@ const InvoiceAdd: React.FC = () => {
             {Array.isArray(invoiceData[id]) && invoiceData[id].length > 0 ? (
               <>
                 <Grid item xl={9} md={8} xs={12}>
-                  <PreviewCard
-                    data={invoiceData[id]}
-                    startDate={startDate as string}
-                    endDate={endDate as string}
-                  />
+                  <PreviewCard data={invoiceData[id]} invoiceNumber={invoiceNumbers[id]} />
                 </Grid>
                 <Grid item xl={3} md={4} xs={12}>
                   <PreviewActions

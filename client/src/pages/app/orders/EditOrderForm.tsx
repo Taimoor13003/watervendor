@@ -17,6 +17,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import toast from 'react-hot-toast';
 import { useForm, Controller } from 'react-hook-form';
 import { useRouter } from 'next/router';
+import OrderPaymentStatus from 'src/views/orders/OrderPaymentStatus';
 import CustomTextField from 'src/@core/components/mui/text-field';
 
 type Order = {
@@ -158,6 +159,7 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
     <Card>
       <CardHeader title='Edit Order' subheader='Update order details, delivery, and billing.' />
       <CardContent>
+        <OrderPaymentStatus orderId={data?.orderid} />
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={5}>
             <Grid item xs={12} sm={6}>

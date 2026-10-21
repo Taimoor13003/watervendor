@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import prisma from 'src/lib/prisma'
 import { requireInvoiceAuth } from 'src/lib/require-invoice-auth'
-import { buildInvoiceNumber } from 'src/lib/invoice-number'
+import { issueInvoiceNumber } from 'src/lib/invoice-numbering'
 import { buildInvoiceWhatsAppMessage, buildWhatsAppLink, normalizeWhatsAppNumber } from 'src/lib/whatsapp'
 import { createInvoiceLinkToken, requestOrigin } from 'src/lib/invoice-link'
 
@@ -45,6 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const rows = await prisma.$queryRaw<
       Array<{
+        orderid: number
         orderqty: number | null
         orderamount: number | null
         returnqty: number | null
@@ -58,7 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ordertelephone: string | null
       }>
     >`
-      SELECT o.orderqty, o.orderamount, COALESCE(od.returnqty, 0) AS "returnqty",
+      SELECT o.orderid, o.orderqty, o.orderamount, COALESCE(od.returnqty, 0) AS "returnqty",
              COALESCE(od.unitprice, c.rate_per_bottle) AS "rate_per_bottle",
              c.firstname, c.middlename, c.lastname, c.accountno,
              c.telephoneres, c.telephoneoffice, o.telephone AS "ordertelephone"
@@ -76,11 +77,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         AND o.invoicedate < (${rangeEnd}::date + INTERVAL '1 day')
         AND COALESCE(o.isdeleted, false) = false
         AND COALESCE(o.orderstatus, '') NOT IN ('Cancel', 'Canceled')
+        -- Paid orders never appear on an invoice again (the desktop RMS rule).
+        AND COALESCE(o.ispaymentreceived, false) = false
       ORDER BY o.invoicedate ASC, o.orderid ASC
     `
 
     if (!rows.length) {
-      return res.status(404).json({ error: 'This customer has no invoiceable orders in the selected date range.' })
+      return res.status(404).json({ error: 'This customer has no unpaid orders in the selected date range.' })
     }
 
     const first = rows[0]
@@ -112,11 +115,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const message = buildInvoiceWhatsAppMessage({
       customerName,
       accountNo: first.accountno,
-      invoiceNumber: buildInvoiceNumber({
-        accountNo: first.accountno,
+      invoiceNumber: await issueInvoiceNumber({
         customerId,
         startDate: rangeStart,
-        endDate: rangeEnd
+        endDate: rangeEnd,
+        orderIds: rows.map(row => row.orderid)
       }),
       periodFrom: formatDisplayDate(rangeStart),
       periodTo: formatDisplayDate(rangeEnd),

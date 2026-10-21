@@ -1,6 +1,8 @@
 // ** Next Import
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
+import toast from 'react-hot-toast'
 import axios from 'axios'
 import { firebaseAuth } from 'src/services/firebase.service'
 
@@ -23,6 +25,32 @@ interface Props {
 
 const PreviewActions = ({ id, startDate, endDate, toggleSendInvoiceDrawer, toggleAddPaymentDrawer }: Props) => {
   const [whatsAppOpen, setWhatsAppOpen] = useState(false)
+  const [savingPayment, setSavingPayment] = useState(false)
+  const router = useRouter()
+
+  // The customer paid this whole invoice: every unpaid order on it is marked
+  // paid, so the customer leaves the invoice list for this period.
+  const recordPayment = async () => {
+    if (!id || !startDate || !endDate) return
+    if (!window.confirm('Mark every order on this invoice as PAID? It will no longer be printable.')) return
+
+    setSavingPayment(true)
+    try {
+      const idToken = await firebaseAuth.currentUser?.getIdToken()
+      const resp = await axios.post(
+        '/api/payment-received',
+        { customerIds: [Number(id)], startDate, endDate, received: true },
+        { headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined }
+      )
+      const updated = Number(resp.data?.updated ?? 0)
+      toast.success(`Payment received (${updated} order${updated === 1 ? '' : 's'} marked paid).`)
+      router.push('/app/customerinvoice')
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || 'Could not record the payment. Please try again.')
+    } finally {
+      setSavingPayment(false)
+    }
+  }
 
   const downloadInvoice = async () => {
     const idToken = await firebaseAuth.currentUser?.getIdToken()
@@ -75,6 +103,17 @@ const PreviewActions = ({ id, startDate, endDate, toggleSendInvoiceDrawer, toggl
         >
           <Icon fontSize='1.125rem' icon='tabler:brand-whatsapp' />
           Send on WhatsApp
+        </Button>
+
+        <Button
+          fullWidth
+          variant='outlined'
+          color='success'
+          onClick={recordPayment}
+          sx={{ mb: 2 }}
+          disabled={!id || !startDate || !endDate || savingPayment}
+        >
+          Payment Received
         </Button>
 
         <Button
