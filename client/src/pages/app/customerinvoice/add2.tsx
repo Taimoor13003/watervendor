@@ -15,6 +15,8 @@ const InvoiceAdd: React.FC = () => {
   const router = useRouter()
   const { customerid, startDate, endDate } = router.query
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
 
   // parse out all IDs from the `?customerid=` param (it may be "905,1723" etc)
   const bulkIds = useMemo(
@@ -42,6 +44,7 @@ const InvoiceAdd: React.FC = () => {
     let active = true
     const fetchData = async () => {
       setLoading(true)
+      setLoadError(false)
       try {
         const idToken = await firebaseAuth.currentUser?.getIdToken()
         const resp = await axios.get('/api/invoice', {
@@ -57,7 +60,9 @@ const InvoiceAdd: React.FC = () => {
         }
       } catch (err) {
         if (active) {
-          toast.error('Error fetching grouped invoice data')
+          setInvoiceData({})
+          setLoadError(true)
+          toast.error('Could not load the invoices. Please try again.')
         }
       } finally {
         if (active) {
@@ -71,7 +76,7 @@ const InvoiceAdd: React.FC = () => {
     return () => {
       active = false
     }
-  }, [bulkIdsParam, startDate, endDate])
+  }, [bulkIdsParam, startDate, endDate, reloadKey])
 
   const handleBulkPrint = () => {
     if (!invoiceCustomerIds.length) return
@@ -84,6 +89,24 @@ const InvoiceAdd: React.FC = () => {
 
   if (loading) {
     return <div>Loading...</div>
+  }
+
+  // A failed request is not the same as "no orders": say so instead of listing
+  // every customer as having nothing to invoice.
+  if (loadError) {
+    return (
+      <Alert
+        severity='error'
+        sx={{ m: 2 }}
+        action={
+          <Button color='inherit' size='small' onClick={() => setReloadKey(key => key + 1)}>
+            Retry
+          </Button>
+        }
+      >
+        Could not load the invoices. Please try again.
+      </Alert>
+    )
   }
 
   return (

@@ -1,4 +1,5 @@
 import { createHash } from 'crypto'
+import { Prisma } from '@prisma/client'
 import prisma from 'src/lib/prisma'
 
 // Invoice numbers continue the desktop RMS series: RI-345693, RI-345694, ...
@@ -46,39 +47,86 @@ export const formatInvoiceNumber = (invoiceNo: number) => `${INVOICE_PREFIX}${in
 
 export type InvoiceToNumber = { customerId: number; startDate: string; endDate: string; orderIds: number[] }
 
-export const issueInvoiceNumber = async ({ customerId, startDate, endDate, orderIds }: InvoiceToNumber) => {
+const orderKeyFor = (customerId: number, orderIds: number[]) =>
+  createHash('sha256').update(`${customerId}:${orderIds.join(',')}`).digest('hex')
+
+// Numbers several invoices in one transaction. Printing many customers at once
+// used to open one transaction per customer, each scanning orders for the
+// highest RMS number; a batch of three ran past the request time limit and the
+// whole invoice screen failed. Now a batch costs the same few queries as one.
+const issueNumbers = async (invoices: InvoiceToNumber[], startDate: string, endDate: string) => {
   await ensureTable()
-  const ids = [...new Set(orderIds)].sort((a, b) => a - b)
-  const orderKey = createHash('sha256').update(`${customerId}:${ids.join(',')}`).digest('hex')
 
-  const invoiceNo = await prisma.$transaction(async tx => {
-    const existing = await tx.$queryRaw<Array<{ invoiceno: number }>>`
-      SELECT invoiceno FROM customer_invoice_numbers WHERE orderkey = ${orderKey}
-    `
-    if (existing.length) return Number(existing[0].invoiceno)
+  const wanted = new Map<string, { customerId: number; orderIds: number[] }>()
+  const keyByCustomer = new Map<number, string>()
+  invoices.forEach(({ customerId, orderIds }) => {
+    const ids = [...new Set(orderIds)].sort((a, b) => a - b)
+    const orderKey = orderKeyFor(customerId, ids)
+    wanted.set(orderKey, { customerId, orderIds: ids })
+    keyByCustomer.set(customerId, orderKey)
+  })
+  if (!wanted.size) return {}
 
-    // One allocation at a time, so two people printing at once never share a number.
-    await tx.$executeRaw`SELECT pg_advisory_xact_lock(${INVOICE_NUMBER_LOCK})`
-    const again = await tx.$queryRaw<Array<{ invoiceno: number }>>`
-      SELECT invoiceno FROM customer_invoice_numbers WHERE orderkey = ${orderKey}
-    `
-    if (again.length) return Number(again[0].invoiceno)
-
-    const [{ next }] = await tx.$queryRaw<Array<{ next: number }>>`
-      SELECT (GREATEST(
-        COALESCE((SELECT MAX(invoiceno) FROM orders), 0),
-        COALESCE((SELECT MAX(invoiceno) FROM customer_invoice_numbers), 0)
-      ) + 1)::int AS "next"
-    `
-    await tx.$executeRaw`
-      INSERT INTO customer_invoice_numbers (invoiceno, customerid, startdate, enddate, orderkey, orderids)
-      VALUES (${next}, ${customerId}, ${startDate}::date, ${endDate}::date, ${orderKey}, ${ids}::int[])
+  const findExisting = async (db: Pick<typeof prisma, '$queryRaw'>, keys: string[]) => {
+    const rows = await db.$queryRaw<Array<{ orderkey: string; invoiceno: number }>>`
+      SELECT orderkey, invoiceno FROM customer_invoice_numbers WHERE orderkey = ANY(${keys}::varchar[])
     `
 
-    return Number(next)
+    return new Map(rows.map(row => [row.orderkey, Number(row.invoiceno)]))
+  }
+
+  let numbers = await findExisting(prisma, [...wanted.keys()])
+  const missing = [...wanted.keys()].filter(key => !numbers.has(key))
+
+  if (missing.length) {
+    // RMS numbers only change when its data is imported, so this slow scan of
+    // orders stays outside the lock.
+    const [{ rmsmax }] = await prisma.$queryRaw<Array<{ rmsmax: number }>>`
+      SELECT COALESCE(MAX(invoiceno), 0)::int AS "rmsmax" FROM orders
+    `
+
+    numbers = await prisma.$transaction(
+      async tx => {
+        // One allocation at a time, so two people printing at once never share a number.
+        await tx.$executeRaw`SELECT pg_advisory_xact_lock(${INVOICE_NUMBER_LOCK})`
+        const issued = await findExisting(tx, [...wanted.keys()])
+        const toInsert = [...wanted.keys()].filter(key => !issued.has(key))
+        if (!toInsert.length) return issued
+
+        const [{ webmax }] = await tx.$queryRaw<Array<{ webmax: number }>>`
+          SELECT COALESCE(MAX(invoiceno), 0)::int AS "webmax" FROM customer_invoice_numbers
+        `
+        let next = Math.max(Number(rmsmax), Number(webmax))
+        const values = toInsert.map(key => {
+          next += 1
+          issued.set(key, next)
+          const { customerId, orderIds } = wanted.get(key)!
+
+          return Prisma.sql`(${next}, ${customerId}, ${startDate}::date, ${endDate}::date, ${key}, ${orderIds}::int[])`
+        })
+        await tx.$executeRaw`
+          INSERT INTO customer_invoice_numbers (invoiceno, customerid, startdate, enddate, orderkey, orderids)
+          VALUES ${Prisma.join(values)}
+        `
+
+        return issued
+      },
+      { maxWait: 10000, timeout: 20000 }
+    )
+  }
+
+  const result: Record<string, string> = {}
+  keyByCustomer.forEach((orderKey, customerId) => {
+    result[String(customerId)] = formatInvoiceNumber(numbers.get(orderKey)!)
   })
 
-  return formatInvoiceNumber(invoiceNo)
+  return result
+}
+
+export const issueInvoiceNumber = async (invoice: InvoiceToNumber) => {
+  const numbers = await issueNumbers([invoice], invoice.startDate, invoice.endDate)
+
+  return numbers[String(invoice.customerId)]
 }
 
 /** Numbers for several customers' invoices at once, keyed by customer id. */
@@ -93,10 +141,9 @@ export const issueInvoiceNumbers = async (
     byCustomer.set(row.customerid, [...(byCustomer.get(row.customerid) || []), row.orderid])
   })
 
-  const numbers: Record<string, string> = {}
-  for (const [customerId, orderIds] of byCustomer) {
-    numbers[String(customerId)] = await issueInvoiceNumber({ customerId, startDate, endDate, orderIds })
-  }
-
-  return numbers
+  return issueNumbers(
+    [...byCustomer].map(([customerId, orderIds]) => ({ customerId, startDate, endDate, orderIds })),
+    startDate,
+    endDate
+  )
 }
