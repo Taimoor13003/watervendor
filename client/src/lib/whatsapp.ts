@@ -32,6 +32,18 @@ export const buildWhatsAppLink = (number: string, message: string) =>
 export const buildWhatsAppWebLink = (number: string, message: string) =>
   `https://web.whatsapp.com/send?phone=${number}&text=${encodeURIComponent(message)}`
 
+// Browser only. Phones open the WhatsApp app; computers reuse one WhatsApp Web
+// tab, so sending a run of bills does not pile up a tab per customer. Must be
+// called straight from a click, or the browser blocks the new tab.
+export const openWhatsAppChat = (number: string, message: string) => {
+  const isPhone = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+  if (isPhone) {
+    window.open(buildWhatsAppLink(number, message), '_blank', 'noopener,noreferrer')
+  } else {
+    window.open(buildWhatsAppWebLink(number, message), 'rivielle-whatsapp')
+  }
+}
+
 export type InvoiceMessageInput = {
   customerName?: string | null
   accountNo?: string | null

@@ -11,7 +11,7 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import { Alert, Checkbox, FormControlLabel } from '@mui/material';
+import { Alert, Button, Checkbox, FormControlLabel } from '@mui/material';
 import axios from 'axios';
 import format from 'date-fns/format';
 import startOfMonth from 'date-fns/startOfMonth';
@@ -22,6 +22,8 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import Header from 'src/pages/app/customerinvoice/Header';
 import { firebaseAuth } from 'src/services/firebase.service';
 import { DISPLAY_DATE_FORMAT } from 'src/lib/display-date';
+import Icon from 'src/@core/components/icon';
+import BulkWhatsAppDialog, { BulkWhatsAppCustomer } from './BulkWhatsAppDialog';
 
 // Laid out like the desktop RMS "Customer Invoice Report": Sales Period From /
 // To, then one scrolling list of the customers who still have UNPAID orders in
@@ -51,6 +53,8 @@ const InvoiceList = ({ data }: { data: CustomerRow[] }) => {
   const [search, setSearch] = useState('');
   const [creditOnly, setCreditOnly] = useState(true);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  // The customers being sent, fixed when the run starts.
+  const [whatsAppQueue, setWhatsAppQueue] = useState<BulkWhatsAppCustomer[] | null>(null);
 
   const [unpaidCustomerIds, setUnpaidCustomerIds] = useState<number[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -128,6 +132,18 @@ const InvoiceList = ({ data }: { data: CustomerRow[] }) => {
   const toggleOne = (id: number) =>
     setSelectedIds(current => (current.includes(id) ? current.filter(value => value !== id) : [...current, id]));
 
+  // Every selected customer, in list order (including any hidden by the search).
+  const startWhatsAppRun = () => {
+    const selected = new Set(selectedIds);
+    setWhatsAppQueue(
+      data
+        .filter(row => row.customerid !== null && selected.has(Number(row.customerid)))
+        .filter((row, i, all) => all.findIndex(other => other.customerid === row.customerid) === i)
+        .sort((a, b) => fullName(a).localeCompare(fullName(b)))
+        .map(row => ({ customerId: Number(row.customerid), name: fullName(row) || `Customer ${row.customerid}` }))
+    );
+  };
+
   return (
     <DatePickerWrapper>
       <Grid container spacing={6}>
@@ -176,6 +192,18 @@ const InvoiceList = ({ data }: { data: CustomerRow[] }) => {
               startDate={fromDate}
               endDate={toDate}
               isDataReady={rangeValid && selectedIds.length > 0}
+              actions={
+                <Button
+                  sx={{ mb: 2 }}
+                  variant='outlined'
+                  color='success'
+                  startIcon={<Icon icon='tabler:brand-whatsapp' />}
+                  onClick={startWhatsAppRun}
+                  disabled={!rangeValid || selectedIds.length === 0}
+                >
+                  Send on WhatsApp{selectedIds.length ? ` (${selectedIds.length})` : ''}
+                </Button>
+              }
             />
             <Box sx={{ px: 5, pb: 2, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 4 }}>
               <FormControlLabel
@@ -259,6 +287,13 @@ const InvoiceList = ({ data }: { data: CustomerRow[] }) => {
           </Card>
         </Grid>
       </Grid>
+      <BulkWhatsAppDialog
+        open={Boolean(whatsAppQueue)}
+        onClose={() => setWhatsAppQueue(null)}
+        customers={whatsAppQueue || []}
+        startDate={fromParam}
+        endDate={toParam}
+      />
     </DatePickerWrapper>
   );
 };

@@ -12,7 +12,7 @@ import Typography from '@mui/material/Typography'
 
 import CustomTextField from 'src/@core/components/mui/text-field'
 import { firebaseAuth } from 'src/services/firebase.service'
-import { buildWhatsAppLink, buildWhatsAppWebLink, normalizeWhatsAppNumber } from 'src/lib/whatsapp'
+import { normalizeWhatsAppNumber, openWhatsAppChat } from 'src/lib/whatsapp'
 
 interface Props {
   open: boolean
@@ -69,13 +69,7 @@ const SendWhatsAppDialog = ({ open, onClose, customerId, startDate, endDate }: P
 
   const openWhatsApp = () => {
     if (!canSend) return
-    // Phones open the WhatsApp app; computers reuse one WhatsApp Web tab.
-    const isPhone = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
-    if (isPhone) {
-      window.open(buildWhatsAppLink(normalized, message), '_blank', 'noopener,noreferrer')
-    } else {
-      window.open(buildWhatsAppWebLink(normalized, message), 'rivielle-whatsapp')
-    }
+    openWhatsAppChat(normalized, message)
   }
 
   return (

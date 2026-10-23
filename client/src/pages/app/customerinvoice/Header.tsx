@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { ReactNode } from 'react'
 
 import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
@@ -16,10 +17,11 @@ interface TableHeaderProps {
   startDate: Date | null
   endDate: Date | null
   isDataReady: boolean // New prop to determine if data is ready
+  actions?: ReactNode // More buttons beside Create Invoice
 }
 
 const TableHeader = (props: TableHeaderProps) => {
-  const { value, selectedRows, handleFilter, selectedRowIds, startDate, endDate, isDataReady } = props
+  const { value, selectedRows, handleFilter, selectedRowIds, startDate, endDate, isDataReady, actions } = props
   // Send calendar dates, not UTC timestamps. A timestamp shifts the selected
   // day for customers whose local timezone is ahead of UTC.
   const startDateParam = startDate ? format(startDate, 'yyyy-MM-dd') : ''
@@ -37,7 +39,7 @@ const TableHeader = (props: TableHeaderProps) => {
         justifyContent: 'space-between'
       }}
     >
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center' }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 3 }}>
         <Button
           sx={{ mb: 2 }}
           component={Link}
@@ -49,6 +51,7 @@ const TableHeader = (props: TableHeaderProps) => {
         >
           Create Invoice
         </Button>
+        {actions}
       </Box>
     </Box>
   )
