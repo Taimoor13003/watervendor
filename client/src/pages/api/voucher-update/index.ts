@@ -1,17 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import prisma from 'src/lib/prisma'
 import { vouchertypes } from 'src/constant'
+import { parseCalendarDate } from 'src/lib/calendar-date'
 
 const toNumberOrNull = (value: any) => {
   if (value === '' || value === null || value === undefined) return null
   const num = Number(value)
   return Number.isNaN(num) ? null : num
-}
-
-const toDateOrNull = (value: any) => {
-  if (!value) return null
-  const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? null : date
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -38,7 +33,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'Voucher id and number are required' })
     }
 
-    const parsedDate = toDateOrNull(voucherdate)
+    // Voucher dates are calendar days; see src/lib/calendar-date.ts.
+    const parsedDate = parseCalendarDate(voucherdate)
     if (!parsedDate) {
       return res.status(400).json({ message: 'Invalid voucher date' })
     }

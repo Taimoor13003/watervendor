@@ -28,6 +28,7 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
 import toast from 'react-hot-toast'
 import { vouchertypes } from 'src/constant'
+import { toCalendarDateString } from 'src/lib/calendar-date'
 import { firebaseAuth } from 'src/services/firebase.service'
 
 // ------------ validation schema ------------
@@ -78,7 +79,8 @@ const VouchersForm: React.FC = () => {
       description: '',
       // New vouchers should always start with a valid posting date; users can still change it.
       // @ts-ignore
-      voucherdate: new Date().toISOString().slice(0, 10),
+      // Local day: toISOString() gave the UTC day, i.e. yesterday before 5am in Karachi.
+      voucherdate: toCalendarDateString(new Date()),
       accountCode: '',
       creditAmount: 0,
       debitAmount: 0
@@ -159,7 +161,9 @@ const VouchersForm: React.FC = () => {
       const res = await fetch('/api/vouchers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...vals, transactions: rows })
+        // The form turns the date into local midnight; sent as JSON that became
+        // 19:00 the day before. Send the picked calendar day instead.
+        body: JSON.stringify({ ...vals, voucherdate: toCalendarDateString(vals.voucherdate), transactions: rows })
       })
 
       if (!res.ok) {

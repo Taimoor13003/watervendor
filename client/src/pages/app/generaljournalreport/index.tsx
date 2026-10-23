@@ -13,7 +13,8 @@ const GeneralJournalReport = () => {
   const handleSubmit = async () => {
     setError(null);
 
-    if (voucherType === null || !voucherPeriodFrom || !voucherPeriodTo) {
+    // Journal Voucher is type 0, so only an unpicked type ('') is missing.
+    if (voucherType === '' || !voucherPeriodFrom || !voucherPeriodTo) {
       setError('All fields are required.');
       return;
     }

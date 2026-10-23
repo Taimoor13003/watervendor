@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types';
 import { PrismaClient } from '@prisma/client'; 
 import { vouchertypes } from 'src/constant';
+import { parseCalendarDate } from 'src/lib/calendar-date';
 
 const prisma = new PrismaClient();
 
@@ -60,8 +61,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ message: 'Missing description, voucherdate, or transactions' });
       }
 
-      const parsedDate = new Date(voucherdate);
-      if (Number.isNaN(parsedDate.getTime())) {
+      // Voucher dates are calendar days; see src/lib/calendar-date.ts.
+      const parsedDate = parseCalendarDate(voucherdate);
+      if (!parsedDate) {
         return res.status(400).json({ message: 'Invalid voucherdate' });
       }
 

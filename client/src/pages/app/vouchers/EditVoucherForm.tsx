@@ -21,6 +21,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import { useRouter } from 'next/router'
 import { vouchertypes } from 'src/constant'
+import { toCalendarDateString } from 'src/lib/calendar-date'
 import { firebaseAuth } from 'src/services/firebase.service'
 
 type Voucher = {
@@ -153,7 +154,8 @@ const EditVoucherForm = ({ vouchers, vouchertrans }: VoucherProps) => {
       voucherno: voucher.voucherno,
       description: formData.description,
       vouchertype: formData.vouchertype,
-      voucherdate: formData.voucherDate,
+      // The picked calendar day, so the date cannot shift back a day.
+      voucherdate: toCalendarDateString(formData.voucherDate),
       voucheramount: toNumberOrNull(formData.voucheramount),
       accountcode: formData.accountcode,
       chqno: formData.chqno,
