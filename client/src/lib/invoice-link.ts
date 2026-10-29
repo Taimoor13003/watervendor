@@ -17,11 +17,14 @@ const signingKey = () => {
 
 const sign = (payload: string) => createHmac('sha256', signingKey()).update(payload).digest('hex').slice(0, 32)
 
-export type InvoiceLinkClaims = { customerId: number; startDate: string; endDate: string }
+// invoiceNo pins the exact bill that was sent (its orders), so the link keeps
+// showing that bill after it is paid or the period is reprinted. Links sent
+// before it was added carry no number.
+export type InvoiceLinkClaims = { customerId: number; startDate: string; endDate: string; invoiceNo?: number }
 
-export const createInvoiceLinkToken = ({ customerId, startDate, endDate }: InvoiceLinkClaims, now = Date.now()) => {
+export const createInvoiceLinkToken = ({ customerId, startDate, endDate, invoiceNo }: InvoiceLinkClaims, now = Date.now()) => {
   const expires = Math.floor(now / 1000) + LINK_LIFETIME_DAYS * 24 * 60 * 60
-  const payload = `${customerId}.${startDate}.${endDate}.${expires}`
+  const payload = `${customerId}.${startDate}.${endDate}.${expires}${invoiceNo ? `.n${invoiceNo}` : ''}`
 
   return `${payload}.${sign(payload)}`
 }
@@ -29,16 +32,19 @@ export const createInvoiceLinkToken = ({ customerId, startDate, endDate }: Invoi
 export const verifyInvoiceLinkToken = (token: unknown, now = Date.now()): InvoiceLinkClaims | null => {
   if (typeof token !== 'string') return null
 
-  const match = /^(\d+)\.(\d{4}-\d{2}-\d{2})\.(\d{4}-\d{2}-\d{2})\.(\d+)\.([0-9a-f]{32})$/.exec(token)
+  const match = /^(\d+)\.(\d{4}-\d{2}-\d{2})\.(\d{4}-\d{2}-\d{2})\.(\d+)(?:\.n(\d+))?\.([0-9a-f]{32})$/.exec(token)
   if (!match) return null
 
-  const [, customerId, startDate, endDate, expires, signature] = match
-  const expected = Buffer.from(sign(`${customerId}.${startDate}.${endDate}.${expires}`))
+  const [, customerId, startDate, endDate, expires, invoiceNo, signature] = match
+  const expected = Buffer.from(sign(`${customerId}.${startDate}.${endDate}.${expires}${invoiceNo ? `.n${invoiceNo}` : ''}`))
   const given = Buffer.from(signature)
   if (expected.length !== given.length || !timingSafeEqual(expected, given)) return null
   if (Number(expires) * 1000 < now) return null
 
-  return { customerId: Number(customerId), startDate, endDate }
+  const claims: InvoiceLinkClaims = { customerId: Number(customerId), startDate, endDate }
+  if (invoiceNo) claims.invoiceNo = Number(invoiceNo)
+
+  return claims
 }
 
 // The site's own address as the visitor reached it, for links and for fetching

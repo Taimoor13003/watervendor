@@ -16,7 +16,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   if (!(await requireApiAuth(req, res))) return
 
-  const { customerIds, startDate, endDate, received } = req.body ?? {}
+  const { customerIds, orderIds, startDate, endDate, received } = req.body ?? {}
+
+  if (typeof received !== 'boolean') {
+    return res.status(400).json({ error: 'received must be true or false' })
+  }
+
+  // The orders ticked on the Orders screen, as in the desktop RMS: pick a month,
+  // search the customer, select all, Payment Received.
+  if (orderIds !== undefined) {
+    const orders = Array.isArray(orderIds) ? [...new Set(orderIds.map(id => Number(id)))] : []
+    if (!orders.length || orders.some(id => !Number.isInteger(id) || id <= 0)) {
+      return res.status(400).json({ error: 'Select at least one order' })
+    }
+
+    try {
+      const updated = await prisma.$executeRaw`
+        UPDATE orders
+        SET ispaymentreceived = ${received}, modifydate = NOW()
+        WHERE orderid IN (${Prisma.join(orders)})
+          AND COALESCE(isdeleted, false) = false
+          AND COALESCE(orderstatus, '') NOT IN ('Cancel', 'Canceled')
+      `
+
+      return res.status(200).json({ updated })
+    } catch (error) {
+      console.error('Failed to record payment received:', error)
+
+      return res.status(500).json({ error: 'Failed to record payment' })
+    }
+  }
 
   const parseCalendarDate = (value: unknown) => {
     if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
@@ -37,10 +66,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res
       .status(400)
       .json({ error: 'Start and end dates must be valid calendar dates, with start on or before end' })
-  }
-
-  if (typeof received !== 'boolean') {
-    return res.status(400).json({ error: 'received must be true or false' })
   }
 
   try {

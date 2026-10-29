@@ -6,6 +6,8 @@ import {
   DataGrid,
   GridColDef,
   GridRenderCellParams,
+  GridRowId,
+  GridRowSelectionModel,
   GridSortModel
 } from '@mui/x-data-grid';
 import {
@@ -16,7 +18,12 @@ import {
   Fab,
   Card,
   Chip,
-  IconButton
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle
 } from '@mui/material';
 import Icon from 'src/@core/components/icon';
 import DatePicker from 'react-datepicker';
@@ -28,6 +35,9 @@ import toast from 'react-hot-toast';
 import CustomInput from './DatePicker/CustomInput';
 import DialougeComponent from './DialougeComponent';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
+import { toCalendarDateString } from 'src/lib/calendar-date';
+import { DISPLAY_DATE_FORMAT } from 'src/lib/display-date'
+import { authHeaders } from 'src/lib/api-client'
 
 type SortType = 'asc' | 'desc' | undefined | null;
 
@@ -50,7 +60,7 @@ const OrderTableServerSide = () => {
   const [rows, setRows] = useState<any[]>([]);
   const [sort, setSort] = useState<SortType>('asc');
   const [sortColumn, setSortColumn] = useState<string>('firstname');
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 50 });
   const [searchText, setSearchText] = useState<string>('');
   const [open, setOpen] = useState<boolean>(false);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
@@ -60,6 +70,15 @@ const OrderTableServerSide = () => {
   const [tempStartDate, setTempStartDate] = useState<Date | null>(null);
   const [tempEndDate, setTempEndDate] = useState<Date | null>(null);
 
+  // Ticked orders for Payment Received. Kept across pages, with each order's
+  // orderid remembered because the grid's row id can be the table's own id.
+  const [selection, setSelection] = useState<GridRowSelectionModel>([]);
+  const selectedOrderIds = useRef<Map<GridRowId, number>>(new Map());
+  const [paymentOpen, setPaymentOpen] = useState<boolean>(false);
+  // Fixed when the dialog opens, so it doesn't read "0 orders" while closing.
+  const [paymentCount, setPaymentCount] = useState<number>(0);
+  const [savingPayment, setSavingPayment] = useState<boolean>(false);
+
   const fetchTableData = useCallback(async () => {
     setIsLoading(true);
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -67,14 +86,15 @@ const OrderTableServerSide = () => {
     debounceTimeout.current = setTimeout(async () => {
       try {
         const response = await axios.get('/api/orders', {
+          headers: await authHeaders(),
           params: {
             page: paginationModel.page + 1,
             limit: paginationModel.pageSize,
             sort,
             sortColumn,
             searchText,
-            fromDate: startDateRange ? startDateRange.toISOString() : null,
-            toDate: endDateRange ? endDateRange.toISOString() : null
+            fromDate: toCalendarDateString(startDateRange),
+            toDate: toCalendarDateString(endDateRange)
           }
         });
 
@@ -93,6 +113,46 @@ const OrderTableServerSide = () => {
     }, 600);
   }, [paginationModel, sort, sortColumn, searchText, startDateRange, endDateRange]);
 
+  const clearSelection = () => {
+    setSelection([]);
+    selectedOrderIds.current = new Map();
+  };
+
+  const handleSelectionChange = (model: GridRowSelectionModel) => {
+    const next = new Map<GridRowId, number>();
+    model.forEach(rowId => {
+      const row = rows.find(r => (r.id || r.orderid) === rowId);
+      const orderId = row ? Number(row.orderid) : selectedOrderIds.current.get(rowId);
+      if (orderId) next.set(rowId, orderId);
+    });
+    selectedOrderIds.current = next;
+    setSelection(model);
+  };
+
+  // Desktop RMS "Payment Received": the customer paid for every ticked order.
+  const handlePaymentReceived = async () => {
+    const orderIds = [...selectedOrderIds.current.values()];
+    if (!orderIds.length) return;
+
+    setSavingPayment(true);
+    try {
+      const resp = await axios.post(
+        '/api/payment-received',
+        { orderIds, received: true },
+        { headers: await authHeaders() }
+      );
+      const updated = Number(resp.data?.updated ?? 0);
+      toast.success(`Payment received (${updated} order${updated === 1 ? '' : 's'} marked paid).`);
+      clearSelection();
+      fetchTableData();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.error || 'Could not record the payment. Please try again.');
+    } finally {
+      setSavingPayment(false);
+      setPaymentOpen(false);
+    }
+  };
+
   const handleSortModel = (newModel: GridSortModel) => {
     if (newModel.length) {
       setSort(newModel[0].sort);
@@ -106,14 +166,17 @@ const OrderTableServerSide = () => {
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
     setSearchText(event.target.value);
     setPaginationModel(prev => ({ ...prev, page: 0 }));
+    clearSelection();
   };
 
   const handleClearSearch = () => {
+    clearSelection();
     setSearchText('');
     setPaginationModel(prev => ({ ...prev, page: 0 }));
   };
 
   const handleGoClick = () => {
+    clearSelection();
     setStartDateRange(tempStartDate);
     setEndDateRange(tempEndDate);
     setPaginationModel(prev => ({ ...prev, page: 0 }));
@@ -194,6 +257,19 @@ const OrderTableServerSide = () => {
       }
     },
     {
+      flex: 0.1,
+      minWidth: 100,
+      field: 'ispaymentreceived',
+      headerName: 'Paid',
+      sortable: false,
+      renderCell: (params: GridRenderCellParams) =>
+        params.row.ispaymentreceived ? (
+          <Chip size='small' label='Paid' color='success' variant='outlined' />
+        ) : (
+          <Chip size='small' label='Unpaid' variant='outlined' />
+        )
+    },
+    {
       flex: 0.25,
       minWidth: 200,
       field: 'actions',
@@ -225,6 +301,7 @@ const OrderTableServerSide = () => {
   }, [fetchTableData]);
 
   const handleResetFilters = () => {
+    clearSelection();
     setSearchText('');
     setTempStartDate(null);
     setTempEndDate(null);
@@ -236,7 +313,7 @@ const OrderTableServerSide = () => {
   const handleConfirmDelete = async () => {
     if (!selectedOrderId) return;
     try {
-      await axios.delete('/api/orders', { params: { id: selectedOrderId } });
+      await axios.delete('/api/orders', { params: { id: selectedOrderId }, headers: await authHeaders() });
       toast.success('Order deleted');
       setRows(prev => prev.filter(row => (row.id || row.orderid) !== selectedOrderId));
       setTotal(prev => Math.max(0, prev - 1));
@@ -279,6 +356,18 @@ const OrderTableServerSide = () => {
           </Typography>
         </Box>
         <Box display='flex' gap={2} flexWrap='wrap'>
+          <Button
+            variant='contained'
+            color='success'
+            startIcon={<Icon icon='mdi:cash-check' />}
+            disabled={!selection.length}
+            onClick={() => {
+              setPaymentCount(selection.length);
+              setPaymentOpen(true);
+            }}
+          >
+            Payment Received{selection.length ? ` (${selection.length})` : ''}
+          </Button>
           <Button variant='outlined' onClick={handleResetFilters}>
             Reset filters
           </Button>
@@ -296,6 +385,7 @@ const OrderTableServerSide = () => {
         <Grid item>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <DatePicker
+              dateFormat={DISPLAY_DATE_FORMAT}
               isClearable
               selectsRange
               monthsShown={2}
@@ -317,7 +407,7 @@ const OrderTableServerSide = () => {
                     setTempStartDate(dates[0]);
                     setTempEndDate(dates[1]);
                   }}
-                  label='Invoice Date'
+                  label='Order Date'
                   end={tempEndDate as Date}
                   start={tempStartDate as Date}
                 />
@@ -337,7 +427,12 @@ const OrderTableServerSide = () => {
         rows={rows}
         getRowId={row => row.id || row.orderid}
         rowCount={total}
-        pageSizeOptions={[7, 10, 25, 50]}
+        checkboxSelection
+        keepNonExistentRowsSelected
+        rowSelectionModel={selection}
+        onRowSelectionModelChange={handleSelectionChange}
+        disableRowSelectionOnClick
+        pageSizeOptions={[7, 10, 25, 50, 100]}
         paginationMode="server"
         sortingMode="server"
         paginationModel={paginationModel}
@@ -358,6 +453,25 @@ const OrderTableServerSide = () => {
       />
 
       <DialougeComponent open={open} setOpen={setOpen} onDelete={handleConfirmDelete} />
+
+      <Dialog open={paymentOpen} onClose={() => !savingPayment && setPaymentOpen(false)}>
+        <DialogTitle>Payment Received</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure to receive payment of all {paymentCount} selected order
+            {paymentCount === 1 ? '' : 's'}? They will be marked paid and will no longer appear on invoices or in
+            accounts receivable.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button variant='outlined' disabled={savingPayment} onClick={() => setPaymentOpen(false)}>
+            No
+          </Button>
+          <Button variant='contained' color='success' disabled={savingPayment} onClick={handlePaymentReceived}>
+            {savingPayment ? 'Saving…' : 'Yes'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 };

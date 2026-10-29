@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { requestOrigin, verifyInvoiceLinkToken } from 'src/lib/invoice-link'
-import { buildInvoicePdf, loadInvoiceRows } from 'src/lib/invoice-pdf'
+import { buildInvoicePdf, loadSentInvoiceRows } from 'src/lib/invoice-pdf'
 
 // The invoice PDF a customer opens from the WhatsApp message. There is no login
 // here: the signed, expiring token in the link is the permission, and it covers
@@ -20,8 +20,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const rows = await loadInvoiceRows([claims.customerId], claims.startDate, claims.endDate)
-    // Paid orders drop off invoices, so a fully paid invoice has nothing left.
+    // The bill as it was sent, still readable (marked PAID) after the customer pays.
+    const rows = await loadSentInvoiceRows(claims.customerId, claims.startDate, claims.endDate, claims.invoiceNo)
     if (!rows.length) return res.status(404).send('Nothing is outstanding on this invoice any more. Thank you.')
 
     const { bytes: pdfBytes, fileName } = await buildInvoicePdf(rows, claims.startDate, claims.endDate, requestOrigin(req.headers))

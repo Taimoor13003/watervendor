@@ -1,7 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types';
 import prisma from 'src/lib/prisma';
+import { requireApiAuth } from 'src/lib/require-invoice-auth'
+import { toCalendarDateString } from 'src/lib/calendar-date';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+
+  if (!(await requireApiAuth(req, res))) return
+
   if (req.method === 'GET') {
     try {
       const {
@@ -22,8 +27,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const values: any[] = [];
 
       if (fromDate && toDate) {
-        whereConditions.push(`o.orderdate BETWEEN $${values.length + 1} AND $${values.length + 2}`);
-        values.push(new Date(fromDate as string), new Date(toDate as string));
+        // Plain calendar days, end day included. BETWEEN on browser timestamps
+        // dropped every order dated on the last day of the range.
+        const from = toCalendarDateString(fromDate);
+        const to = toCalendarDateString(toDate);
+        if (!from || !to || from > to) {
+          return res.status(400).json({ message: 'fromDate and toDate must be YYYY-MM-DD, from on or before to' });
+        }
+        whereConditions.push(
+          `o.orderdate >= $${values.length + 1}::date AND o.orderdate < ($${values.length + 2}::date + INTERVAL '1 day')`
+        );
+        values.push(from, to);
       }
 
       if (search) {
@@ -46,6 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           o.orderno, 
           o.orderdate, 
           o.orderstatus,
+          COALESCE(o.ispaymentreceived, false) AS ispaymentreceived,
           c.firstname, 
           c.lastname, 
           c.customerid,

@@ -106,21 +106,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const rawNumber = candidates.find(value => normalizeWhatsAppNumber(value)) || candidates[0] || null
     const whatsappNumber = normalizeWhatsAppNumber(rawNumber)
 
-    // A private, expiring link to this customer's PDF for this period only.
+    const invoiceNumber = await issueInvoiceNumber({
+      customerId,
+      startDate: rangeStart,
+      endDate: rangeEnd,
+      orderIds: rows.map(row => row.orderid)
+    })
+
+    // A private, expiring link to exactly this bill (customer, period, invoice number).
     const origin = requestOrigin(req.headers)
+    const invoiceNo = Number(/\d+$/.exec(invoiceNumber || '')?.[0]) || undefined
     const pdfUrl = origin
-      ? `${origin}/api/invoice/share?t=${createInvoiceLinkToken({ customerId, startDate: rangeStart, endDate: rangeEnd })}`
+      ? `${origin}/api/invoice/share?t=${createInvoiceLinkToken({ customerId, startDate: rangeStart, endDate: rangeEnd, invoiceNo })}`
       : null
 
     const message = buildInvoiceWhatsAppMessage({
       customerName,
       accountNo: first.accountno,
-      invoiceNumber: await issueInvoiceNumber({
-        customerId,
-        startDate: rangeStart,
-        endDate: rangeEnd,
-        orderIds: rows.map(row => row.orderid)
-      }),
+      invoiceNumber,
       periodFrom: formatDisplayDate(rangeStart),
       periodTo: formatDisplayDate(rangeEnd),
       bottlesDelivered,

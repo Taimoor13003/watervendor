@@ -22,32 +22,69 @@ export type InvoiceRow = {
   accountno: string | null
   orderqty: number | null
   orderamount: number | null
+  ispaymentreceived: boolean
 }
 
+// Columns shared by every invoice query; the callers add their own filters.
+const invoiceRowsWhere = (where: Prisma.Sql) => prisma.$queryRaw<InvoiceRow[]>`
+  SELECT o.customerid, o.orderid, o.invoicedate AS "InvoiceDate", COALESCE(od.returnqty, 0) AS "returnqty",
+         COALESCE(od.unitprice, CASE WHEN o.orderqty > 0 THEN o.orderamount / o.orderqty ELSE NULL END, c.rate_per_bottle) AS "rate_per_bottle",
+         c.firstname, c.lastname, NULLIF(TRIM(BOTH E' \n\t' FROM replace(c.addressres, E'\r', '')), '') AS "addressres", c.telephoneres, c.telephoneoffice,
+         c.accountno, o.orderqty, o.orderamount, COALESCE(o.ispaymentreceived, false) AS "ispaymentreceived"
+  FROM orders o
+  LEFT JOIN customer c ON c.customerid = o.customerid
+  LEFT JOIN LATERAL (
+    -- Sum every detail line: a few orders carry more than one, and taking
+    -- only the newest under-reported the returned bottles.
+    SELECT SUM(COALESCE(d.returnqty, 0))::int AS returnqty,
+           (ARRAY_AGG(d.unitprice ORDER BY d.id DESC))[1] AS unitprice
+    FROM order_details d WHERE d.orderid = o.orderid
+  ) od ON true
+  WHERE COALESCE(o.isdeleted, false) = false
+    AND COALESCE(o.orderstatus, '') NOT IN ('Cancel', 'Canceled')
+    AND ${where}
+  ORDER BY o.customerid, o.invoicedate, o.orderid
+`
+
 export const loadInvoiceRows = (customerIds: number[], startDate: string, endDate: string) =>
-  prisma.$queryRaw<InvoiceRow[]>`
-    SELECT o.customerid, o.orderid, o.invoicedate AS "InvoiceDate", COALESCE(od.returnqty, 0) AS "returnqty",
-           COALESCE(od.unitprice, CASE WHEN o.orderqty > 0 THEN o.orderamount / o.orderqty ELSE NULL END, c.rate_per_bottle) AS "rate_per_bottle",
-           c.firstname, c.lastname, NULLIF(TRIM(BOTH E' \n\t' FROM replace(c.addressres, E'\r', '')), '') AS "addressres", c.telephoneres, c.telephoneoffice,
-           c.accountno, o.orderqty, o.orderamount
-    FROM orders o
-    LEFT JOIN customer c ON c.customerid = o.customerid
-    LEFT JOIN LATERAL (
-      -- Sum every detail line: a few orders carry more than one, and taking
-      -- only the newest under-reported the returned bottles.
-      SELECT SUM(COALESCE(d.returnqty, 0))::int AS returnqty,
-             (ARRAY_AGG(d.unitprice ORDER BY d.id DESC))[1] AS unitprice
-      FROM order_details d WHERE d.orderid = o.orderid
-    ) od ON true
-    WHERE o.customerid IN (${Prisma.join(customerIds)})
-      AND o.invoicedate >= ${startDate}::date
-      AND o.invoicedate < (${endDate}::date + INTERVAL '1 day')
-      AND COALESCE(o.isdeleted, false) = false
-      AND COALESCE(o.orderstatus, '') NOT IN ('Cancel', 'Canceled')
-      -- Paid orders never appear on an invoice again (the desktop RMS rule).
-      AND COALESCE(o.ispaymentreceived, false) = false
-    ORDER BY o.customerid, o.invoicedate, o.orderid
-  `
+  invoiceRowsWhere(Prisma.sql`
+    o.customerid IN (${Prisma.join(customerIds)})
+    AND o.invoicedate >= ${startDate}::date
+    AND o.invoicedate < (${endDate}::date + INTERVAL '1 day')
+    -- Paid orders never appear on an invoice again (the desktop RMS rule).
+    AND COALESCE(o.ispaymentreceived, false) = false
+  `)
+
+// The bill a customer was actually sent: the orders behind its invoice number,
+// paid or not. A WhatsApp link has to keep opening after the customer pays;
+// showing only unpaid orders turned it into an error page. Links sent before
+// they carried the number use the latest number issued for the period. Falls
+// back to the unpaid orders when no number was ever issued.
+export const loadSentInvoiceRows = async (customerId: number, startDate: string, endDate: string, invoiceNo?: number) => {
+  let orderIds: number[] = []
+  try {
+    const [latest] = invoiceNo
+      ? await prisma.$queryRaw<Array<{ orderids: number[] }>>`
+          SELECT orderids FROM customer_invoice_numbers
+          WHERE invoiceno = ${invoiceNo} AND customerid = ${customerId}
+        `
+      : await prisma.$queryRaw<Array<{ orderids: number[] }>>`
+          SELECT orderids FROM customer_invoice_numbers
+          WHERE customerid = ${customerId} AND startdate = ${startDate}::date AND enddate = ${endDate}::date
+          ORDER BY id DESC
+          LIMIT 1
+        `
+    orderIds = (latest?.orderids || []).map(Number)
+  } catch {
+    // The numbers table is created on first use; without it there is no sent bill to find.
+  }
+
+  const rows = orderIds.length
+    ? await invoiceRowsWhere(Prisma.sql`o.customerid = ${customerId} AND o.orderid IN (${Prisma.join(orderIds)})`)
+    : []
+
+  return rows.length ? rows : loadInvoiceRows([customerId], startDate, endDate)
+}
 
 const LOGOS = {
   iso: { file: 'iso-22000.jpg', ratio: 356 / 600 },
@@ -231,10 +268,13 @@ export const buildInvoicePdf = async (rows: InvoiceRow[], startDate: string, end
     pdf.text(money(totalAmount), col.total, y, { align: 'right' })
     pdf.line(margin, y + 3, right, y + 3)
 
+    // A bill reopened from its WhatsApp link after the customer paid it.
+    const paid = invoiceRows.every(row => row.ispaymentreceived)
+
     // "Total amount due is Rs.3,740.00 only." with the amount in bold.
     y += 11
     pdf.setFont('helvetica', 'normal')
-    const lead = 'Total amount due is Rs.'
+    const lead = paid ? 'Total amount paid is Rs.' : 'Total amount due is Rs.'
     pdf.text(lead, margin, y)
     let x = margin + pdf.getTextWidth(lead) + 0.3
     pdf.setFont('helvetica', 'bold')
@@ -243,6 +283,13 @@ export const buildInvoicePdf = async (rows: InvoiceRow[], startDate: string, end
     pdf.setFont('helvetica', 'normal')
     pdf.text(' only.', x, y)
     pdf.text('Thank you.', margin, y + 9)
+    if (paid) {
+      pdf.setFont('helvetica', 'bold')
+      pdf.setFontSize(22)
+      pdf.setTextColor(0, 128, 0)
+      pdf.text('PAID', right, y + 4, { align: 'right' })
+      pdf.setTextColor(0, 0, 0)
+    }
 
     drawFooter()
   })

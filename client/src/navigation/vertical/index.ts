@@ -63,6 +63,10 @@ const devNavItems: VerticalNavItemsType = [
         path: '/app/generaljournalreport'
       },
       {
+        title: 'Order Reports',
+        path: '/app/ordersreport'
+      },
+      {
         title: 'Product Reports',
         path: '/app/productreport'
       },
@@ -534,6 +538,10 @@ const prodNavItems :  VerticalNavItemsType = [
       {
         title: 'General Journal Report',
         path: '/app/generaljournalreport'
+      },
+      {
+        title: 'Order Reports',
+        path: '/app/ordersreport'
       },
       {
         title: 'Product Reports',
