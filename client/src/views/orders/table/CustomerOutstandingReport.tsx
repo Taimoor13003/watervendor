@@ -1,184 +1,193 @@
-import React, { useEffect, useState, ChangeEvent } from 'react';
-import Card from '@mui/material/Card';
-import CardHeader from '@mui/material/CardHeader';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
+import React, { useMemo, useState } from 'react'
+import Card from '@mui/material/Card'
+import CardHeader from '@mui/material/CardHeader'
+import Typography from '@mui/material/Typography'
+import Box from '@mui/material/Box'
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
+import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker'
+import { formatDisplayDate } from 'src/lib/display-date'
 
-interface CustomerOutstandingReportProps {
-  data: {
-    orderno: string;
-    orderdate: string;
-    deliveredbyempid: number;
-    deliverydate: string;
-    invoiceno: number;
-    invoicedate: string;
-    customerid: number;
-    firstname: string;
-    lastname: string;
-    quantity: number;
-    bottlereturndate: string | null;
-  }[];
+export type OutstandingRow = {
+  rowid: string
+  orderid: number | null
+  orderno: string | null
+  orderdate: string | null
+  deliveredbyempid: number | null
+  employeename: string | null
+  deliverydate: string | null
+  invoiceno: number | null
+  invoicedate: string | null
+  orderstatus: string | null
+  customerid: number | null
+  firstname: string | null
+  lastname: string | null
+  quantity: number
+  returnqty: number
+  bottlesoutstanding: number
 }
 
-const CustomerOutstandingReport: React.FC<CustomerOutstandingReportProps> = ({ data }) => {
-  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
-  const [searchText, setSearchText] = useState<string>('');
-  const [filteredData, setFilteredData] = useState(data);
+interface CustomerOutstandingReportProps {
+  data: OutstandingRow[]
 
-  const filterFields = ['orderno', 'firstname', 'lastname', 'invoiceno'];
+  // Set once a report has been run; the heading reads "For Customer: ...".
+  customerName?: string
+}
 
-  const escapeRegExp = (value: string) => value.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+// Null and unparseable dates are common in the imported data; rendering them
+// through `new Date(...)` directly produced "Invalid Date" in the grid.
+const formatDate = (value: string | null) => formatDisplayDate(value, '—')
 
-  const handleSearch = (searchValue: string) => {
-    setSearchText(searchValue);
-    const searchRegex = new RegExp(escapeRegExp(searchValue), 'i');
-    const filteredRows = data.filter(row => {
-      return Object.keys(row).some(field => {
-        if (filterFields.includes(field)) {
-          //@ts-ignore
-          return searchRegex.test(row[field]);
-        }
-        return false;
-      });
-    });
-    setFilteredData(searchValue.length ? filteredRows : data);
-  };
+const formatNumber = (value: number) => Number(value || 0).toLocaleString()
+
+const bottles = (count: number) => `${formatNumber(count)} Bottle${count === 1 ? '' : 's'}`
+
+const CustomerOutstandingReport: React.FC<CustomerOutstandingReportProps> = ({ data, customerName }) => {
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 25 })
+
+  const rows = useMemo(() => (Array.isArray(data) ? data : []), [data])
+
+  const totals = useMemo(
+    () =>
+      rows.reduce(
+        (acc, row) => ({
+          delivered: acc.delivered + (row.quantity || 0),
+          returned: acc.returned + (row.returnqty || 0)
+        }),
+        { delivered: 0, returned: 0 }
+      ),
+    [rows]
+  )
 
   const columns: GridColDef[] = [
     {
-      flex: 0.2,
-      minWidth: 150,
+      flex: 0.14,
+      minWidth: 130,
       field: 'orderno',
-      headerName: 'Order No',
+      headerName: 'Order #',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>
-          {params.row.orderno}
+        <Typography variant='body2' sx={{ color: 'text.primary', fontWeight: 600 }}>
+          {params.row.orderno || '—'}
         </Typography>
-      ),
+      )
     },
     {
-      flex: 0.2,
-      minWidth: 150,
+      flex: 0.12,
+      minWidth: 120,
       field: 'orderdate',
       headerName: 'Order Date',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="body2" sx={{ color: 'text.primary' }}>
-          {new Date(params.row.orderdate).toLocaleDateString()}
-        </Typography>
-      ),
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>{formatDate(params.row.orderdate)}</Typography>
+      )
     },
     {
-      flex: 0.2,
-      minWidth: 150,
-      field: 'deliveredbyempid',
-      headerName: 'Delivered By (Emp ID)',
+      flex: 0.18,
+      minWidth: 170,
+      field: 'employeename',
+      headerName: 'Delivered by Employee',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="body2" sx={{ color: 'text.primary' }}>
-          {params.row.deliveredbyempid}
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.employeename || (params.row.deliveredbyempid ?? '—')}
         </Typography>
-      ),
+      )
     },
     {
-      flex: 0.2,
-      minWidth: 150,
+      flex: 0.12,
+      minWidth: 120,
       field: 'deliverydate',
       headerName: 'Delivery Date',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="body2" sx={{ color: 'text.primary' }}>
-          {new Date(params.row.deliverydate).toLocaleDateString()}
-        </Typography>
-      ),
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>{formatDate(params.row.deliverydate)}</Typography>
+      )
     },
     {
-      flex: 0.2,
-      minWidth: 150,
+      flex: 0.12,
+      minWidth: 120,
       field: 'invoiceno',
       headerName: 'Invoice No',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="body2" sx={{ color: 'text.primary' }}>
-          {params.row.invoiceno}
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.invoiceno ? `RI-${params.row.invoiceno}` : '—'}
         </Typography>
-      ),
+      )
     },
     {
-      flex: 0.2,
-      minWidth: 150,
+      flex: 0.12,
+      minWidth: 120,
       field: 'invoicedate',
       headerName: 'Invoice Date',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="body2" sx={{ color: 'text.primary' }}>
-          {new Date(params.row.invoicedate).toLocaleDateString()}
-        </Typography>
-      ),
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>{formatDate(params.row.invoicedate)}</Typography>
+      )
     },
     {
-      flex: 0.2,
-      minWidth: 150,
+      flex: 0.1,
+      minWidth: 110,
       field: 'quantity',
-      headerName: 'Bottles Ordered',
+      headerName: 'Bottles Order',
+      align: 'right',
+      headerAlign: 'right',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="body2" sx={{ color: 'text.primary' }}>
-          {params.row.quantity}
-        </Typography>
-      ),
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>{formatNumber(params.row.quantity)}</Typography>
+      )
     },
     {
-      flex: 0.2,
-      minWidth: 150,
+      flex: 0.1,
+      minWidth: 110,
       field: 'returnqty',
-      headerName: 'Bottles Returned',
+      headerName: 'Bottles Return',
+      align: 'right',
+      headerAlign: 'right',
       renderCell: (params: GridRenderCellParams) => (
-        <Typography variant="body2" sx={{ color: 'text.primary' }}>
-          {params.row.returnqty}
-        </Typography>
-      ),
-    },
-  ];
-  
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>{formatNumber(params.row.returnqty)}</Typography>
+      )
+    }
+  ]
 
   return (
     <Card>
       <DatePickerWrapper>
-        <CardHeader title="Customer Outstanding Report" />
-        <Grid container paddingX={5} display="flex" justifyContent="space-between">
-          <Box>Customer Outstanding Report Summary</Box>
-        </Grid>
-        
-        <DataGrid
-  autoHeight
-  columns={columns}
-  pageSizeOptions={[7, 10, 25, 50]}
-  paginationModel={paginationModel}
+        <CardHeader
+          title='Customer Outstanding Report'
+          subheader={customerName ? `For Customer: ${customerName}` : undefined}
+        />
 
-  // slots={{ toolbar: QuickSearchToolbar }}
-  
-  onPaginationModelChange={setPaginationModel}
-  rows={filteredData.length ? filteredData : data}
-  getRowId={(row) => row.orderno} // Use `orderno` as the unique identifier
-  sx={{
-    '& .MuiSvgIcon-root': {
-      fontSize: '1.125rem',
-    },
-  }}
-  slotProps={{
-    baseButton: {
-      size: 'medium',
-      variant: 'outlined',
-    },
-    toolbar: {
-      value: searchText,
-      clearSearch: () => handleSearch(''),
-      onChange: (event: ChangeEvent<HTMLInputElement>) => handleSearch(event.target.value),
-    },
-  }}
-/>
-      
+        <DataGrid
+          autoHeight
+          columns={columns}
+          pageSizeOptions={[25, 50, 100]}
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          rows={rows}
+          getRowId={row => row.rowid}
+          localeText={{
+            noRowsLabel: customerName ? 'No bottles outstanding for this customer' : 'Select a customer and run the report'
+          }}
+          sx={{
+            '& .MuiSvgIcon-root': {
+              fontSize: '1.125rem'
+            }
+          }}
+        />
+
+        <Box sx={{ px: 5, py: 3, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+          <Typography variant='body2' sx={{ fontWeight: 600 }}>
+            Total Delivered: {bottles(totals.delivered)}
+          </Typography>
+          <Typography variant='body2' sx={{ fontWeight: 600 }}>
+            Total Return: {bottles(totals.returned)}
+          </Typography>
+        </Box>
+
+        <Box sx={{ mx: 5, mb: 5, p: 3, border: theme => `1px solid ${theme.palette.divider}`, borderRadius: 1, maxWidth: 360 }}>
+          <Typography variant='subtitle2' sx={{ textDecoration: 'underline', textAlign: 'center', mb: 1 }}>
+            Total Summary
+          </Typography>
+          <Typography variant='body2'>Delivered Quantity: {bottles(totals.delivered)}</Typography>
+          <Typography variant='body2'>Return Quantity: {bottles(totals.returned)}</Typography>
+        </Box>
       </DatePickerWrapper>
     </Card>
-  );
-};
+  )
+}
 
-export default CustomerOutstandingReport;
+export default CustomerOutstandingReport
