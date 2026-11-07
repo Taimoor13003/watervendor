@@ -120,7 +120,7 @@ const CustomerOutstandingPage = () => {
       ) : null}
 
       <Box mt={3}>
-        <CustomerOutstandingReport data={rows} customerName={reportCustomer} />
+        <CustomerOutstandingReport data={rows} name={reportCustomer} />
       </Box>
     </Box>
   )

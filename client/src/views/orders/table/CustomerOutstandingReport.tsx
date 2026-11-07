@@ -29,8 +29,12 @@ export type OutstandingRow = {
 interface CustomerOutstandingReportProps {
   data: OutstandingRow[]
 
+  // Customer Outstanding lists one customer's deliveries; Employee Outstanding
+  // lists one employee's, with the customer on each row instead.
+  kind?: 'customer' | 'employee'
+
   // Set once a report has been run; the heading reads "For Customer: ...".
-  customerName?: string
+  name?: string
 }
 
 // Null and unparseable dates are common in the imported data; rendering them
@@ -41,7 +45,10 @@ const formatNumber = (value: number) => Number(value || 0).toLocaleString()
 
 const bottles = (count: number) => `${formatNumber(count)} Bottle${count === 1 ? '' : 's'}`
 
-const CustomerOutstandingReport: React.FC<CustomerOutstandingReportProps> = ({ data, customerName }) => {
+const customerLabel = (row: OutstandingRow) =>
+  [row.firstname, row.lastname].filter(Boolean).join(' ') || (row.customerid ? `Customer #${row.customerid}` : '—')
+
+const CustomerOutstandingReport: React.FC<CustomerOutstandingReportProps> = ({ data, kind = 'customer', name }) => {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 25 })
 
   const rows = useMemo(() => (Array.isArray(data) ? data : []), [data])
@@ -79,17 +86,30 @@ const CustomerOutstandingReport: React.FC<CustomerOutstandingReportProps> = ({ d
         <Typography variant='body2' sx={{ color: 'text.primary' }}>{formatDate(params.row.orderdate)}</Typography>
       )
     },
-    {
-      flex: 0.18,
-      minWidth: 170,
-      field: 'employeename',
-      headerName: 'Delivered by Employee',
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {params.row.employeename || (params.row.deliveredbyempid ?? '—')}
-        </Typography>
-      )
-    },
+    kind === 'employee'
+      ? {
+          flex: 0.2,
+          minWidth: 190,
+          field: 'customer',
+          headerName: 'Customer',
+          valueGetter: params => customerLabel(params.row),
+          renderCell: (params: GridRenderCellParams) => (
+            <Typography variant='body2' sx={{ color: 'text.primary' }}>
+              {customerLabel(params.row)}
+            </Typography>
+          )
+        }
+      : {
+          flex: 0.18,
+          minWidth: 170,
+          field: 'employeename',
+          headerName: 'Delivered by Employee',
+          renderCell: (params: GridRenderCellParams) => (
+            <Typography variant='body2' sx={{ color: 'text.primary' }}>
+              {params.row.employeename || (params.row.deliveredbyempid ?? '—')}
+            </Typography>
+          )
+        },
     {
       flex: 0.12,
       minWidth: 120,
@@ -147,8 +167,8 @@ const CustomerOutstandingReport: React.FC<CustomerOutstandingReportProps> = ({ d
     <Card>
       <DatePickerWrapper>
         <CardHeader
-          title='Customer Outstanding Report'
-          subheader={customerName ? `For Customer: ${customerName}` : undefined}
+          title={kind === 'employee' ? 'Employee Outstanding Report' : 'Customer Outstanding Report'}
+          subheader={name ? `For ${kind === 'employee' ? 'Employee' : 'Customer'}: ${name}` : undefined}
         />
 
         <DataGrid
@@ -160,7 +180,7 @@ const CustomerOutstandingReport: React.FC<CustomerOutstandingReportProps> = ({ d
           rows={rows}
           getRowId={row => row.rowid}
           localeText={{
-            noRowsLabel: customerName ? 'No bottles outstanding for this customer' : 'Select a customer and run the report'
+            noRowsLabel: name ? `No bottles outstanding for this ${kind}` : `Select a ${kind} and run the report`
           }}
           sx={{
             '& .MuiSvgIcon-root': {

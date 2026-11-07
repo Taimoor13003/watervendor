@@ -532,8 +532,22 @@ const prodNavItems :  VerticalNavItemsType = [
         path: '/app/accountsreports'
       },
       {
-        title: 'Customer Outstanding Report',
-        path: '/app/customeroutstanding'
+        // Same three reports, names and order as the desktop RMS Reports > Inventory menu.
+        title: 'Inventory',
+        children: [
+          {
+            title: 'Inventory in Hand',
+            path: '/app/productreport'
+          },
+          {
+            title: 'Employee Outstanding',
+            path: '/app/employeeoutstanding'
+          },
+          {
+            title: 'Customer Outstanding',
+            path: '/app/customeroutstanding'
+          }
+        ]
       },
       {
         title: 'General Journal Report',
@@ -542,10 +556,6 @@ const prodNavItems :  VerticalNavItemsType = [
       {
         title: 'Order Reports',
         path: '/app/ordersreport'
-      },
-      {
-        title: 'Product Reports',
-        path: '/app/productreport'
       },
       {
         title: 'Monthly Profit/Loss',
