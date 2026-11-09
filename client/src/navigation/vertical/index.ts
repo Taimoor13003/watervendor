@@ -532,12 +532,16 @@ const prodNavItems :  VerticalNavItemsType = [
         path: '/app/accountsreports'
       },
       {
-        // Same three reports, names and order as the desktop RMS Reports > Inventory menu.
+        // The desktop RMS Reports > Inventory menu, plus the web-only Daily Inventory.
         title: 'Inventory',
         children: [
           {
             title: 'Inventory in Hand',
             path: '/app/productreport'
+          },
+          {
+            title: 'Daily Inventory',
+            path: '/app/dailyinventory'
           },
           {
             title: 'Employee Outstanding',
