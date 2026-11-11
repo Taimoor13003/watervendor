@@ -16,7 +16,7 @@ import { DataGrid, GridColDef, GridRowId } from '@mui/x-data-grid'
 
 import { authHeaders } from 'src/lib/api-client'
 import type { DeliveryTicketRow } from 'src/pages/api/delivery-tickets'
-import DeliveryTicket, { FORM_LENGTH_IN, FORM_WIDTH_IN } from './DeliveryTicket'
+import DeliveryTicket, { FORMS_PER_SHEET, FORM_WIDTH_IN, SHEET_LENGTH_IN } from './DeliveryTicket'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -118,21 +118,34 @@ const DeliveryTickets = () => {
     return (rows || []).filter(row => ids.has(row.customerid))
   }, [rows, selection])
 
+  // Three tickets to a printed sheet, one on each perforated form.
+  const sheets = useMemo(() => {
+    const chunks: DeliveryTicketRow[][] = []
+    for (let i = 0; i < selected.length; i += FORMS_PER_SHEET) chunks.push(selected.slice(i, i + FORMS_PER_SHEET))
+
+    return chunks
+  }, [selected])
+
   return (
     <Box>
-      {/* Only the tickets go to the printer, one per pre-printed form: the page
-          is exactly one form, and the app itself is hidden. */}
+      {/* Only the tickets go to the printer, three to a page: each page is one
+          11in sheet of his paper, so every ticket lands on its own perforated
+          form. The app itself is hidden. */}
       <GlobalStyles
         styles={{
           [`#${PRINT_ROOT_ID}`]: { display: 'none' },
           '@media print': {
-            '@page': { size: `${FORM_WIDTH_IN}in ${FORM_LENGTH_IN}in`, margin: 0 },
+            '@page': { size: `${FORM_WIDTH_IN}in ${SHEET_LENGTH_IN}in`, margin: 0 },
             'html, body': { margin: '0 !important', padding: '0 !important', background: '#fff !important' },
             'body > *': { display: 'none !important' },
             [`body > #${PRINT_ROOT_ID}`]: { display: 'block !important' },
 
-            // A hair under one form, so rounding never spills onto a blank page.
-            [`#${PRINT_ROOT_ID} > div`]: { height: `${FORM_LENGTH_IN - 0.02}in !important`, breakAfter: 'page' },
+            // A hair under one sheet, so rounding never spills onto a blank page.
+            [`#${PRINT_ROOT_ID} > div`]: {
+              height: `${SHEET_LENGTH_IN - 0.02}in`,
+              overflow: 'hidden',
+              breakAfter: 'page'
+            },
             [`#${PRINT_ROOT_ID} > div:last-of-type`]: { breakAfter: 'auto' }
           }
         }}
@@ -227,7 +240,7 @@ const DeliveryTickets = () => {
         <Card sx={{ mt: 4 }}>
           <CardHeader
             title='Ticket Preview'
-            subheader={`One form, ${FORM_WIDTH_IN} × ${FORM_LENGTH_IN} in. Only the text is printed; the shaded header is already on the paper.`}
+            subheader={`One form, a third of a ${FORM_WIDTH_IN} × ${SHEET_LENGTH_IN} in sheet. Only the text is printed; the shaded header is already on the paper.`}
           />
           <CardContent sx={{ overflowX: 'auto' }}>
             <Box sx={{ border: '1px solid', borderColor: 'divider', width: 'fit-content' }}>
@@ -239,8 +252,12 @@ const DeliveryTickets = () => {
 
       <Portal>
         <div id={PRINT_ROOT_ID}>
-          {selected.map(customer => (
-            <DeliveryTicket key={customer.customerid} customer={customer} deliveryDate={ticketDate(deliveryDate)} />
+          {sheets.map(sheet => (
+            <div key={sheet[0].customerid}>
+              {sheet.map(customer => (
+                <DeliveryTicket key={customer.customerid} customer={customer} deliveryDate={ticketDate(deliveryDate)} />
+              ))}
+            </div>
           ))}
         </div>
       </Portal>

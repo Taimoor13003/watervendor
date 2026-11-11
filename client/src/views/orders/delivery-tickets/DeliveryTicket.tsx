@@ -11,10 +11,13 @@ import type { DeliveryTicketRow } from 'src/pages/api/delivery-tickets'
 // and the Rc. Amt. cop row are gone, and Customer's Signature sits on
 // the left beside Remarks.
 
-// His current forms, measured from his photos: 9.5in wide with tractor holes,
-// 3 2/3in long (three to an 11in fold), header about 1.2in deep.
+// His paper, measured from his photos: 9.5in wide with tractor holes, in
+// 11in (28cm) sheets, each perforated into three forms 3 2/3in long. The
+// printed header takes about the top 1.2in of each form.
 export const FORM_WIDTH_IN = 9.5
-export const FORM_LENGTH_IN = 3.67
+export const SHEET_LENGTH_IN = 11
+export const FORMS_PER_SHEET = 3
+export const FORM_LENGTH_IN = SHEET_LENGTH_IN / FORMS_PER_SHEET
 
 // Left blank so the text starts below the printed header.
 const TOP_SPACE_IN = 1.35
