@@ -9,7 +9,8 @@ import type { DeliveryTicketRow } from 'src/pages/api/delivery-tickets'
 // At the client's request (10-11 Nov 2026) the "Pay. Recd. Against" boxes
 // (CP/Book, Dep/Bot, Dep/Dis, Prv.O/S, Recovery), the "DELIVERY TICKET" heading
 // and the Rc. Amt. cop row are gone, and Customer's Signature sits on
-// the left beside Remarks.
+// the left beside Remarks. The quantities get a short line, not a box: boxes
+// made his dot-matrix printer slow.
 
 // His paper, measured from his photos: 9.5in wide with tractor holes, in
 // 11in (28cm) sheets, each perforated into three forms 3 2/3in long. The
@@ -58,14 +59,14 @@ const styles: Record<string, CSSProperties> = {
   table: { borderCollapse: 'collapse' },
   label: { width: '1%', padding: '0 0.12in 0 0', whiteSpace: 'nowrap', verticalAlign: 'top' },
   value: { padding: 0, verticalAlign: 'top', whiteSpace: 'pre-line' },
-  // Square, big enough for a handwritten number.
-  box: {
+  // A short line with room above it for a two-digit handwritten number.
+  blank: {
     display: 'inline-block',
-    width: '0.32in',
-    height: '0.32in',
+    width: '0.45in',
+    height: '0.28in',
     marginBottom: '0.04in',
-    border: `1px solid ${ink}`,
-    verticalAlign: 'middle'
+    borderBottom: `1px solid ${ink}`,
+    verticalAlign: 'bottom'
   },
   footer: { display: 'flex', gap: '0.4in', marginTop: '0.1in' },
   line: { display: 'inline-block', width: '2.2in', borderBottom: `1px solid ${ink}`, marginLeft: '0.05in' }
@@ -78,12 +79,12 @@ const Row = ({ label, children }: { label: string; children?: React.ReactNode })
   </tr>
 )
 
-// A label with a square box to write a number in, the label centred on the box.
-const BoxRow = ({ label }: { label: string }) => (
+// A label with a short line to write a number on, the label sitting on the line.
+const BlankRow = ({ label }: { label: string }) => (
   <tr>
-    <td style={{ ...styles.label, verticalAlign: 'middle' }}>{label}</td>
+    <td style={{ ...styles.label, verticalAlign: 'bottom', paddingBottom: '0.04in' }}>{label}</td>
     <td style={styles.value}>
-      <span style={styles.box} />
+      <span style={styles.blank} />
     </td>
   </tr>
 )
@@ -128,8 +129,8 @@ const DeliveryTicket = ({ customer, deliveryDate, showHeaderArea }: DeliveryTick
         <tbody>
           <Row label='Dlv. Date :'>{deliveryDate}</Row>
           <Row label='Rate/Unit :' />
-          <BoxRow label='Recvd. Qty. :' />
-          <BoxRow label='Emp. Bot. Rt. :' />
+          <BlankRow label='Recvd. Qty. :' />
+          <BlankRow label='Emp. Bot. Rt. :' />
         </tbody>
       </table>
     </div>
