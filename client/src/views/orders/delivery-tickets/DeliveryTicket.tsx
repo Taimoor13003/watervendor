@@ -1,22 +1,35 @@
 import { CSSProperties } from 'react'
 import type { DeliveryTicketRow } from 'src/pages/api/delivery-tickets'
 
-// The desktop RMS delivery ticket, made shorter at the client's request
-// (10 Nov 2026) to save paper: the "Pay. Recd. Against" boxes (CP/Book,
-// Dep/Bot, Dep/Dis, Prv.O/S, Recovery) are gone and Customer's Signature sits
-// on the left beside Remarks. Sizes are in print units so the ticket comes out
-// the same on the dot-matrix printer as on screen.
-export const TICKET_WIDTH = '7.6in'
+// The desktop RMS delivery ticket, printed on the client's continuous two-part
+// forms. The Rivielle header, address and both logos are already printed on
+// those forms by a print shop, so the computer prints only the ticket's text,
+// below that header, one ticket per form.
+//
+// At the client's request (10-11 Nov 2026) the "Pay. Recd. Against" boxes
+// (CP/Book, Dep/Bot, Dep/Dis, Prv.O/S, Recovery), the "DELIVERY TICKET" heading
+// and the coupon ("cop") in Rc. Amt. are gone, and Customer's Signature sits on
+// the left beside Remarks.
 
-const ink = '#222'
-const brandBlue = '#1d4f91'
+// His current forms, measured from his photos: 9.5in wide with tractor holes,
+// 3 2/3in long (three to an 11in fold), header about 1.2in deep.
+export const FORM_WIDTH_IN = 9.5
+export const FORM_LENGTH_IN = 3.67
+
+// Left blank so the text starts below the printed header.
+const TOP_SPACE_IN = 1.35
+
+// Clear of the tractor strip; matches where the desktop printed its labels.
+const LEFT_MARGIN_IN = 1.0
+
+const ink = '#000'
 
 const styles: Record<string, CSSProperties> = {
-  ticket: {
-    width: TICKET_WIDTH,
+  form: {
+    width: `${FORM_WIDTH_IN}in`,
     boxSizing: 'border-box',
-    padding: '0.08in 0.2in 0.1in',
-    borderBottom: '1px dashed #888',
+    overflow: 'hidden',
+    position: 'relative',
     fontFamily: 'Tahoma, Verdana, Arial, sans-serif',
     fontSize: '9.5pt',
     lineHeight: 1.2,
@@ -25,12 +38,19 @@ const styles: Record<string, CSSProperties> = {
     breakInside: 'avoid',
     pageBreakInside: 'avoid'
   },
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
-  sideLogo: { height: '0.36in', width: 'auto' },
-  centre: { textAlign: 'center' },
-  mainLogo: { height: '0.42in', width: 'auto', display: 'block', margin: '0 auto' },
-  address: { fontSize: '6.5pt', fontWeight: 700, color: brandBlue, lineHeight: 1.25 },
-  title: { textDecoration: 'underline', margin: '0.03in 0 0.02in', letterSpacing: '0.02em' },
+  header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: '#f1f3f6',
+    color: '#8a94a6',
+    fontSize: '8pt',
+    borderBottom: '1px dashed #c4cad4'
+  },
   body: { display: 'flex', gap: '0.5in' },
   table: { borderCollapse: 'collapse' },
   label: { width: '1%', padding: '0 0.12in 0 0', whiteSpace: 'nowrap', verticalAlign: 'top' },
@@ -42,7 +62,7 @@ const styles: Record<string, CSSProperties> = {
     border: `1px solid ${ink}`,
     verticalAlign: 'middle'
   },
-  footer: { display: 'flex', gap: '0.4in', marginTop: '0.08in' },
+  footer: { display: 'flex', gap: '0.4in', marginTop: '0.1in' },
   line: { display: 'inline-block', width: '2.2in', borderBottom: `1px solid ${ink}`, marginLeft: '0.05in' }
 }
 
@@ -60,24 +80,24 @@ interface DeliveryTicketProps {
 
   // Already formatted for display, e.g. "11-11-2026".
   deliveryDate: string
+
+  // On screen only: shade where the print shop's header sits on the form.
+  showHeaderArea?: boolean
 }
 
-const DeliveryTicket = ({ customer, deliveryDate }: DeliveryTicketProps) => (
-  <div style={styles.ticket}>
-    <div style={styles.header}>
-      <img src='/images/invoice/iso-22000.jpg' alt='ISO 22000' style={styles.sideLogo} />
-      <div style={styles.centre}>
-        <img src='/images/invoice/rivielle.jpg' alt='Rivielle' style={styles.mainLogo} />
-        <div style={styles.address}>
-          Plot # C-3-28, Block-B, GEM Korangi Industrial Area, Karachi.
-          <br />
-          Ph: 0300 2734089, 0332 4422385, E-mail: riviellewater@hotmail.com, Website: Rivielle.com
-        </div>
+const DeliveryTicket = ({ customer, deliveryDate, showHeaderArea }: DeliveryTicketProps) => (
+  <div
+    style={{
+      ...styles.form,
+      height: `${FORM_LENGTH_IN}in`,
+      padding: `${TOP_SPACE_IN}in 0.6in 0 ${LEFT_MARGIN_IN}in`
+    }}
+  >
+    {showHeaderArea ? (
+      <div style={{ ...styles.header, height: `${TOP_SPACE_IN - 0.1}in` }}>
+        Pre-printed header (Rivielle logo, address, ISO and Pakistan Standards logos)
       </div>
-      <img src='/images/invoice/pakistan-standards.jpg' alt='Pakistan Standards' style={styles.sideLogo} />
-    </div>
-
-    <div style={styles.title}>DELIVERY TICKET</div>
+    ) : null}
 
     <div style={styles.body}>
       <table style={{ ...styles.table, width: '4.4in' }}>
@@ -99,7 +119,7 @@ const DeliveryTicket = ({ customer, deliveryDate }: DeliveryTicketProps) => (
           <Row label='Emp. Bot. Rt. :'>
             <span style={styles.box} />
           </Row>
-          <Row label='Rc. Amt. cop :'>
+          <Row label='Rc. Amt. :'>
             <span style={styles.box} />
           </Row>
         </tbody>

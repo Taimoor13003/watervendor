@@ -14,6 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const vouchers = await prisma.$queryRaw`
       SELECT * FROM pick_paymentmode
+      -- Coupons are no longer sold (client, 11 Nov 2026).
+      WHERE paymentmode IS DISTINCT FROM 'Coupon'
     `
 
     res.status(200).json({ vouchers })

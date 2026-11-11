@@ -27,7 +27,6 @@ const GeneralJournalReport = ({ data }: { data: any[] }) => {
     { field: 'unitsinstock', headerName: 'Units In Stock', flex: 0.15, minWidth: 120 },
     { field: 'totalunits', headerName: 'Total Units', flex: 0.15, minWidth: 150 },
     { field: 'rateperunitcash', headerName: 'Rate Per Unit Cash', flex: 0.2, minWidth: 180 },
-    { field: 'rateperunitcoupon', headerName: 'Rate Per Unit Coupon', flex: 0.15, minWidth: 120, type: 'number' },
   ];
 
   return (

@@ -112,17 +112,6 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
       ),
     },
     {
-      flex: 0.175,
-      minWidth: 120,
-      field: 'rateperunitcoupon',
-      headerName: 'Rate Per Unit (Coupon)',
-      renderCell: (params: GridRenderCellParams) => (
-        <Typography variant='body2' sx={{ color: 'text.primary' }}>
-          {formatRate(params.row.rateperunitcoupon)}
-        </Typography>
-      ),
-    },
-    {
       flex: 0.25,
       minWidth: 290,
       field: 'actions',

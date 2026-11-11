@@ -91,7 +91,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `,
       prisma.pick_customertype.findMany({ select: { id: true, customertype: true } }),
       prisma.pick_requirement.findMany({ select: { id: true, requirement: true } }),
-      prisma.pick_paymentmode.findMany({ select: { id: true, paymentmode: true } }),
+      // Coupons are no longer sold (client, 11 Nov 2026), so Coupon is not offered.
+      prisma.pick_paymentmode.findMany({ where: { NOT: { paymentmode: 'Coupon' } }, select: { id: true, paymentmode: true } }),
       prisma.employee_personal.findMany({
         select: { id: true, empid: true, employeecode: true, firstname: true, middlename: true, lastname: true, doj: true, salarypaydate: true, dob: true }
       }),

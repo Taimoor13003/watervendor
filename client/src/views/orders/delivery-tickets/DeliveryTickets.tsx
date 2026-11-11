@@ -16,7 +16,7 @@ import { DataGrid, GridColDef, GridRowId } from '@mui/x-data-grid'
 
 import { authHeaders } from 'src/lib/api-client'
 import type { DeliveryTicketRow } from 'src/pages/api/delivery-tickets'
-import DeliveryTicket from './DeliveryTicket'
+import DeliveryTicket, { FORM_LENGTH_IN, FORM_WIDTH_IN } from './DeliveryTicket'
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
@@ -120,16 +120,20 @@ const DeliveryTickets = () => {
 
   return (
     <Box>
-      {/* Only the tickets go to the printer: the app itself is hidden, and the
-          tickets run one after another with no page break inside a ticket. */}
+      {/* Only the tickets go to the printer, one per pre-printed form: the page
+          is exactly one form, and the app itself is hidden. */}
       <GlobalStyles
         styles={{
           [`#${PRINT_ROOT_ID}`]: { display: 'none' },
           '@media print': {
-            '@page': { margin: '0.2in' },
+            '@page': { size: `${FORM_WIDTH_IN}in ${FORM_LENGTH_IN}in`, margin: 0 },
+            'html, body': { margin: '0 !important', padding: '0 !important', background: '#fff !important' },
             'body > *': { display: 'none !important' },
             [`body > #${PRINT_ROOT_ID}`]: { display: 'block !important' },
-            body: { background: '#fff !important' }
+
+            // A hair under one form, so rounding never spills onto a blank page.
+            [`#${PRINT_ROOT_ID} > div`]: { height: `${FORM_LENGTH_IN - 0.02}in !important`, breakAfter: 'page' },
+            [`#${PRINT_ROOT_ID} > div:last-of-type`]: { breakAfter: 'auto' }
           }
         }}
       />
@@ -221,10 +225,13 @@ const DeliveryTickets = () => {
 
       {selected.length ? (
         <Card sx={{ mt: 4 }}>
-          <CardHeader title='Ticket Preview' subheader='As it prints; tickets follow one another with a cut line' />
+          <CardHeader
+            title='Ticket Preview'
+            subheader={`One form, ${FORM_WIDTH_IN} × ${FORM_LENGTH_IN} in. Only the text is printed; the shaded header is already on the paper.`}
+          />
           <CardContent sx={{ overflowX: 'auto' }}>
             <Box sx={{ border: '1px solid', borderColor: 'divider', width: 'fit-content' }}>
-              <DeliveryTicket customer={selected[0]} deliveryDate={ticketDate(deliveryDate)} />
+              <DeliveryTicket customer={selected[0]} deliveryDate={ticketDate(deliveryDate)} showHeaderArea />
             </Box>
           </CardContent>
         </Card>

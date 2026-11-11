@@ -22,7 +22,6 @@ type FormValues = {
   unitsinstock: number | string;
   totalunits: number | string;
   rateperunitcash: number | string;
-  rateperunitcoupon: number | string;
   remarks: string;
   isactive: boolean;
 };
@@ -47,11 +46,6 @@ const schema = yup.object({
     .typeError('Must be a number')
     .min(0, 'Cannot be negative')
     .required('Cash rate is required'),
-  rateperunitcoupon: yup
-    .number()
-    .typeError('Must be a number')
-    .min(0, 'Cannot be negative')
-    .required('Coupon rate is required'),
   remarks: yup.string().max(500, 'Max 500 characters'),
   isactive: yup.boolean(),
 });
@@ -69,7 +63,6 @@ const ProductsForm = () => {
       unitsinstock: '',
       totalunits: '',
       rateperunitcash: '',
-      rateperunitcoupon: '',
       remarks: '',
       isactive: true,
     },
@@ -89,7 +82,6 @@ const ProductsForm = () => {
       unitsinstock: toNumberOrNull(vals.unitsinstock),
       totalunits: toNumberOrNull(vals.totalunits),
       rateperunitcash: toNumberOrNull(vals.rateperunitcash),
-      rateperunitcoupon: toNumberOrNull(vals.rateperunitcoupon),
       remarks: vals.remarks,
       isactive: !!vals.isactive,
     };
@@ -246,24 +238,6 @@ const ProductsForm = () => {
                     inputProps={{ min: 0, step: '0.01' }}
                     error={Boolean(errors.rateperunitcash)}
                     helperText={errors.rateperunitcash?.message}
-                  />
-                )}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name='rateperunitcoupon'
-                control={control}
-                render={({ field }) => (
-                  <CustomTextField
-                    {...field}
-                    fullWidth
-                    label='Rate per Unit (Coupon)'
-                    type='number'
-                    inputProps={{ min: 0, step: '0.01' }}
-                    error={Boolean(errors.rateperunitcoupon)}
-                    helperText={errors.rateperunitcoupon?.message}
                   />
                 )}
               />

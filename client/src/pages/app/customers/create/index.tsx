@@ -114,7 +114,8 @@ export const getServerSideProps: GetServerSideProps<CustomerFormPageProps> = asy
           console.error('Error loading delivery persons:', err)
           return []
         }),
-      prisma.pick_paymentmode.findMany()
+      // Coupons are no longer sold (client, 11 Nov 2026), so Coupon is not offered.
+      prisma.pick_paymentmode.findMany({ where: { NOT: { paymentmode: 'Coupon' } } })
         .catch(err => {
           console.error('Error loading payment modes:', err)
           return []

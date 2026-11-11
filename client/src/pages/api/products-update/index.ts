@@ -14,14 +14,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { id, productcode, productname, unitsinstock, totalunits, rateperunitcash, rateperunitcoupon, remarks, isactive } = req.body || {}
+    const { id, productcode, productname, unitsinstock, totalunits, rateperunitcash, remarks, isactive } = req.body || {}
 
     const idNumber = toNumberOrNull(id)
     if (idNumber === null) {
       return res.status(400).json({ message: 'Missing product id' })
     }
-    if (!productcode || !productname || rateperunitcash === undefined || rateperunitcoupon === undefined) {
-      return res.status(400).json({ message: 'productcode, productname, rateperunitcash, rateperunitcoupon are required' })
+    if (!productcode || !productname || rateperunitcash === undefined) {
+      return res.status(400).json({ message: 'productcode, productname, rateperunitcash are required' })
     }
 
     const payload = {
@@ -30,7 +30,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       unitsinstock: toNumberOrNull(unitsinstock),
       totalunits: toNumberOrNull(totalunits),
       rateperunitcash: toNumberOrNull(rateperunitcash),
-      rateperunitcoupon: toNumberOrNull(rateperunitcoupon),
       remarks: remarks?.toString().trim() ?? '',
       isactive: typeof isactive === 'boolean' ? isactive : true,
     }

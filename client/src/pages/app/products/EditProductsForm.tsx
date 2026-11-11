@@ -13,7 +13,6 @@ type EditProductFormProps = {
     unitsinstock: number;
     totalunits: number;
     rateperunitcash: number;
-    rateperunitcoupon: number;
     remarks: string;
     isactive?: boolean | null;
   };

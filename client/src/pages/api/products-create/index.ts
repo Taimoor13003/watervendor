@@ -14,10 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { productcode, productname, unitsinstock, totalunits, rateperunitcash, rateperunitcoupon, remarks, isactive } = req.body || {}
+    const { productcode, productname, unitsinstock, totalunits, rateperunitcash, remarks, isactive } = req.body || {}
 
-    if (!productcode || !productname || rateperunitcash === undefined || rateperunitcoupon === undefined) {
-      return res.status(400).json({ message: 'productcode, productname, rateperunitcash, rateperunitcoupon are required' })
+    if (!productcode || !productname || rateperunitcash === undefined) {
+      return res.status(400).json({ message: 'productcode, productname, rateperunitcash are required' })
     }
 
     // derive next productid
@@ -31,7 +31,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       unitsinstock: toNumberOrNull(unitsinstock),
       totalunits: toNumberOrNull(totalunits),
       rateperunitcash: toNumberOrNull(rateperunitcash),
-      rateperunitcoupon: toNumberOrNull(rateperunitcoupon),
       remarks: remarks?.toString().trim() ?? '',
       isactive: typeof isactive === 'boolean' ? isactive : true,
       isdeleted: false,
