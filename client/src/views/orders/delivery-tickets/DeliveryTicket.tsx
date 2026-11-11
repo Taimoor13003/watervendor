@@ -8,7 +8,7 @@ import type { DeliveryTicketRow } from 'src/pages/api/delivery-tickets'
 //
 // At the client's request (10-11 Nov 2026) the "Pay. Recd. Against" boxes
 // (CP/Book, Dep/Bot, Dep/Dis, Prv.O/S, Recovery), the "DELIVERY TICKET" heading
-// and the coupon ("cop") in Rc. Amt. are gone, and Customer's Signature sits on
+// and the Rc. Amt. cop row are gone, and Customer's Signature sits on
 // the left beside Remarks.
 
 // His current forms, measured from his photos: 9.5in wide with tractor holes,
@@ -117,9 +117,6 @@ const DeliveryTicket = ({ customer, deliveryDate, showHeaderArea }: DeliveryTick
             <span style={styles.box} />
           </Row>
           <Row label='Emp. Bot. Rt. :'>
-            <span style={styles.box} />
-          </Row>
-          <Row label='Rc. Amt. :'>
             <span style={styles.box} />
           </Row>
         </tbody>
