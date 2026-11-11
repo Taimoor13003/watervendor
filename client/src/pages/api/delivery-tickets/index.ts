@@ -10,7 +10,6 @@ export type DeliveryTicketRow = {
   address: string | null
   area: string | null
   telephone: string | null
-  fax: string | null
   paymentmode: string | null
   deliveryperson: number | null
   deliverypersonname: string | null
@@ -59,7 +58,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         COALESCE(NULLIF(TRIM(c.addressres), ''), NULLIF(TRIM(c.addressoffice), '')) AS "address",
         COALESCE(NULLIF(TRIM(c.deliveryarea), ''), NULLIF(TRIM(c.areares), '')) AS "area",
         COALESCE(NULLIF(TRIM(c.telephoneres), ''), NULLIF(TRIM(c.telephoneoffice), '')) AS "telephone",
-        NULLIF(TRIM(c.fax), '') AS "fax",
         c.paymentmode,
         c.delivery_person AS "deliveryperson",
         TRIM(CONCAT_WS(' ', e.firstname, e.lastname)) AS "deliverypersonname"

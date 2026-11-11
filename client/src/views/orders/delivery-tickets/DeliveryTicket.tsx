@@ -9,8 +9,9 @@ import type { DeliveryTicketRow } from 'src/pages/api/delivery-tickets'
 // At the client's request (10-11 Nov 2026) the "Pay. Recd. Against" boxes
 // (CP/Book, Dep/Bot, Dep/Dis, Prv.O/S, Recovery), the "DELIVERY TICKET" heading
 // and the Rc. Amt. cop row are gone, and Customer's Signature sits on
-// the left beside Remarks. The quantities get a short line, not a box: boxes
-// made his dot-matrix printer slow.
+// the left beside Remarks. Only the phone is printed, not the fax. The
+// quantities get a short line, not a box: boxes made his dot-matrix printer
+// slow.
 
 // His paper, measured from his photos: 9.5in wide with tractor holes, in
 // 11in (28cm) sheets, each perforated into three forms 3 2/3in long. The
@@ -89,8 +90,6 @@ const BlankRow = ({ label }: { label: string }) => (
   </tr>
 )
 
-const phoneFax = (customer: DeliveryTicketRow) => [customer.telephone, customer.fax].filter(Boolean).join(' / ')
-
 interface DeliveryTicketProps {
   customer: DeliveryTicketRow
 
@@ -121,7 +120,7 @@ const DeliveryTicket = ({ customer, deliveryDate, showHeaderArea }: DeliveryTick
           <Row label='A/C. No. :'>{customer.accountno}</Row>
           <Row label='A/C. Name :'>{customer.name}</Row>
           <Row label='Address :'>{customer.address}</Row>
-          <Row label='Phone/Fax :'>{phoneFax(customer)}</Row>
+          <Row label='Phone :'>{customer.telephone}</Row>
           <Row label='Pay. Mode :'>{customer.paymentmode}</Row>
         </tbody>
       </table>
