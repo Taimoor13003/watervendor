@@ -67,6 +67,11 @@ const devNavItems: VerticalNavItemsType = [
         path: '/app/ordersreport'
       },
       {
+        // Desktop: Reports > Todays Schedule Orders (prints the delivery tickets).
+        title: "Today's Schedule Orders",
+        path: '/app/deliverytickets'
+      },
+      {
         title: 'Product Reports',
         path: '/app/productreport'
       },
@@ -560,6 +565,11 @@ const prodNavItems :  VerticalNavItemsType = [
       {
         title: 'Order Reports',
         path: '/app/ordersreport'
+      },
+      {
+        // Desktop: Reports > Todays Schedule Orders (prints the delivery tickets).
+        title: "Today's Schedule Orders",
+        path: '/app/deliverytickets'
       },
       {
         title: 'Monthly Profit/Loss',
