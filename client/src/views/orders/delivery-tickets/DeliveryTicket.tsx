@@ -55,10 +55,12 @@ const styles: Record<string, CSSProperties> = {
   table: { borderCollapse: 'collapse' },
   label: { width: '1%', padding: '0 0.12in 0 0', whiteSpace: 'nowrap', verticalAlign: 'top' },
   value: { padding: 0, verticalAlign: 'top', whiteSpace: 'pre-line' },
+  // Square, big enough for a handwritten number.
   box: {
     display: 'inline-block',
-    width: '0.6in',
-    height: '0.15in',
+    width: '0.32in',
+    height: '0.32in',
+    marginBottom: '0.04in',
     border: `1px solid ${ink}`,
     verticalAlign: 'middle'
   },
@@ -70,6 +72,16 @@ const Row = ({ label, children }: { label: string; children?: React.ReactNode })
   <tr>
     <td style={styles.label}>{label}</td>
     <td style={styles.value}>{children}</td>
+  </tr>
+)
+
+// A label with a square box to write a number in, the label centred on the box.
+const BoxRow = ({ label }: { label: string }) => (
+  <tr>
+    <td style={{ ...styles.label, verticalAlign: 'middle' }}>{label}</td>
+    <td style={styles.value}>
+      <span style={styles.box} />
+    </td>
   </tr>
 )
 
@@ -113,12 +125,8 @@ const DeliveryTicket = ({ customer, deliveryDate, showHeaderArea }: DeliveryTick
         <tbody>
           <Row label='Dlv. Date :'>{deliveryDate}</Row>
           <Row label='Rate/Unit :' />
-          <Row label='Recvd. Qty. :'>
-            <span style={styles.box} />
-          </Row>
-          <Row label='Emp. Bot. Rt. :'>
-            <span style={styles.box} />
-          </Row>
+          <BoxRow label='Recvd. Qty. :' />
+          <BoxRow label='Emp. Bot. Rt. :' />
         </tbody>
       </table>
     </div>
