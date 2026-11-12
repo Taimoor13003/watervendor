@@ -9,10 +9,16 @@ import {
   MenuItem,
   Paper,
   Select,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Typography
 } from '@mui/material'
-import { DataGrid, GridColDef } from '@mui/x-data-grid'
 import { firebaseAuth } from 'src/services/firebase.service'
+import { authFetch } from 'src/lib/api-client'
 
 type ProfitRow = {
   id: number
@@ -23,23 +29,64 @@ type ProfitRow = {
   actualprofit: number | null
 }
 
-const currency = (value: number | null) => Number(value || 0).toLocaleString()
+type AccountLine = { accountcode: string | null; accountname: string | null; amount: number }
 
-const columns: GridColDef[] = [
-  { field: 'monthname', headerName: 'Month', flex: 0.2, minWidth: 140 },
-  { field: 'monthyear', headerName: 'Year', flex: 0.15, minWidth: 110 },
-  { field: 'income', headerName: 'Income', flex: 0.22, minWidth: 150, valueFormatter: params => currency(params.value) },
-  { field: 'expenses', headerName: 'Expenses', flex: 0.22, minWidth: 150, valueFormatter: params => currency(params.value) },
-  { field: 'actualprofit', headerName: 'Actual Profit', flex: 0.22, minWidth: 160, valueFormatter: params => currency(params.value) }
-]
+type Statement = {
+  result: ProfitRow[]
+  total: { income: number; expenses: number; actualprofit: number }
+  incomeAccounts: AccountLine[]
+  expenseAccounts: AccountLine[]
+}
+
+const ALL_MONTHS = 'All Months'
+
+const currency = (value: number | null) =>
+  Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+const accountLabel = (line: AccountLine) =>
+  line.accountname ? `${line.accountcode}-${line.accountname.trim()}` : `${line.accountcode} (not in Chart of Accounts)`
+
+const AccountsTable = ({ title, lines }: { title: string; lines: AccountLine[] }) => (
+  <Box mt={4}>
+    <Typography variant='subtitle1' fontWeight='bold' gutterBottom>
+      {title}
+    </Typography>
+    <Table size='small'>
+      <TableHead>
+        <TableRow>
+          <TableCell>Account Code</TableCell>
+          <TableCell align='right'>Amount</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {lines.length === 0 && (
+          <TableRow>
+            <TableCell colSpan={2}>None</TableCell>
+          </TableRow>
+        )}
+        {lines.map(line => (
+          <TableRow key={line.accountcode ?? ''}>
+            <TableCell>{accountLabel(line)}</TableCell>
+            <TableCell align='right'>{currency(line.amount)}</TableCell>
+          </TableRow>
+        ))}
+        <TableRow>
+          <TableCell sx={{ fontWeight: 'bold' }}>Total</TableCell>
+          <TableCell align='right' sx={{ fontWeight: 'bold' }}>
+            {currency(lines.reduce((sum, line) => sum + line.amount, 0))}
+          </TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
+  </Box>
+)
 
 const ProfitLossReportPage = () => {
   const [month, setMonth] = useState('')
   const [year, setYear] = useState('')
-  const [rows, setRows] = useState<ProfitRow[]>([])
+  const [statement, setStatement] = useState<Statement | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [hasRunReport, setHasRunReport] = useState(false)
 
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -50,18 +97,22 @@ const ProfitLossReportPage = () => {
   const handleRunReport = async () => {
     setLoading(true)
     setError('')
-    setHasRunReport(false)
+    setStatement(null)
 
     try {
       const idToken = await firebaseAuth.currentUser?.getIdToken()
-      const response = await fetch(`/api/monthlyprofit?month=${encodeURIComponent(month)}&year=${year}`, {
+      const response = await authFetch(`/api/monthlyprofit?month=${encodeURIComponent(month)}&year=${year}`, {
         headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined
       })
       const body = await response.json()
       if (!response.ok) throw new Error(body.error || 'Unable to load monthly profit data')
 
-      setRows(Array.isArray(body.result) ? body.result : [])
-      setHasRunReport(true)
+      setStatement({
+        result: Array.isArray(body.result) ? body.result : [],
+        total: body.total ?? { income: 0, expenses: 0, actualprofit: 0 },
+        incomeAccounts: Array.isArray(body.incomeAccounts) ? body.incomeAccounts : [],
+        expenseAccounts: Array.isArray(body.expenseAccounts) ? body.expenseAccounts : []
+      })
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : 'Unable to load monthly profit data')
     } finally {
@@ -72,10 +123,11 @@ const ProfitLossReportPage = () => {
   const handleCancel = () => {
     setMonth('')
     setYear('')
-    setRows([])
+    setStatement(null)
     setError('')
-    setHasRunReport(false)
   }
+
+  const allMonths = month === ALL_MONTHS
 
   return (
     <Box sx={{ p: 3 }}>
@@ -88,7 +140,7 @@ const ProfitLossReportPage = () => {
         <FormControl fullWidth margin='normal'>
           <InputLabel id='month-label'>Month</InputLabel>
           <Select labelId='month-label' value={month} label='Month' onChange={event => setMonth(event.target.value)}>
-            {months.map(value => <MenuItem key={value} value={value}>{value}</MenuItem>)}
+            {[ALL_MONTHS, ...months].map(value => <MenuItem key={value} value={value}>{value}</MenuItem>)}
           </Select>
         </FormControl>
         <FormControl fullWidth margin='normal'>
@@ -107,17 +159,54 @@ const ProfitLossReportPage = () => {
 
       {loading && <Box display='flex' justifyContent='center' my={4}><CircularProgress /></Box>}
       {error && <Alert severity='error' sx={{ mt: 3 }}>{error}</Alert>}
-      {hasRunReport && !loading && !error && (
-        <Box mt={4}>
-          <DataGrid
-            autoHeight
-            rows={rows}
-            columns={columns}
-            pageSizeOptions={[10, 25, 50]}
-            initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-            localeText={{ noRowsLabel: `No profit/loss record was found for ${month} ${year}.` }}
-          />
-        </Box>
+      {statement && !loading && !error && (
+        <Paper elevation={3} sx={{ mt: 4, p: { xs: 2, sm: 4 }, borderRadius: 2 }}>
+          <Typography variant='h5' fontWeight='bold' gutterBottom>
+            {allMonths ? `Profit & Expense Statement ${year}` : 'Monthly Profit & Expense Statement'}
+          </Typography>
+
+          {statement.result.length === 0 ? (
+            <Typography mt={2}>
+              No profit/loss record was found for {allMonths ? year : `${month} ${year}`}.
+            </Typography>
+          ) : (
+            <>
+              <TableContainer>
+                <Table size='small'>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Month Name & Year</TableCell>
+                      <TableCell align='right'>Income</TableCell>
+                      <TableCell align='right'>Expenses</TableCell>
+                      <TableCell align='right'>Actual Profit</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {statement.result.map(row => (
+                      <TableRow key={row.id}>
+                        <TableCell>{`${row.monthname} ${row.monthyear}`}</TableCell>
+                        <TableCell align='right'>{currency(row.income)}</TableCell>
+                        <TableCell align='right'>{currency(row.expenses)}</TableCell>
+                        <TableCell align='right'>{currency(row.actualprofit)}</TableCell>
+                      </TableRow>
+                    ))}
+                    {allMonths && (
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 'bold' }}>{`Total ${year}`}</TableCell>
+                        <TableCell align='right' sx={{ fontWeight: 'bold' }}>{currency(statement.total.income)}</TableCell>
+                        <TableCell align='right' sx={{ fontWeight: 'bold' }}>{currency(statement.total.expenses)}</TableCell>
+                        <TableCell align='right' sx={{ fontWeight: 'bold' }}>{currency(statement.total.actualprofit)}</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              <AccountsTable title='All Income Accounts' lines={statement.incomeAccounts} />
+              <AccountsTable title='All Expense Accounts' lines={statement.expenseAccounts} />
+            </>
+          )}
+        </Paper>
       )}
     </Box>
   )

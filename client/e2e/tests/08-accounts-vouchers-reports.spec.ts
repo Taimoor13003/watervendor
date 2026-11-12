@@ -224,6 +224,26 @@ test.describe('Financial reports', () => {
     await expect(row).toContainText(/5,?000/)
     await expect(row).toContainText(/1,?200/)
     await expect(row).toContainText(/3,?800/)
+
+    // Detail like the desktop statement: cash under income, the electricity bill under expenses.
+    await expect(page.getByRole('row').filter({ hasText: `${CASH}-CASH` })).toContainText('5,000.00')
+    await expect(page.getByRole('row').filter({ hasText: `${ELECTRICITY}-Electricity` })).toContainText('1,200.00')
+  })
+
+  test('Profit/Loss for All Months 2026: month rows, year total and expense heads', async ({ page, request }) => {
+    const body = await (await request.get('/api/monthlyprofit?month=All%20Months&year=2026', { headers: await authHeaders(request) })).json()
+    expect(body.result.map((r: { monthname: string }) => r.monthname)).toEqual(['July'])
+    expect(body.total).toEqual({ income: 5000, expenses: 1200, actualprofit: 3800 })
+    expect(body.expenseAccounts).toEqual([{ accountcode: ELECTRICITY, accountname: expect.stringMatching(/Electricity/), amount: 1200 }])
+
+    await login(page, '/app/profitlossreport')
+    await page.getByLabel('Month').click()
+    await page.getByRole('option', { name: 'All Months', exact: true }).click()
+    await page.getByLabel('Year').click()
+    await page.getByRole('option', { name: '2026', exact: true }).click()
+    await page.getByRole('button', { name: /run report/i }).click()
+    await expect(page.getByText('Profit & Expense Statement 2026')).toBeVisible()
+    await expect(page.getByRole('row').filter({ hasText: 'Total 2026' })).toContainText(/5,000\.00.*1,200\.00.*3,800\.00/)
   })
 
   test('Monthly Profit/Loss for June shows nothing: the 1 July voucher stays in July', async ({ request }) => {
