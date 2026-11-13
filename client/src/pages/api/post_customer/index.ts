@@ -2,6 +2,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import prisma from 'src/lib/prisma'
 
+// Arbitrary but fixed key: serialises customer id / account number allocation.
+const CUSTOMER_NUMBER_LOCK = 918273647
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -51,21 +54,23 @@ export default async function handler(
     }
 
     const newCustomer = await prisma.$transaction(async (tx) => {
-      // 1) aggregate both customerid and accountno suffix
-      const { _max } = await tx.customer.aggregate({
-        _max: {
-          customerid: true,
-          accountno: true
-        }
-      })
+      // One allocation at a time, so two creates cannot claim the same number.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(${CUSTOMER_NUMBER_LOCK})`
 
+      const { _max } = await tx.customer.aggregate({ _max: { customerid: true } })
       const maxCid = _max.customerid ?? 0
-      const rawAcc = _max.accountno ?? ''
-      const currentNum = rawAcc.split('-', 2)[1]
-      const nextNum = currentNum
-        ? parseInt(currentNum, 10) + 1
-        : 1
-      const nextAccNo = `RC-${String(nextNum).padStart(3, '0')}`
+
+      // Like the desktop, the account number follows the customer id: customer
+      // 1947 is RC-1947. It used to come from MAX(accountno), which compares
+      // text, so 'RC-987' ranked above 'RC-1946' and new customers got RC-988.
+      let accountNumber = maxCid + 1
+      let nextAccNo = `RC-${accountNumber}`
+      for (let attempt = 0; attempt < 50; attempt += 1) {
+        const clash = await tx.customer.findFirst({ where: { accountno: nextAccNo }, select: { id: true } })
+        if (!clash) break
+        accountNumber += 1
+        nextAccNo = `RC-${accountNumber}`
+      }
 
       // 2) create with proper type coercion
       return tx.customer.create({
