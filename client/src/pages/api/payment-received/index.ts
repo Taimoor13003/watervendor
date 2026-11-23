@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { Prisma } from '@prisma/client'
 import prisma from 'src/lib/prisma'
 import { requireApiAuth } from 'src/lib/require-invoice-auth'
+import { syncReceiptVouchers } from 'src/lib/receipt-vouchers'
 
 // Records that customers paid (or, to undo a mistake, did not pay) for every
 // order invoiced inside a date range. This is the web version of the desktop
@@ -31,15 +32,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     try {
-      const updated = await prisma.$executeRaw`
-        UPDATE orders
-        SET ispaymentreceived = ${received}, modifydate = NOW()
-        WHERE orderid IN (${Prisma.join(orders)})
-          AND COALESCE(isdeleted, false) = false
-          AND COALESCE(orderstatus, '') NOT IN ('Cancel', 'Canceled')
-      `
+      const result = await prisma.$transaction(
+        async tx => {
+          const rows = await tx.$queryRaw<{ orderid: number }[]>`
+            UPDATE orders
+            SET ispaymentreceived = ${received}, modifydate = NOW()
+            WHERE orderid IN (${Prisma.join(orders)})
+              AND COALESCE(isdeleted, false) = false
+              AND COALESCE(orderstatus, '') NOT IN ('Cancel', 'Canceled')
+            RETURNING orderid
+          `
+          const vouchers = await syncReceiptVouchers(tx, rows.map(row => row.orderid), received)
 
-      return res.status(200).json({ updated })
+          return { updated: rows.length, ...vouchers }
+        },
+        { timeout: 30000 }
+      )
+
+      return res.status(200).json(result)
     } catch (error) {
       console.error('Failed to record payment received:', error)
 
@@ -71,17 +81,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Same order selection as the invoice itself, so exactly the orders that
     // appear on the printed invoice are the ones marked paid.
-    const updated = await prisma.$executeRaw`
-      UPDATE orders
-      SET ispaymentreceived = ${received}, modifydate = NOW()
-      WHERE customerid IN (${Prisma.join(ids)})
-        AND invoicedate >= ${rangeStart}::date
-        AND invoicedate < (${rangeEnd}::date + INTERVAL '1 day')
-        AND COALESCE(isdeleted, false) = false
-        AND COALESCE(orderstatus, '') NOT IN ('Cancel', 'Canceled')
-    `
+    const result = await prisma.$transaction(
+      async tx => {
+        const rows = await tx.$queryRaw<{ orderid: number }[]>`
+          UPDATE orders
+          SET ispaymentreceived = ${received}, modifydate = NOW()
+          WHERE customerid IN (${Prisma.join(ids)})
+            AND invoicedate >= ${rangeStart}::date
+            AND invoicedate < (${rangeEnd}::date + INTERVAL '1 day')
+            AND COALESCE(isdeleted, false) = false
+            AND COALESCE(orderstatus, '') NOT IN ('Cancel', 'Canceled')
+          RETURNING orderid
+        `
+        // The cash comes in as Received Vouchers, as in the desktop RMS.
+        const vouchers = await syncReceiptVouchers(tx, rows.map(row => row.orderid), received)
 
-    return res.status(200).json({ updated })
+        return { updated: rows.length, ...vouchers }
+      },
+      { timeout: 30000 }
+    )
+
+    return res.status(200).json(result)
   } catch (error) {
     console.error('Failed to record payment received:', error)
 

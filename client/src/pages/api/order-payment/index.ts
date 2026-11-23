@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import prisma from 'src/lib/prisma'
 import { requireApiAuth } from 'src/lib/require-invoice-auth'
+import { syncReceiptVouchers } from 'src/lib/receipt-vouchers'
 
 // Payment Received for ONE order, as in the desktop RMS Edit Order screen. A
 // paid order leaves accounts receivable and never appears on an invoice again;
@@ -38,10 +39,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'A cancelled order cannot be marked as paid' })
     }
 
-    await prisma.orders.update({
-      where: { id: order.id },
-      data: { ispaymentreceived: source.received, modifydate: new Date() }
-    })
+    await prisma.$transaction(
+      async tx => {
+        const updated = await tx.orders.update({
+          where: { id: order.id },
+          data: { ispaymentreceived: source.received, modifydate: new Date() },
+          select: { orderid: true }
+        })
+        // Posts (or, when undone, removes) the Received Voucher for the cash.
+        if (updated.orderid) await syncReceiptVouchers(tx, [updated.orderid], source.received)
+      },
+      { timeout: 30000 }
+    )
 
     return res.status(200).json({ orderno: order.orderno, received: source.received })
   } catch (error) {
