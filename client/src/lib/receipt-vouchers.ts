@@ -7,6 +7,9 @@ import { Prisma } from '@prisma/client'
 // came in. These helpers do the same for the web Payment Received buttons.
 
 export const CASH_ACCOUNT_CODE = '10001'
+// A taxable customer pays the bill less its tax percentage; that share is
+// posted here instead of to cash.
+export const TAX_ACCOUNT_CODE = '50061' // W.H Tax
 export const RECEIVED_VOUCHER_TYPE = 2
 
 // Same key as the voucher create API, so receipts and manual vouchers never
@@ -28,6 +31,14 @@ export const receiptDescription = (
   `Received Payment From Customer ${customer.firstname ?? ''} ${customer.middlename ?? ''} ${
     customer.lastname ?? ''
   } ${ORDER_MARKER}${orderno}`
+
+/** The tax share of a payment from a taxable customer (whole rupees). */
+export const taxShare = (amount: number, customer: { istaxable?: boolean | null; tax?: number | null }) => {
+  const percent = Number(customer.tax || 0)
+  if (!customer.istaxable || !(percent > 0) || !(amount > 0)) return 0
+
+  return Math.min(amount, Math.round((amount * percent) / 100))
+}
 
 /** Today's calendar day in Pakistan, as midnight (how voucher dates are stored). */
 export const todayInPakistan = (now: Date = new Date()) => {
@@ -59,10 +70,12 @@ export async function syncReceiptVouchers(tx: Tx, orderIds: number[], received: 
       firstname: string | null
       middlename: string | null
       lastname: string | null
+      istaxable: boolean | null
+      tax: number | null
     }[]
   >`
     SELECT o.orderno, COALESCE(o.orderamount, 0)::int AS orderamount, c.accountno,
-           c.firstname, c.middlename, c.lastname
+           c.firstname, c.middlename, c.lastname, c.istaxable, c.tax
     FROM orders o
     LEFT JOIN customer c ON c.customerid = o.customerid
     WHERE o.orderid IN (${Prisma.join(orderIds)})
@@ -122,23 +135,20 @@ export async function syncReceiptVouchers(tx: Tx, orderIds: number[], received: 
       modifydate
     }))
   })
+  // Dr cash (less any tax the customer keeps back), Dr tax, Cr the customer.
   await tx.voucher_trans.createMany({
-    data: toPost.flatMap((order, index) => [
-      {
-        voucherno: first + index,
-        accountcode: CASH_ACCOUNT_CODE,
-        chqno: null,
-        debitamount: order.orderamount,
-        creditamount: 0
-      },
-      {
-        voucherno: first + index,
-        accountcode: order.accountno as string,
-        chqno: null,
-        debitamount: 0,
-        creditamount: order.orderamount
-      }
-    ])
+    data: toPost.flatMap((order, index) => {
+      const voucherno = first + index
+      const tax = taxShare(order.orderamount, order)
+
+      return [
+        { voucherno, accountcode: CASH_ACCOUNT_CODE, chqno: null, debitamount: order.orderamount - tax, creditamount: 0 },
+        ...(tax > 0
+          ? [{ voucherno, accountcode: TAX_ACCOUNT_CODE, chqno: null, debitamount: tax, creditamount: 0 }]
+          : []),
+        { voucherno, accountcode: order.accountno as string, chqno: null, debitamount: 0, creditamount: order.orderamount }
+      ]
+    })
   })
 
   return { posted: toPost.length, removed: 0 }
