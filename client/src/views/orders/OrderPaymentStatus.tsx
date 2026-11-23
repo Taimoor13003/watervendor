@@ -13,7 +13,15 @@ const authHeaders = async () => {
 
 // "Payment Received" for one order, as in the desktop RMS Edit Order screen.
 // Paying an order removes it from every invoice; Undo puts it back.
-const OrderPaymentStatus = ({ orderId }: { orderId?: number | null }) => {
+// onChange gets the order's new status (Completed when paid), so a form showing
+// the status can follow it.
+const OrderPaymentStatus = ({
+  orderId,
+  onChange
+}: {
+  orderId?: number | null
+  onChange?: (received: boolean, orderstatus: string | null) => void
+}) => {
   const [received, setReceived] = useState<boolean | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -45,8 +53,13 @@ const OrderPaymentStatus = ({ orderId }: { orderId?: number | null }) => {
 
     setSaving(true)
     try {
-      await axios.post('/api/order-payment', { orderid: orderId, received: next }, { headers: await authHeaders() })
+      const resp = await axios.post(
+        '/api/order-payment',
+        { orderid: orderId, received: next },
+        { headers: await authHeaders() }
+      )
       setReceived(next)
+      onChange?.(next, resp.data?.orderstatus ?? null)
       toast.success(next ? 'Payment received for this order.' : 'Order marked as not paid.')
     } catch (error: any) {
       toast.error(error?.response?.data?.error || 'Could not update the payment. Please try again.')

@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next/types'
 import prisma from 'src/lib/prisma'
 import { requireApiAuth } from 'src/lib/require-invoice-auth'
-import { syncReceiptVouchers } from 'src/lib/receipt-vouchers'
+import { paidStatus, syncReceiptVouchers } from 'src/lib/receipt-vouchers'
 
 // Payment Received for ONE order, as in the desktop RMS Edit Order screen. A
 // paid order leaves accounts receivable and never appears on an invoice again;
@@ -43,7 +43,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       async tx => {
         const updated = await tx.orders.update({
           where: { id: order.id },
-          data: { ispaymentreceived: source.received, modifydate: new Date() },
+          data: {
+            ispaymentreceived: source.received,
+            orderstatus: paidStatus(source.received, order.orderstatus),
+            modifydate: new Date()
+          },
           select: { orderid: true }
         })
         // Posts (or, when undone, removes) the Received Voucher for the cash.
@@ -52,7 +56,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       { timeout: 30000 }
     )
 
-    return res.status(200).json({ orderno: order.orderno, received: source.received })
+    return res
+      .status(200)
+      .json({ orderno: order.orderno, received: source.received, orderstatus: paidStatus(source.received, order.orderstatus) })
   } catch (error) {
     console.error('Failed to update order payment:', error)
 

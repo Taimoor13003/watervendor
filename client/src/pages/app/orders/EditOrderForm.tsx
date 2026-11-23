@@ -159,7 +159,10 @@ const OrderEditForm = ({ data, paymentmode, orderdetails }: OrderEditFormProps) 
     <Card>
       <CardHeader title='Edit Order' subheader='Update order details, delivery, and billing.' />
       <CardContent>
-        <OrderPaymentStatus orderId={data?.orderid} />
+        <OrderPaymentStatus
+          orderId={data?.orderid}
+          onChange={(_, orderstatus) => orderstatus && setValue('orderstatus', orderstatus)}
+        />
         <form onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={5}>
             <Grid item xs={12} sm={6}>

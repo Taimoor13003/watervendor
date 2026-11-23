@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next/types'
 import { Prisma } from '@prisma/client'
 import prisma from 'src/lib/prisma'
 import { requireApiAuth } from 'src/lib/require-invoice-auth'
-import { syncReceiptVouchers } from 'src/lib/receipt-vouchers'
+import { paidStatusSql, syncReceiptVouchers } from 'src/lib/receipt-vouchers'
 
 // Records that customers paid (or, to undo a mistake, did not pay) for every
 // order invoiced inside a date range. This is the web version of the desktop
@@ -36,7 +36,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         async tx => {
           const rows = await tx.$queryRaw<{ orderid: number }[]>`
             UPDATE orders
-            SET ispaymentreceived = ${received}, modifydate = NOW()
+            SET ispaymentreceived = ${received}, orderstatus = ${paidStatusSql(received)}, modifydate = NOW()
             WHERE orderid IN (${Prisma.join(orders)})
               AND COALESCE(isdeleted, false) = false
               AND COALESCE(orderstatus, '') NOT IN ('Cancel', 'Canceled')
@@ -85,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       async tx => {
         const rows = await tx.$queryRaw<{ orderid: number }[]>`
           UPDATE orders
-          SET ispaymentreceived = ${received}, modifydate = NOW()
+          SET ispaymentreceived = ${received}, orderstatus = ${paidStatusSql(received)}, modifydate = NOW()
           WHERE customerid IN (${Prisma.join(ids)})
             AND invoicedate >= ${rangeStart}::date
             AND invoicedate < (${rangeEnd}::date + INTERVAL '1 day')

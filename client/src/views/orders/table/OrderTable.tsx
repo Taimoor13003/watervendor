@@ -428,6 +428,11 @@ const OrderTableServerSide = () => {
         getRowId={row => row.id || row.orderid}
         rowCount={total}
         checkboxSelection
+        // A paid order can't be received again, and the server skips cancelled
+        // ones, so neither can be ticked for Payment Received.
+        isRowSelectable={params =>
+          !params.row.ispaymentreceived && !['Cancel', 'Canceled'].includes(params.row.orderstatus)
+        }
         keepNonExistentRowsSelected
         rowSelectionModel={selection}
         onRowSelectionModelChange={handleSelectionChange}

@@ -40,6 +40,18 @@ export const taxShare = (amount: number, customer: { istaxable?: boolean | null;
   return Math.min(amount, Math.round((amount * percent) / 100))
 }
 
+// The desktop RMS shows a paid order as Completed (334k of them in the
+// import); an unpaid one stays New. Undoing a payment puts a Completed order
+// back to New and leaves any other status alone.
+export const paidStatus = (received: boolean, current: string | null | undefined) =>
+  received ? 'Completed' : current === 'Completed' ? 'New' : current ?? null
+
+/** paidStatus for an UPDATE ... SET orderstatus = <this> over many orders. */
+export const paidStatusSql = (received: boolean) =>
+  received
+    ? Prisma.sql`'Completed'`
+    : Prisma.sql`CASE WHEN orderstatus = 'Completed' THEN 'New' ELSE orderstatus END`
+
 /** Today's calendar day in Pakistan, as midnight (how voucher dates are stored). */
 export const todayInPakistan = (now: Date = new Date()) => {
   const day = new Intl.DateTimeFormat('en-CA', {
