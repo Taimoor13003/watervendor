@@ -24,6 +24,62 @@ const MUITableCell = styled(TableCell)(({ theme }) => ({
   fontSize: theme.typography.body1.fontSize
 }))
 
+// Paper invoices go on Rivielle letterhead, which already carries the logos at
+// the top and the address band at the bottom. The page margins keep every
+// sheet's text inside the blank part of the letterhead (a long invoice runs on
+// to a second sheet instead of under the address band), and the type follows
+// the desktop RMS invoice: small black serif text with bold sans headings.
+// Screen, Download and the WhatsApp PDF are unchanged.
+const SERIF = '"Times New Roman", Times, serif'
+const SANS = 'Arial, Helvetica, sans-serif'
+const printStyles = {
+  '@page': { size: 'A4', margin: '46mm 14mm 34mm 14mm' },
+  '@media print': {
+    'html, body': { margin: 0, padding: 0, backgroundColor: '#fff' },
+    '.invoice-print': { padding: '0 !important' },
+    // Two classes, so this beats MUI's own one-class font and colour rules.
+    '.invoice-print .invoice-block, .invoice-print .invoice-block *': {
+      color: '#000 !important',
+      fontFamily: SERIF,
+      fontSize: '10.5pt',
+      lineHeight: 1.3,
+      WebkitPrintColorAdjust: 'exact',
+      printColorAdjust: 'exact'
+    },
+    // One sheet per invoice: a new invoice starts a new sheet, nothing after the last.
+    '.invoice-block': { margin: '0 !important', padding: '0 !important', position: 'static !important' },
+    '.invoice-block + .invoice-block': { breakBefore: 'page' },
+    '.invoice-logos, .page-footer': { display: 'none !important' },
+    '.invoice-print .inv-name, .invoice-print .inv-name *': { fontFamily: SANS, fontSize: '11pt', fontWeight: 700 },
+    '.invoice-print .inv-address': { fontSize: '10pt', lineHeight: 1.25 },
+    '.invoice-print .inv-date, .invoice-print .inv-date *': { fontSize: '11pt', fontWeight: 700, marginTop: '10pt' },
+    '.invoice-print .inv-meta': { fontSize: '9pt', lineHeight: 1.25 },
+    '.invoice-print .inv-title': {
+      border: 'none !important',
+      borderTop: '1px solid #000 !important',
+      borderBottom: '1px solid #000 !important',
+      borderLeft: '1px solid #000 !important',
+      padding: '2pt 0 !important',
+      margin: '6pt 0 2pt !important'
+    },
+    '.invoice-print .inv-title *': { fontSize: '11pt', fontWeight: 700, letterSpacing: '0.5em' },
+    '.invoice-print .inv-table th, .invoice-print .inv-table th *': {
+      fontFamily: SANS,
+      fontSize: '9pt',
+      fontWeight: 700,
+      letterSpacing: 'normal'
+    },
+    // Desktop row spacing, so a month of daily deliveries fits on one sheet.
+    '.invoice-print .inv-table th, .invoice-print .inv-table td': { padding: '1pt 4pt !important', lineHeight: 1.2 },
+    '.invoice-print .inv-table tr': { breakInside: 'avoid' },
+    '.invoice-print .inv-total td, .invoice-print .inv-total td *': { fontFamily: SANS, fontSize: '11pt', fontWeight: 700 },
+    '.invoice-print .inv-note': { breakInside: 'avoid', marginTop: '6pt !important' },
+    '.invoice-print .inv-note, .invoice-print .inv-note *': { fontSize: '9.5pt' },
+    '.invoice-print .inv-note b': { fontFamily: SANS, fontWeight: 700 },
+    '.invoice-print .inv-thanks': { fontSize: '10pt', marginTop: '18pt !important' }
+  }
+} as const
+
 const PrintPage: React.FC = () => {
   const router = useRouter()
   const { query } = router
@@ -244,16 +300,9 @@ const PrintPage: React.FC = () => {
 
   return (
     <>
-      <GlobalStyles
-        styles={{
-          '@page': { margin: 0 },
-          '@media print': {
-            body: { margin: 0, backgroundColor: '#fff' }
-          }
-        }}
-      />
+      <GlobalStyles styles={printStyles} />
 
-      <Box sx={{ backgroundColor: '#fff', color: '#000', p: 4 }}>
+      <Box className='invoice-print' sx={{ backgroundColor: '#fff', color: '#000', p: 4 }}>
         {action === 'download' && isExporting ? <Box sx={{ mb: 3 }}>Generating your PDF…</Box> : null}
         {action === 'download' && exportError ? (
           <Box sx={{ mb: 3 }}>
@@ -284,18 +333,18 @@ const PrintPage: React.FC = () => {
               sx={{
                 position: 'relative', // for screen-only absolute footer
                 mb: 6,
-                pb: '2rem', // space for footer on screen
-                pageBreakAfter: 'always'
+                pb: '2rem' // space for footer on screen
               }}
               className='invoice-block'
               data-account={invoiceNumber}
             >
               {/* HEADER WITH LOGOS. Invoices are printed on Rivielle letterhead
-                  that already carries these marks, so on paper the header is
-                  left blank (its space kept, so the details start below the
+                  that already carries these marks, so the header is left off
+                  paper (the page margin keeps the details below the
                   letterhead). The screen, Download and WhatsApp PDFs keep it. */}
               <Grid
                 container
+                className='invoice-logos'
                 alignItems='center'
                 sx={{
                   mb: 2,
@@ -304,8 +353,7 @@ const PrintPage: React.FC = () => {
                     objectFit: 'contain',
                     maxHeight: 100,
                     WebkitPrintColorAdjust: 'exact'
-                  },
-                  '@media print': { visibility: 'hidden' }
+                  }
                 }}
               >
                 <Grid item xs={4} textAlign='left'>
@@ -344,21 +392,25 @@ const PrintPage: React.FC = () => {
               </Grid>
 
               {/* CUSTOMER INFO */}
-              <Typography variant='h6' fontWeight={700}>
+              <Typography className='inv-name' variant='h6' fontWeight={700}>
                 {[first.firstname, first.lastname].filter(Boolean).join(' ') || '—'}
               </Typography>
-              <Typography sx={{ whiteSpace: 'pre-line' }}>{first.addressres || '—'}</Typography>
+              <Typography className='inv-address' sx={{ whiteSpace: 'pre-line' }}>
+                {first.addressres || '—'}
+              </Typography>
 
               {/* Same order as the desktop RMS invoice: date, account, then our invoice number. */}
-              <Typography sx={{ mt: 2 }}>
+              <Typography className='inv-date' sx={{ mt: 2 }}>
                 <b>Date: {format(new Date(), 'EEEE, dd MMMM, yyyy')}</b>
               </Typography>
-              <Typography variant='body2'>Account #: {first.accountno}</Typography>
-              <Typography variant='body2' sx={{ mb: 2 }}>
+              <Typography className='inv-meta' variant='body2'>
+                Account #: {first.accountno}
+              </Typography>
+              <Typography className='inv-meta' variant='body2' sx={{ mb: 2 }}>
                 Invoice #: {invoiceNumber}
               </Typography>
 
-              <Box sx={{ textAlign: 'center', border: '1px solid rgba(0,0,0,0.7)', py: 1, mb: 1 }}>
+              <Box className='inv-title' sx={{ textAlign: 'center', border: '1px solid rgba(0,0,0,0.7)', py: 1, mb: 1 }}>
                 <Typography letterSpacing={4} fontWeight={700}>
                   INVOICE DETAILS
                 </Typography>
@@ -367,6 +419,7 @@ const PrintPage: React.FC = () => {
               {/* DETAILS TABLE */}
               {/* Compact black rows with plain bold headings, like the desktop invoice. */}
               <Table
+                className='inv-table'
                 size='small'
                 sx={{
                   '& th, & td': { color: '#000', borderBottom: 'none', py: 0.5 },
@@ -405,7 +458,7 @@ const PrintPage: React.FC = () => {
                       </TableRow>
                     )
                   })}
-                  <TableRow sx={{ '& td': { borderTop: '2px solid #000', borderBottom: '2px solid #000' } }}>
+                  <TableRow className='inv-total' sx={{ '& td': { borderTop: '2px solid #000', borderBottom: '2px solid #000' } }}>
                     <MUITableCell>
                       <b>TOTAL</b>
                     </MUITableCell>
@@ -424,11 +477,13 @@ const PrintPage: React.FC = () => {
               </Table>
 
               {/* NOTE & THANK YOU */}
-              <Box mt={2}>
+              <Box className='inv-note' mt={2}>
                 <Typography>
                   Total amount due is Rs.<b>{money(totAmt)}</b> only.
                 </Typography>
-                <Typography sx={{ mt: 3 }}>Thank you.</Typography>
+                <Typography className='inv-thanks' sx={{ mt: 3 }}>
+                  Thank you.
+                </Typography>
               </Box>
 
               {/* INLINE FOOTER */}
