@@ -290,7 +290,10 @@ const PrintPage: React.FC = () => {
               className='invoice-block'
               data-account={invoiceNumber}
             >
-              {/* HEADER WITH LOGOS */}
+              {/* HEADER WITH LOGOS. Invoices are printed on Rivielle letterhead
+                  that already carries these marks, so on paper the header is
+                  left blank (its space kept, so the details start below the
+                  letterhead). The screen, Download and WhatsApp PDFs keep it. */}
               <Grid
                 container
                 alignItems='center'
@@ -301,7 +304,8 @@ const PrintPage: React.FC = () => {
                     objectFit: 'contain',
                     maxHeight: 100,
                     WebkitPrintColorAdjust: 'exact'
-                  }
+                  },
+                  '@media print': { visibility: 'hidden' }
                 }}
               >
                 <Grid item xs={4} textAlign='left'>
