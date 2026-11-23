@@ -229,8 +229,6 @@ const EditCustomerForm = ({
               { name: 'telephoneres', label: 'Delivery Telephone#', placeholder: '123456', type: 'number', colSMSize: 6 },
               { name: 'telephoneoffice', label: 'WhatsAPP Number#', placeholder: '123456', type: 'number', colSMSize: 6 },
               { name: 'datefirstcontacted', label: 'Date First Contacted', type: 'date', colSMSize: 6 },
-              { name: 'dateofbirth', label: 'Date Of Birth', type: 'date', colSMSize: 6 },
-              { name: 'delieverydate', label: 'Delivery Date', type: 'date', colSMSize: 6 },
               { name: 'depositamount', label: 'Deposit Amount', placeholder: '123456', colSMSize: 6, type: 'number' },
               { name: 'email', label: 'Email Address', colSMSize: 6, },
               { name: 'addressres', label: 'Delivery Address', placeholder: '123456', colSMSize: 6, multiline: true, rows: 2 },
