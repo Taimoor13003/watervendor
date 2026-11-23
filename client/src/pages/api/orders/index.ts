@@ -41,14 +41,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       if (search) {
+        // A search that is exactly one customer's name (ignoring case, dots and
+        // spacing) or account number shows only that customer: "Systems Ltd"
+        // must not also list "Systems Ltd. Azad Trade Center", whose orders
+        // would then be marked paid by mistake. Anything else matches anywhere.
+        const like = values.length + 1;
+        const exact = values.length + 2;
+        const norm = (expr: string) => `btrim(regexp_replace(lower(COALESCE(${expr}, '')), '[^a-z0-9]+', ' ', 'g'))`;
+        const exactCustomers = `
+          SELECT x.customerid FROM customer x
+          WHERE x.isdeleted IS DISTINCT FROM TRUE
+            AND (${norm(`CONCAT(x.firstname, ' ', x.lastname)`)} = ${norm(`$${exact}`)}
+                 OR lower(x.accountno) = lower($${exact}))`;
         whereConditions.push(`(
-          o.orderno ILIKE $${values.length + 1} OR
-          TO_CHAR(o.orderdate, 'DD-MM-YYYY') ILIKE $${values.length + 1} OR
-          CONCAT(c.firstname, ' ', c.lastname) ILIKE $${values.length + 1} OR
-          c.firstname ILIKE $${values.length + 1} OR
-          c.lastname ILIKE $${values.length + 1}
+          CASE WHEN EXISTS (${exactCustomers})
+            THEN o.customerid IN (${exactCustomers})
+            ELSE (
+              o.orderno ILIKE $${like} OR
+              TO_CHAR(o.orderdate, 'DD-MM-YYYY') ILIKE $${like} OR
+              CONCAT(c.firstname, ' ', c.lastname) ILIKE $${like} OR
+              c.firstname ILIKE $${like} OR
+              c.lastname ILIKE $${like} OR
+              c.accountno ILIKE $${like}
+            )
+          END
         )`);
-        values.push(`%${search}%`);
+        values.push(`%${search}%`, search);
       }
 
       const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
