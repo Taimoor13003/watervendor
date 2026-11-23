@@ -60,7 +60,7 @@ const schema = yup.object().shape({
     .matches(/^\d+$/, 'Must be a whole number'),
   tax: yup
     .string()
-    .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
+    .matches(/^\d*(\.\d{1,2})?$/, 'Up to 2 decimal places, e.g. 10.50')
     .nullable()
     .transform(v => (v === '' ? null : v)),
   delivery_person: yup.string(),
@@ -233,7 +233,7 @@ const EditCustomerForm = ({
                     label='Tax (Percentage)'
                     placeholder='Enter tax amount'
                     type='number'
-                    inputProps={{ max: 100, min: 0 }}
+                    inputProps={{ max: 100, min: 0, step: 0.01 }}
                     onChange={(e) => {
                       const inputValue = parseFloat(e.target.value);
                       if (inputValue <= 100 || e.target.value === '') {

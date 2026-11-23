@@ -28,7 +28,7 @@ export default async function handler(
     const taxValue =
       body.tax === undefined || body.tax === null || body.tax === ''
         ? 0
-        : parseInt(body.tax, 10)
+        : Math.round(parseFloat(body.tax) * 100) / 100 // percentage, 2 decimals
 
     const reqBottlesValue =
       body.reqbottles === undefined || body.reqbottles === null || body.reqbottles === ''

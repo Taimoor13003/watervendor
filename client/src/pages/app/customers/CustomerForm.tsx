@@ -91,7 +91,7 @@ const schema = yup.object().shape({
     .matches(/^\d+$/, 'Must be a whole number'),
   tax: yup
     .string()
-    .matches(/^\d*(\.\d+)?$/, 'Must be a valid number')
+    .matches(/^\d*(\.\d{1,2})?$/, 'Up to 2 decimal places, e.g. 10.50')
     .nullable()
     .transform(v => (v === '' ? null : v)),
   rate_per_bottle: yup
@@ -454,7 +454,7 @@ const EditCustomerForm = ({
                     placeholder="Enter tax amount"
                     error={Boolean(errors.tax)}
                     helperText={errors.tax?.message}
-                    inputProps={{ max: 100 }}
+                    inputProps={{ max: 100, min: 0, step: 0.01 }}
                   />
                 )}
               />

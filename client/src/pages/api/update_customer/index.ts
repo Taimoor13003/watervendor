@@ -48,7 +48,8 @@ export default async function handler(
         delivery_person: toNumberOrNull(delivery_person),
         reqbottles: toNumberOrNull(reqbottles),
         depositamount: toNumberOrNull(depositamount),
-        tax: toNumberOrNull(tax),
+        // A percentage such as 10.50: kept to 2 decimals.
+        tax: toNumberOrNull(tax) === null ? null : Math.round((toNumberOrNull(tax) as number) * 100) / 100,
         rate_per_bottle: toNumberOrNull(rate_per_bottle),
         // Ensure date fields are correctly formatted if they exist
         dateofbirth: data.dateofbirth ? new Date(data.dateofbirth) : null,
