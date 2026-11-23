@@ -5,6 +5,7 @@ import {
   Button,
   CircularProgress,
   FormControl,
+  GlobalStyles,
   InputLabel,
   MenuItem,
   Paper,
@@ -39,6 +40,17 @@ type Statement = {
 }
 
 const ALL_MONTHS = 'All Months'
+
+// Print sends only the statement to the printer; the menu, filters and buttons
+// stay on screen.
+const PRINT_ID = 'profit-loss-statement'
+const printStyles = {
+  '@media print': {
+    'body *': { visibility: 'hidden' },
+    [`#${PRINT_ID}, #${PRINT_ID} *`]: { visibility: 'visible' },
+    [`#${PRINT_ID}`]: { position: 'absolute', left: 0, top: 0, width: '100%', boxShadow: 'none !important' }
+  }
+} as const
 
 const currency = (value: number | null) =>
   Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -131,6 +143,7 @@ const ProfitLossReportPage = () => {
 
   return (
     <Box sx={{ p: 3 }}>
+      <GlobalStyles styles={printStyles} />
       <Typography variant='h4' textAlign='center' fontWeight='bold' gutterBottom>
         Monthly Profit / Loss
       </Typography>
@@ -150,9 +163,18 @@ const ProfitLossReportPage = () => {
           </Select>
         </FormControl>
         <Box mt={3} display='flex' justifyContent='space-between'>
-          <Button variant='contained' onClick={handleRunReport} disabled={!month || !year || loading}>
-            Run Report
-          </Button>
+          <Box display='flex' gap={2}>
+            <Button variant='contained' onClick={handleRunReport} disabled={!month || !year || loading}>
+              Run Report
+            </Button>
+            <Button
+              variant='outlined'
+              disabled={loading || !statement || statement.result.length === 0}
+              onClick={() => window.print()}
+            >
+              Print
+            </Button>
+          </Box>
           <Button variant='outlined' color='secondary' onClick={handleCancel}>Cancel</Button>
         </Box>
       </Paper>
@@ -160,9 +182,12 @@ const ProfitLossReportPage = () => {
       {loading && <Box display='flex' justifyContent='center' my={4}><CircularProgress /></Box>}
       {error && <Alert severity='error' sx={{ mt: 3 }}>{error}</Alert>}
       {statement && !loading && !error && (
-        <Paper elevation={3} sx={{ mt: 4, p: { xs: 2, sm: 4 }, borderRadius: 2 }}>
+        <Paper id={PRINT_ID} elevation={3} sx={{ mt: 4, p: { xs: 2, sm: 4 }, borderRadius: 2 }}>
           <Typography variant='h5' fontWeight='bold' gutterBottom>
             {allMonths ? `Profit & Expense Statement ${year}` : 'Monthly Profit & Expense Statement'}
+          </Typography>
+          <Typography variant='body2' color='text.secondary' gutterBottom>
+            For {allMonths ? `the year ${year}` : `${month} ${year}`}
           </Typography>
 
           {statement.result.length === 0 ? (
