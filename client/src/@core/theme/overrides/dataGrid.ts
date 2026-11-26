@@ -4,6 +4,11 @@ import { OwnerStateThemeType } from './'
 const DataGrid = () => {
   return {
     MuiDataGrid: {
+      // Compact rows: more of the list on screen at once.
+      defaultProps: {
+        rowHeight: 42,
+        columnHeaderHeight: 42
+      },
       styleOverrides: {
         root: ({ theme }: OwnerStateThemeType) => ({
           border: 0,
@@ -17,18 +22,19 @@ const DataGrid = () => {
           paddingLeft: `${theme.spacing(3.25)} !important`
         }),
         columnHeaders: ({ theme }: OwnerStateThemeType) => ({
-          backgroundColor: theme.palette.customColors.tableHeaderBg
+          backgroundColor: theme.palette.customColors.tableHeaderBg,
+          borderBottom: `1px solid ${theme.palette.divider}`
         }),
         columnHeader: ({ theme }: OwnerStateThemeType) => ({
           '&:not(.MuiDataGrid-columnHeaderCheckbox)': {
-            paddingLeft: theme.spacing(4),
-            paddingRight: theme.spacing(4),
+            paddingLeft: theme.spacing(3),
+            paddingRight: theme.spacing(3),
             '&:first-of-type': {
-              paddingLeft: theme.spacing(6)
+              paddingLeft: theme.spacing(4)
             }
           },
           '&:last-of-type': {
-            paddingRight: theme.spacing(6)
+            paddingRight: theme.spacing(4)
           }
         }),
         columnHeaderCheckbox: {
@@ -39,9 +45,10 @@ const DataGrid = () => {
           padding: 0
         },
         columnHeaderTitle: ({ theme }: OwnerStateThemeType) => ({
-          fontWeight: 500,
-          letterSpacing: '1px',
-          textTransform: 'uppercase',
+          fontWeight: 600,
+          color: theme.palette.text.primary,
+          letterSpacing: 0,
+          textTransform: 'none',
           fontSize: theme.typography.body2.fontSize
         }),
         columnSeparator: ({ theme }: OwnerStateThemeType) => ({
@@ -56,15 +63,24 @@ const DataGrid = () => {
         },
         cell: ({ theme }: OwnerStateThemeType) => ({
           borderColor: theme.palette.divider,
+          fontWeight: 500,
           '&:not(.MuiDataGrid-cellCheckbox)': {
-            paddingLeft: theme.spacing(4),
-            paddingRight: theme.spacing(4),
+            paddingLeft: theme.spacing(3),
+            paddingRight: theme.spacing(3),
             '&:first-of-type': {
-              paddingLeft: theme.spacing(6)
+              paddingLeft: theme.spacing(4)
             }
           },
           '&:last-of-type': {
-            paddingRight: theme.spacing(6)
+            paddingRight: theme.spacing(4)
+          },
+          // Row buttons (Edit, Delete, ...) sized to fit the compact rows.
+          '& .MuiButton-root': {
+            paddingTop: theme.spacing(1),
+            paddingBottom: theme.spacing(1),
+            paddingLeft: theme.spacing(3),
+            paddingRight: theme.spacing(3),
+            fontSize: theme.typography.body2.fontSize
           },
           '&:focus, &:focus-within': {
             outline: 'none'

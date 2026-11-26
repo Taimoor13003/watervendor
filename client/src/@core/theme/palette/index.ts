@@ -5,7 +5,10 @@ import { Skin } from 'src/@core/layouts/types'
 const DefaultPalette = (mode: Palette['mode'], skin: Skin): Palette => {
   // ** Vars
   const whiteColor = '#FFF'
-  const lightColor = '47, 43, 61'
+  // Light mode: near-black text, clear outlines and a deep blue (ideas taken
+  // from the client's desktop RMS), instead of the template's faded grey and purple.
+  const lightColor = '17, 24, 39'
+  const isLight = mode === 'light'
   const darkColor = '208, 212, 241'
   const darkPaperBgColor = '#2F3349'
   const mainColor = mode === 'light' ? lightColor : darkColor
@@ -16,7 +19,7 @@ const DefaultPalette = (mode: Palette['mode'], skin: Skin): Palette => {
     } else if (skin === 'bordered' && mode === 'dark') {
       return darkPaperBgColor
     } else if (mode === 'light') {
-      return '#F8F7FA'
+      return '#F3F5F9'
     } else return '#25293C'
   }
 
@@ -27,10 +30,10 @@ const DefaultPalette = (mode: Palette['mode'], skin: Skin): Palette => {
       light: lightColor,
       lightPaperBg: whiteColor,
       darkPaperBg: darkPaperBgColor,
-      bodyBg: mode === 'light' ? '#F8F7FA' : '#25293C', // Same as palette.background.default but doesn't consider bordered skin
+      bodyBg: mode === 'light' ? '#F3F5F9' : '#25293C', // Same as palette.background.default but doesn't consider bordered skin
       trackBg: mode === 'light' ? '#F1F0F2' : '#363B54',
       avatarBg: mode === 'light' ? '#DBDADE' : '#4A5072',
-      tableHeaderBg: mode === 'light' ? '#F6F6F7' : '#4A5072'
+      tableHeaderBg: mode === 'light' ? '#EEF2F8' : '#4A5072'
     },
     mode: mode,
     common: {
@@ -38,15 +41,15 @@ const DefaultPalette = (mode: Palette['mode'], skin: Skin): Palette => {
       white: whiteColor
     },
     primary: {
-      light: '#8479F2',
-      main: '#7367F0',
-      dark: '#655BD3',
+      light: '#3D72C2',
+      main: '#1F57A8',
+      dark: '#174486',
       contrastText: whiteColor
     },
     secondary: {
-      light: '#B2B4B8',
-      main: '#A8AAAE',
-      dark: '#949699',
+      light: '#7A8391',
+      main: '#5B6472',
+      dark: '#454D59',
       contrastText: whiteColor
     },
     error: {
@@ -90,11 +93,11 @@ const DefaultPalette = (mode: Palette['mode'], skin: Skin): Palette => {
       A700: '#616161'
     },
     text: {
-      primary: `rgba(${mainColor}, 0.78)`,
-      secondary: `rgba(${mainColor}, 0.68)`,
-      disabled: `rgba(${mainColor}, 0.42)`
+      primary: `rgba(${mainColor}, ${isLight ? 0.92 : 0.78})`,
+      secondary: `rgba(${mainColor}, ${isLight ? 0.72 : 0.68})`,
+      disabled: `rgba(${mainColor}, ${isLight ? 0.55 : 0.42})`
     },
-    divider: `rgba(${mainColor}, 0.16)`,
+    divider: `rgba(${mainColor}, ${isLight ? 0.2 : 0.16})`,
     background: {
       paper: mode === 'light' ? whiteColor : darkPaperBgColor,
       default: defaultBgColor()

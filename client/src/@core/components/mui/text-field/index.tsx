@@ -13,17 +13,18 @@ const TextFieldStyled = styled(TextField)<TextFieldProps>(({ theme }) => ({
     position: 'relative',
     marginBottom: theme.spacing(1),
     fontSize: theme.typography.body2.fontSize,
+    fontWeight: 600,
     color: `${theme.palette.text.primary} !important`
   },
   '& .MuiInputBase-root': {
     borderRadius: 8,
     backgroundColor: 'transparent !important',
-    border: `1px solid rgba(${theme.palette.customColors.main}, 0.2)`,
+    border: `1px solid rgba(${theme.palette.customColors.main}, 0.45)`,
     transition: theme.transitions.create(['border-color', 'box-shadow'], {
       duration: theme.transitions.duration.shorter
     }),
     '&:not(.Mui-focused):not(.Mui-disabled):not(.Mui-error):hover': {
-      borderColor: `rgba(${theme.palette.customColors.main}, 0.28)`
+      borderColor: `rgba(${theme.palette.customColors.main}, 0.7)`
     },
     '&:before, &:after': {
       display: 'none'

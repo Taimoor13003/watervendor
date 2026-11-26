@@ -54,13 +54,13 @@ const input = () => {
             borderRadius: 8
           },
           '&:hover:not(.Mui-focused):not(.Mui-disabled):not(.Mui-error) .MuiOutlinedInput-notchedOutline': {
-            borderColor: `rgba(${theme.palette.customColors.main}, 0.28)`
+            borderColor: `rgba(${theme.palette.customColors.main}, 0.7)`
           },
           '&:hover.Mui-error .MuiOutlinedInput-notchedOutline': {
             borderColor: theme.palette.error.main
           },
           '& .MuiOutlinedInput-notchedOutline': {
-            borderColor: `rgba(${theme.palette.customColors.main}, 0.2)`
+            borderColor: `rgba(${theme.palette.customColors.main}, 0.45)`
           },
           '&.Mui-disabled .MuiOutlinedInput-notchedOutline': {
             borderColor: theme.palette.text.disabled
