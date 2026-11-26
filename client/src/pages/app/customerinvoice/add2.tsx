@@ -10,6 +10,7 @@ import PreviewCard from 'src/views/apps/invoice/preview/PreviewCard'
 import PreviewActions from 'src/views/apps/invoice/preview/PreviewActions'
 import toast from 'react-hot-toast'
 import { firebaseAuth } from 'src/services/firebase.service'
+import BulkWhatsAppDialog from 'src/views/orders/table/BulkWhatsAppDialog'
 
 const InvoiceAdd: React.FC = () => {
   const router = useRouter()
@@ -17,6 +18,7 @@ const InvoiceAdd: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
+  const [whatsAppOpen, setWhatsAppOpen] = useState(false)
 
   // parse out all IDs from the `?customerid=` param (it may be "905,1723" etc)
   const bulkIds = useMemo(
@@ -27,7 +29,10 @@ const InvoiceAdd: React.FC = () => {
 
   // fetch grouped invoice data for each of those IDs
   const [invoiceData, setInvoiceData] = useState<Record<string, any[]>>({})
-  const customerNames = (invoiceData.__customerNames as unknown as Record<string, string>) || {}
+  const customerNames = useMemo(
+    () => (invoiceData.__customerNames as unknown as Record<string, string>) || {},
+    [invoiceData]
+  )
   const invoiceNumbers = (invoiceData.__invoiceNumbers as unknown as Record<string, string>) || {}
   const invoiceCustomerIds = useMemo(
     () => bulkIds.filter(id => Array.isArray(invoiceData[id]) && invoiceData[id].length > 0),
@@ -87,6 +92,16 @@ const InvoiceAdd: React.FC = () => {
     )
   }
 
+  // Every invoice on this page, in the same order, for one WhatsApp run.
+  const whatsAppCustomers = useMemo(
+    () =>
+      invoiceCustomerIds.map(id => ({
+        customerId: Number(id),
+        name: customerNames[id] || `Customer ${id}`
+      })),
+    [invoiceCustomerIds, customerNames]
+  )
+
   if (loading) {
     return <div>Loading...</div>
   }
@@ -113,6 +128,15 @@ const InvoiceAdd: React.FC = () => {
     <DatePickerWrapper sx={{ '& .react-datepicker-wrapper': { width: 'auto' } }}>
       <Button variant='contained' onClick={handleBulkPrint} disabled={!invoiceCustomerIds.length} sx={{ mb: 4, ml: 2 }}>
         Print {invoiceCustomerIds.length} Invoice{invoiceCustomerIds.length === 1 ? '' : 's'}
+      </Button>
+      <Button
+        variant='contained'
+        color='success'
+        onClick={() => setWhatsAppOpen(true)}
+        disabled={!invoiceCustomerIds.length}
+        sx={{ mb: 4, ml: 2 }}
+      >
+        Send {invoiceCustomerIds.length} on WhatsApp
       </Button>
 
       {customersWithoutInvoices.length > 0 ? (
@@ -149,6 +173,14 @@ const InvoiceAdd: React.FC = () => {
           </Grid>
         ))}
       </Grid>
+
+      <BulkWhatsAppDialog
+        open={whatsAppOpen}
+        onClose={() => setWhatsAppOpen(false)}
+        customers={whatsAppCustomers}
+        startDate={typeof startDate === 'string' ? startDate : ''}
+        endDate={typeof endDate === 'string' ? endDate : ''}
+      />
     </DatePickerWrapper>
   )
 }

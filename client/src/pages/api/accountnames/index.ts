@@ -13,11 +13,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const accounts = await prisma.$queryRaw`
-      SELECT DISTINCT ON (accountcode) accountcode, accountname
-      FROM accounts_head
-      WHERE accountcode IS NOT NULL
-        AND COALESCE(isdeleted, false) = false
-      ORDER BY accountcode, id DESC
+      SELECT accountcode, accountname
+      FROM (
+        SELECT DISTINCT ON (accountcode) accountcode, accountname
+        FROM accounts_head
+        WHERE accountcode IS NOT NULL
+          AND COALESCE(isdeleted, false) = false
+        ORDER BY accountcode, id DESC
+      ) latest
+      ORDER BY LOWER(TRIM(COALESCE(accountname, ''))), accountcode
     `
 
     res.status(200).json({ accounts })
