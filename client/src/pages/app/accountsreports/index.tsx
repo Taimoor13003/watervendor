@@ -14,6 +14,7 @@ import Alert from '@mui/material/Alert'
 import AccountDetailsTable, { AccountDetailRow, voucherTypeLabel } from 'src/views/orders/table/AccountDetailsTable'
 import { vouchertypes } from 'src/constant'
 import { firebaseAuth } from 'src/services/firebase.service'
+import { businessToday } from 'src/lib/calendar-date'
 
 interface Account {
   accountcode: string
@@ -21,12 +22,8 @@ interface Account {
 }
 
 // The desktop RMS opens this report with both dates set to today.
-const todayInputValue = () => {
-  const now = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-
-  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-}
+// Pakistan's today, whatever time zone the computer is set to.
+const todayInputValue = () => businessToday()
 
 const AccountAndVoucherPage = () => {
   const [accountCode, setAccountCode] = useState<string>('')

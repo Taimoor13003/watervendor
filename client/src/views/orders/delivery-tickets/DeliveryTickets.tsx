@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography'
 import { DataGrid, GridColDef, GridRowId } from '@mui/x-data-grid'
 
 import { authHeaders } from 'src/lib/api-client'
+import { businessTodayDate } from 'src/lib/calendar-date'
 import type { DeliveryTicketRow } from 'src/pages/api/delivery-tickets'
 import DeliveryTicket, { FORMS_PER_SHEET, FORM_WIDTH_IN, SHEET_LENGTH_IN } from './DeliveryTicket'
 
@@ -28,7 +29,7 @@ const toInputDate = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth()
 // Tickets are printed the day before the round, so a weekday means its next
 // date from tomorrow on (picked on Tuesday, "Wednesday" is tomorrow).
 const nextDateFor = (dayIndex: number) => {
-  const date = new Date()
+  const date = businessTodayDate()
   date.setDate(date.getDate() + 1)
   date.setDate(date.getDate() + ((dayIndex - date.getDay() + 7) % 7))
 
@@ -54,7 +55,7 @@ const columns: GridColDef<DeliveryTicketRow>[] = [
 ]
 
 const DeliveryTickets = () => {
-  const tomorrowIndex = useMemo(() => (new Date().getDay() + 1) % 7, [])
+  const tomorrowIndex = useMemo(() => (businessTodayDate().getDay() + 1) % 7, [])
   const [day, setDay] = useState(DAYS[tomorrowIndex])
   const [deliveryDate, setDeliveryDate] = useState(() => nextDateFor(tomorrowIndex))
   const [empid, setEmpid] = useState('')

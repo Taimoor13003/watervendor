@@ -22,6 +22,7 @@ import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import Header from 'src/pages/app/customerinvoice/Header';
 import { firebaseAuth } from 'src/services/firebase.service';
 import { DISPLAY_DATE_FORMAT } from 'src/lib/display-date';
+import { businessTodayDate } from 'src/lib/calendar-date';
 import Icon from 'src/@core/components/icon';
 import BulkWhatsAppDialog, { BulkWhatsAppCustomer } from './BulkWhatsAppDialog';
 
@@ -48,8 +49,8 @@ const fullName = (row: CustomerRow) => [row.firstname, row.middlename, row.lastn
 
 const InvoiceList = ({ data }: { data: CustomerRow[] }) => {
   // Opens on the current month to date, like the client's usual run.
-  const [fromDate, setFromDate] = useState<Date | null>(() => startOfMonth(new Date()));
-  const [toDate, setToDate] = useState<Date | null>(() => new Date());
+  const [fromDate, setFromDate] = useState<Date | null>(() => startOfMonth(businessTodayDate()));
+  const [toDate, setToDate] = useState<Date | null>(() => businessTodayDate());
   const [search, setSearch] = useState('');
   const [creditOnly, setCreditOnly] = useState(true);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);

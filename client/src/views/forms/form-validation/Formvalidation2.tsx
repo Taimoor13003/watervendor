@@ -10,7 +10,7 @@ import { useForm, Controller } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import axios from 'axios';
 import { authFetch, authHeaders } from 'src/lib/api-client'
-import { toCalendarDateString } from 'src/lib/calendar-date'
+import { businessTodayDate, toCalendarDateString } from 'src/lib/calendar-date'
 import { useSubmitOnce } from 'src/hooks/useSubmitOnce'
 import { DISPLAY_DATE_FORMAT } from 'src/lib/display-date'
 
@@ -43,7 +43,7 @@ const defaultValues = {
 // Like the desktop RMS "Create New Order": the order date starts at today, the
 // status is always "New", and there is no separate delivery date (it is the
 // order date). Invoice number and date are set later from the order itself.
-const freshValues = () => ({ ...defaultValues, orderDate: new Date() as Date | '' })
+const freshValues = () => ({ ...defaultValues, orderDate: businessTodayDate() as Date | '' })
 // @ts-ignore
 const FormValidationSchema = ({ customers }) => {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null)

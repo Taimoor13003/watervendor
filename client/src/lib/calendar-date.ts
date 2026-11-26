@@ -50,3 +50,25 @@ export const parseCalendarDate = (value: unknown): Date | null => {
 
   return Number.isNaN(date.getTime()) ? null : date
 }
+
+// The business runs on Pakistan time. "Today" is taken there, not from the
+// computer's own time-zone setting: the office PC was set to a far-west zone, so
+// at 14:18 in Karachi on 25 Nov its "today" was still 24 Nov.
+export const BUSINESS_TIME_ZONE = 'Asia/Karachi'
+
+/** Today's date in Pakistan as "yyyy-MM-dd". */
+export const businessToday = (now: Date = new Date()): string =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: BUSINESS_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(now)
+
+/** Today in Pakistan as a local Date at midnight, for date pickers that work in
+ *  local time (and are read back with toCalendarDateString). */
+export const businessTodayDate = (now: Date = new Date()): Date => {
+  const [year, month, day] = businessToday(now).split('-').map(Number)
+
+  return new Date(year, month - 1, day)
+}
