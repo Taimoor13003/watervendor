@@ -20,6 +20,7 @@ import HorizontalNavItems from 'src/navigation/horizontal'
 
 import VerticalAppBarContent from './components/vertical/AppBarContent'
 import HorizontalAppBarContent from './components/horizontal/AppBarContent'
+import SidebarUserMenu from './components/vertical/SidebarUserMenu'
 
 // ** Hook Import
 import { useSettings } from 'src/@core/hooks/useSettings'
@@ -59,12 +60,18 @@ const UserLayout = ({ children, contentHeightFixed }: Props) => {
       contentHeightFixed={contentHeightFixed}
       verticalLayoutProps={{
         navMenu: {
-          navItems: VerticalNavItems()
+          navItems: VerticalNavItems(),
 
           // Uncomment the below line when using server-side menu in vertical layout and comment the above line
           // navItems: verticalMenuItems
+
+          afterContent: props => <SidebarUserMenu settings={settings} navHover={props?.navHover} />
         },
+
+        // The account menu lives at the foot of the sidebar, so on a computer the
+        // top bar would hold nothing. Phones keep it for the menu button.
         appBar: {
+          componentProps: hidden ? undefined : { sx: { display: 'none' } },
           content: props => (
             <VerticalAppBarContent
               hidden={hidden}

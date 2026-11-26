@@ -1,6 +1,7 @@
 // ** MUI Imports
 import Box from '@mui/material/Box'
 import IconButton from '@mui/material/IconButton'
+import Typography from '@mui/material/Typography'
 
 // ** Icon Imports
 import Icon from 'src/@core/components/icon'
@@ -9,12 +10,14 @@ import Icon from 'src/@core/components/icon'
 import { Settings } from 'src/@core/context/settingsContext'
 
 // ** Components
-import UserDropdown from 'src/@core/layouts/components/shared-components/UserDropdown'
 import LanguageDropdown from 'src/@core/layouts/components/shared-components/LanguageDropdown'
 import NotificationDropdown, {
   NotificationsType
 } from 'src/@core/layouts/components/shared-components/NotificationDropdown'
 import ShortcutsDropdown, { ShortcutsType } from 'src/@core/layouts/components/shared-components/ShortcutsDropdown'
+
+// ** Config
+import themeConfig from 'src/configs/themeConfig'
 
 // ** Hook Import
 import { useAuth } from 'src/hooks/useAuth'
@@ -137,13 +140,13 @@ const AppBarContent = (props: Props) => {
             <Icon fontSize='1.5rem' icon='tabler:menu-2' />
           </IconButton>
         ) : null}
+        {hidden ? <Typography sx={{ ml: 2, fontWeight: 700, fontSize: '1.125rem' }}>{themeConfig.templateName}</Typography> : null}
       </Box>
       <Box className='actions-right' sx={{ display: 'flex', alignItems: 'center' }}>
         {auth.user && (
           <>
             {/* <ShortcutsDropdown settings={settings} shortcuts={shortcuts} /> */}
             {/* <NotificationDropdown settings={settings} notifications={notifications} /> */}
-            <UserDropdown settings={settings} />
           </>
         )}
       </Box>
