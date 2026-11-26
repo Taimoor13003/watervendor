@@ -10,8 +10,18 @@ import { useRouter } from 'next/router';
 import QuickSearchToolbar from 'src/views/table/data-grid/QuickSearchToolbar';
 import DatePickerWrapper from 'src/@core/styles/libs/react-datepicker';
 import Icon from 'src/@core/components/icon';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import toast from 'react-hot-toast';
+import { authFetch } from 'src/lib/api-client';
 
-const ProductTable = ({ products = [] }: { products?: any[] }) => {
+const ProductTable = ({ products: initialProducts = [] }: { products?: any[] }) => {
+  // Rows leave the list as soon as they are deleted, without a page reload.
+  const [products, setProducts] = useState<any[]>(initialProducts);
+  const [toDelete, setToDelete] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState<string>('');
   const [filteredData, setFilteredData] = useState<any[]>([]);
@@ -58,6 +68,25 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
     setSearchText('');
   };
 
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    try {
+      const res = await authFetch(`/api/products-delete?id=${toDelete.id}`, { method: 'DELETE' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.message || 'Failed to delete product');
+
+      setProducts(current => current.filter(row => row.id !== toDelete.id));
+      setFilteredData(current => current.filter(row => row.id !== toDelete.id));
+      toast.success('Product deleted');
+      setToDelete(null);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to delete product');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const columns: GridColDef[] = [
     {
       flex: 0.2,
@@ -101,6 +130,17 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
       ),
     },
     {
+      flex: 0.14,
+      minWidth: 120,
+      field: 'totalunits',
+      headerName: 'Total Units',
+      renderCell: (params: GridRenderCellParams) => (
+        <Typography variant='body2' sx={{ color: 'text.primary' }}>
+          {params.row.totalunits ?? 0}
+        </Typography>
+      ),
+    },
+    {
       flex: 0.175,
       minWidth: 120,
       field: 'rateperunitcash',
@@ -123,7 +163,10 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
             onClick={() => router.push(`/app/products/edit?id=${params.row.id}`)}
             disabled={!params.row.id}
           >
-            View
+            Edit
+          </Button>
+          <Button variant='contained' color='error' onClick={() => setToDelete(params.row)} disabled={!params.row.id}>
+            Delete
           </Button>
         </Box>
       ),
@@ -173,6 +216,13 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
             >
               Reset filters
             </Button>
+            <Button
+              variant='contained'
+              startIcon={<Icon icon='mdi:plus' />}
+              onClick={() => router.push('/app/products/create')}
+            >
+              Add product
+            </Button>
           </Box>
         </Box>
 
@@ -203,6 +253,23 @@ const ProductTable = ({ products = [] }: { products?: any[] }) => {
         />
       </DatePickerWrapper>
 
+      <Dialog open={Boolean(toDelete)} onClose={() => (deleting ? null : setToDelete(null))}>
+        <DialogTitle>Delete product?</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {toDelete?.productname || 'This product'} ({toDelete?.productcode || 'no code'}) will be removed from the
+            products list and Inventory in Hand.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button variant='outlined' onClick={() => setToDelete(null)} disabled={deleting}>
+            Cancel
+          </Button>
+          <Button variant='contained' color='error' onClick={confirmDelete} disabled={deleting}>
+            {deleting ? 'Deleting…' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 };

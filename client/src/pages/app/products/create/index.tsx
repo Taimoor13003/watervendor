@@ -1,13 +1,6 @@
 import React from 'react'
-import { GetServerSideProps } from 'next/types';
+import ProductsForm from '../ProductsForm'
 
-// Creation is disabled; redirect to products list
-export const getServerSideProps: GetServerSideProps = async () => {
-  return {
-    redirect: { destination: '/app/products', permanent: false },
-  };
-};
+const CreateProductPage = () => <ProductsForm />
 
-const DisabledCreateProductPage = () => null;
-
-export default DisabledCreateProductPage;
+export default CreateProductPage

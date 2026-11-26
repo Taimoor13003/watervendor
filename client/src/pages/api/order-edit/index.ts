@@ -36,7 +36,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    const paymentmode = await prisma.pick_paymentmode.findMany();
+    // Coupons are discontinued (client, 26 Nov 2026): not offered on orders.
+    const paymentmode = await prisma.pick_paymentmode.findMany({ where: { NOT: { paymentmode: 'Coupon' } } });
     const orderdetails = await prisma.order_details.findMany({
       where: { orderid: Number(id) },
     });

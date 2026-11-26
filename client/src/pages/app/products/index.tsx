@@ -6,7 +6,11 @@ const prisma = new PrismaClient();
 
 export const getServerSideProps: GetServerSideProps = async () => {
   try {
-    const products = await prisma.products.findMany();
+    // Deleted products stay in the table for old orders but leave the list.
+    const products = await prisma.products.findMany({
+      where: { OR: [{ isdeleted: false }, { isdeleted: null }] },
+      orderBy: [{ productname: 'asc' }, { id: 'asc' }]
+    });
 
     const serializedProducts = products.map(product => ({
       ...product,

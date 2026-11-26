@@ -27,6 +27,12 @@ const TOP_SPACE_IN = 1.35
 // Clear of the tractor strip; matches where the desktop printed its labels.
 const LEFT_MARGIN_IN = 1.0
 
+// Kept clear at the foot of each form, above the perforation.
+const BOTTOM_SPACE_IN = 0.25
+
+// Up to two printed lines between the address block and Remarks/Signature.
+const EXTRA_FOOTER_SPACE_IN = 0.32
+
 const ink = '#000'
 
 const styles: Record<string, CSSProperties> = {
@@ -56,7 +62,7 @@ const styles: Record<string, CSSProperties> = {
     fontSize: '8pt',
     borderBottom: '1px dashed #c4cad4'
   },
-  body: { display: 'flex', gap: '0.5in' },
+  body: { display: 'flex', gap: '0.5in', flexShrink: 0 },
   table: { borderCollapse: 'collapse' },
   label: { width: '1%', padding: '0 0.12in 0 0', whiteSpace: 'nowrap', verticalAlign: 'top' },
   value: { padding: 0, verticalAlign: 'top', whiteSpace: 'pre-line' },
@@ -69,7 +75,11 @@ const styles: Record<string, CSSProperties> = {
     borderBottom: `1px solid ${ink}`,
     verticalAlign: 'bottom'
   },
-  footer: { display: 'flex', gap: '0.4in', marginTop: '0.1in' },
+  // Remarks and Signature sit up to two lines lower than before (26 Nov 2026),
+  // so there is room to write above them. The extra space shrinks for a long
+  // address, keeping the lines clear of the form's perforation.
+  extraSpace: { flex: `0 1 ${EXTRA_FOOTER_SPACE_IN}in`, minHeight: 0 },
+  footer: { display: 'flex', gap: '0.4in', marginTop: '0.1in', flexShrink: 0 },
   line: { display: 'inline-block', width: '2.2in', borderBottom: `1px solid ${ink}`, marginLeft: '0.05in' }
 }
 
@@ -105,7 +115,9 @@ const DeliveryTicket = ({ customer, deliveryDate, showHeaderArea }: DeliveryTick
     style={{
       ...styles.form,
       height: `${FORM_LENGTH_IN}in`,
-      padding: `${TOP_SPACE_IN}in 0.6in 0 ${LEFT_MARGIN_IN}in`
+      padding: `${TOP_SPACE_IN}in 0.6in ${BOTTOM_SPACE_IN}in ${LEFT_MARGIN_IN}in`,
+      display: 'flex',
+      flexDirection: 'column'
     }}
   >
     {showHeaderArea ? (
@@ -133,6 +145,8 @@ const DeliveryTicket = ({ customer, deliveryDate, showHeaderArea }: DeliveryTick
         </tbody>
       </table>
     </div>
+
+    <div style={styles.extraSpace} />
 
     <div style={styles.footer}>
       <span>

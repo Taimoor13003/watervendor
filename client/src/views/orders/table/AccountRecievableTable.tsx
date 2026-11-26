@@ -82,7 +82,7 @@ const AccountRecievableTable: React.FC<AccountRecievableTableProps> = ({ month, 
       flex: 0.2,
       minWidth: 120,
       field: 'ordercount',
-      headerName: 'Unpaid Orders',
+      headerName: 'Unpaid Deliveries',
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2'>{params.row.ordercount || 0}</Typography>
       )
@@ -102,7 +102,7 @@ const AccountRecievableTable: React.FC<AccountRecievableTableProps> = ({ month, 
       flex: 0.2,
       minWidth: 150,
       field: 'balance',
-      headerName: 'Unpaid Amount',
+      headerName: 'Amount Due',
       renderCell: (params: GridRenderCellParams) => (
         <Typography variant='body2' sx={{ fontWeight: 700 }}>
           {Number(params.row.balance || 0).toFixed(2)}
@@ -114,7 +114,7 @@ const AccountRecievableTable: React.FC<AccountRecievableTableProps> = ({ month, 
   return (
     <Card>
       <DatePickerWrapper>
-        <CardHeader title={`Unpaid Orders for ${month} ${year}`} />
+        <CardHeader title={`Customers Due for ${month} ${year}`} />
         <Grid container paddingX={5} display='flex' justifyContent={'space-between'}>
           <Box></Box>
         </Grid>
@@ -136,7 +136,7 @@ const AccountRecievableTable: React.FC<AccountRecievableTableProps> = ({ month, 
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
             slots={{ toolbar: QuickSearchToolbar }}
-            localeText={{ noRowsLabel: 'No unpaid, non-cancelled orders were found for this month.' }}
+            localeText={{ noRowsLabel: 'No customers have unpaid bills for this month.' }}
             sx={{ '& .MuiSvgIcon-root': { fontSize: '1.125rem' } }}
             slotProps={{
               baseButton: {

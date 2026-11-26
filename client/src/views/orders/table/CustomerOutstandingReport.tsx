@@ -191,7 +191,8 @@ const CustomerOutstandingReport: React.FC<CustomerOutstandingReportProps> = ({ d
 
         <Box sx={{ px: 5, py: 3, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
           <Typography variant='body2' sx={{ fontWeight: 600 }}>
-            Total Delivered: {bottles(totals.delivered)}
+            {/* Bottles still with the customer: delivered minus returned. */}
+            Total Inventory: {bottles(totals.delivered - totals.returned)}
           </Typography>
           <Typography variant='body2' sx={{ fontWeight: 600 }}>
             Total Return: {bottles(totals.returned)}

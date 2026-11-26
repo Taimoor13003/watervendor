@@ -22,7 +22,14 @@ function Index() {
           throw new Error('Failed to load customers');
         }
         const { customers } = await res.json();
-        setCustomers(customers || []);
+        // A–Z by customer name, the way the client looks people up.
+        const fullName = (c: Customer) =>
+          [c.firstname, c.middlename, c.lastname].filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+        setCustomers(
+          [...(customers || [])].sort((a: Customer, b: Customer) =>
+            fullName(a).localeCompare(fullName(b), undefined, { sensitivity: 'base', numeric: true })
+          )
+        );
       } catch (err: any) {
         setError(err?.message || 'Failed to load customers');
       } finally {

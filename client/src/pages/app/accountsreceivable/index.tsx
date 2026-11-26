@@ -33,13 +33,13 @@ const AccountsReceivablePage = () => {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant='h4' textAlign='center' fontWeight='bold' gutterBottom>
-        Accounts Receivable - Unpaid Orders
+        Accounts Receivable - Customers Due
       </Typography>
 
       {/* White card with dropdowns */}
       <Paper elevation={3} sx={{ p: 4, borderRadius: 2, maxWidth: 600, mx: 'auto' }}>
         <Typography variant='h6' mb={2}>
-          Select the invoice month and year to view unpaid, non-cancelled orders.
+          Select the invoice month and year to see every customer with unpaid bills, one line per customer.
         </Typography>
 
         <FormControl fullWidth margin='normal'>

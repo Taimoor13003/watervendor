@@ -15,6 +15,8 @@ import toast from 'react-hot-toast';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useRouter } from 'next/router';
+import { authFetch } from 'src/lib/api-client'
+import { useSubmitOnce } from 'src/hooks/useSubmitOnce'
 
 type FormValues = {
   productcode: string;
@@ -32,41 +34,62 @@ const schema = yup.object({
   unitsinstock: yup
     .number()
     .typeError('Must be a number')
+    .integer('Must be a whole number')
     .min(0, 'Cannot be negative')
     .nullable()
-    .transform(v => (v === '' || v === null ? null : v)),
+    .transform((value, original) => (original === '' || original === null ? null : value)),
   totalunits: yup
     .number()
     .typeError('Must be a number')
+    .integer('Must be a whole number')
     .min(0, 'Cannot be negative')
     .nullable()
-    .transform(v => (v === '' || v === null ? null : v)),
+    .transform((value, original) => (original === '' || original === null ? null : value)),
   rateperunitcash: yup
     .number()
     .typeError('Must be a number')
+    .integer('Must be a whole number')
     .min(0, 'Cannot be negative')
+    .transform((value, original) => (original === '' || original === null ? undefined : value))
     .required('Cash rate is required'),
   remarks: yup.string().max(500, 'Max 500 characters'),
   isactive: yup.boolean(),
 });
 
-const ProductsForm = () => {
+export type ProductRecord = {
+  id: number;
+  productcode: string | null;
+  productname: string | null;
+  unitsinstock: number | null;
+  totalunits: number | null;
+  rateperunitcash: number | null;
+  remarks: string | null;
+  isactive?: boolean | null;
+};
+
+// Adds a product, or edits one when `product` is given.
+const ProductsForm = ({ product }: { product?: ProductRecord }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const isEdit = Boolean(product);
+  // Opened from Inventory in Hand: Save and Cancel go back there.
+  const backTo = router.query.from === 'productreport' ? '/app/productreport' : '/app/products';
+  const asField = (value: number | null | undefined) => (value === null || value === undefined ? '' : value);
 
   const { control, handleSubmit, formState: { errors }, reset } = useForm<FormValues>({
     mode: 'onChange',
     resolver: yupResolver(schema),
     defaultValues: {
-      productcode: '',
-      productname: '',
-      unitsinstock: '',
-      totalunits: '',
-      rateperunitcash: '',
-      remarks: '',
-      isactive: true,
+      productcode: product?.productcode ?? '',
+      productname: product?.productname ?? '',
+      unitsinstock: asField(product?.unitsinstock),
+      totalunits: asField(product?.totalunits),
+      rateperunitcash: asField(product?.rateperunitcash),
+      remarks: product?.remarks ?? '',
+      isactive: product ? product.isactive !== false : true,
     },
   });
+  const { once: submitOnce, submitting } = useSubmitOnce();
 
   const toNumberOrNull = (value: any) => {
     if (value === '' || value === null || value === undefined) return null;
@@ -77,6 +100,7 @@ const ProductsForm = () => {
   const onSubmit = async (vals: FormValues) => {
     setLoading(true);
     const payload = {
+      ...(product ? { id: product.id } : {}),
       productcode: vals.productcode.trim(),
       productname: vals.productname.trim(),
       unitsinstock: toNumberOrNull(vals.unitsinstock),
@@ -87,7 +111,7 @@ const ProductsForm = () => {
     };
 
     try {
-      const res = await fetch('/api/products-create', {
+      const res = await authFetch(isEdit ? '/api/products-update' : '/api/products-create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -95,14 +119,14 @@ const ProductsForm = () => {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.message || 'Failed to create product');
+        throw new Error(err?.message || (isEdit ? 'Failed to update product' : 'Failed to create product'));
       }
 
-      toast.success('Product created');
-      reset();
-      router.push('/app/products');
+      toast.success(isEdit ? 'Product updated' : 'Product created');
+      if (!isEdit) reset();
+      router.push(backTo);
     } catch (err: any) {
-      toast.error(err?.message || 'Failed to create product');
+      toast.error(err?.message || (isEdit ? 'Failed to update product' : 'Failed to create product'));
     } finally {
       setLoading(false);
     }
@@ -131,19 +155,21 @@ const ProductsForm = () => {
           <Icon icon='mdi:cube-outline' />
           <Box>
             <Typography variant='h5' sx={{ fontWeight: 700 }}>
-              Create Product
+              {isEdit ? 'Edit Product' : 'Create Product'}
             </Typography>
             <Typography variant='body2' color='text.secondary'>
-              Add a new product with pricing and stock details.
+              {isEdit
+                ? 'Change the stock, pricing or details of this product.'
+                : 'Add a new product with pricing and stock details.'}
             </Typography>
           </Box>
         </Box>
-        <Button variant='outlined' onClick={() => router.push('/app/products')}>
-          Back to products
+        <Button variant='outlined' onClick={() => router.push(backTo)}>
+          {backTo === '/app/productreport' ? 'Back to Inventory in Hand' : 'Back to products'}
         </Button>
       </Box>
       <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form onSubmit={submitOnce(handleSubmit(onSubmit))} noValidate>
           <Grid container spacing={4}>
             <Grid item xs={12}>
               <Typography variant='h6'>Basics</Typography>
@@ -235,7 +261,7 @@ const ProductsForm = () => {
                     fullWidth
                     label='Rate per Unit (Cash)'
                     type='number'
-                    inputProps={{ min: 0, step: '0.01' }}
+                    inputProps={{ min: 0, step: 1 }}
                     error={Boolean(errors.rateperunitcash)}
                     helperText={errors.rateperunitcash?.message}
                   />
@@ -287,10 +313,10 @@ const ProductsForm = () => {
 
             <Grid item xs={12}>
               <Box display='flex' gap={2}>
-                <Button type='submit' variant='contained' disabled={loading}>
+                <Button type='submit' variant='contained' disabled={loading || submitting}>
                   {loading ? 'Saving...' : 'Save Product'}
                 </Button>
-                <Button variant='outlined' onClick={() => router.push('/app/products')}>
+                <Button variant='outlined' onClick={() => router.push(backTo)}>
                   Cancel
                 </Button>
               </Box>

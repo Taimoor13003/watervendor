@@ -26,18 +26,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Bottles move on the day they are delivered; orders without a delivery
-    // date fall back to their order date.
+    // A day is the invoice date, as on the desktop report and the invoices: in
+    // the RMS data the bottles go out on the invoice date and the order is often
+    // keyed in the next working day (invoice 14/10, order 15/10). Orders without
+    // an invoice date fall back to the delivery date, then the order date.
     const days = await prisma.$queryRaw`
       SELECT
-        to_char(COALESCE(o.deliverydate, o.orderdate)::date, 'YYYY-MM-DD') AS "day",
+        to_char(COALESCE(o.invoicedate, o.deliverydate, o.orderdate)::date, 'YYYY-MM-DD') AS "day",
         COALESCE(SUM(od.quantity), 0)::int AS "delivered",
         COALESCE(SUM(od.returnqty), 0)::int AS "returned",
         COALESCE(SUM(GREATEST(COALESCE(od.quantity, 0) - COALESCE(od.returnqty, 0), 0)), 0)::int AS "extraout",
         COALESCE(SUM(GREATEST(COALESCE(od.returnqty, 0) - COALESCE(od.quantity, 0), 0)), 0)::int AS "extrain"
       FROM orders o
       JOIN order_details od ON od.orderid = o.orderid
-      WHERE COALESCE(o.deliverydate, o.orderdate)::date BETWEEN ${startDate}::date AND ${endDate}::date
+      WHERE COALESCE(o.invoicedate, o.deliverydate, o.orderdate)::date BETWEEN ${startDate}::date AND ${endDate}::date
         AND COALESCE(o.isdeleted, false) = false
         AND COALESCE(o.orderstatus, '') NOT IN ('Cancel', 'Canceled')
       GROUP BY 1
@@ -49,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const rows = await prisma.$queryRaw`
       SELECT
         od.id AS "rowid",
-        to_char(COALESCE(o.deliverydate, o.orderdate)::date, 'YYYY-MM-DD') AS "day",
+        to_char(COALESCE(o.invoicedate, o.deliverydate, o.orderdate)::date, 'YYYY-MM-DD') AS "day",
         o.orderid,
         o.orderno,
         o.customerid,
@@ -61,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       FROM orders o
       JOIN order_details od ON od.orderid = o.orderid
       LEFT JOIN customer c ON c.customerid = o.customerid
-      WHERE COALESCE(o.deliverydate, o.orderdate)::date BETWEEN ${startDate}::date AND ${endDate}::date
+      WHERE COALESCE(o.invoicedate, o.deliverydate, o.orderdate)::date BETWEEN ${startDate}::date AND ${endDate}::date
         AND COALESCE(o.isdeleted, false) = false
         AND COALESCE(o.orderstatus, '') NOT IN ('Cancel', 'Canceled')
         AND COALESCE(od.quantity, 0) <> COALESCE(od.returnqty, 0)

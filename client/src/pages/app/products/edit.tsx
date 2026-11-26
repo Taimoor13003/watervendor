@@ -13,7 +13,9 @@ export const getServerSideProps: GetServerSideProps = async (context) => {
       return { redirect: { destination: '/app/products', permanent: false } };
     }
 
-    const product = await prisma.products.findFirst({ where: { id: idNumber } });
+    const product = await prisma.products.findFirst({
+      where: { id: idNumber, OR: [{ isdeleted: false }, { isdeleted: null }] }
+    });
 
     if (!product) {
       return { redirect: { destination: '/app/products', permanent: false } };
